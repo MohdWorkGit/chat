@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using CustomerEngagement.Infrastructure.Persistence;
 
@@ -15,7 +16,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         _context = context;
     }
 
-    public IRepository<T> Repository<T>() where T : class
+    public IRepository<T> Repository<T>() where T : BaseEntity
     {
         return (IRepository<T>)_repositories.GetOrAdd(typeof(T), _ => new GenericRepository<T>(_context));
     }

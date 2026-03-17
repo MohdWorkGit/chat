@@ -3,11 +3,10 @@ using System.Threading.RateLimiting;
 using CustomerEngagement.Api.Hubs;
 using CustomerEngagement.Api.Middleware;
 using CustomerEngagement.Application;
-using CustomerEngagement.Domain.Entities;
-using CustomerEngagement.Domain.Interfaces;
-using CustomerEngagement.Infrastructure.Data;
+using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Interfaces;
+using CustomerEngagement.Infrastructure.Persistence;
 using CustomerEngagement.Infrastructure.Repositories;
-using CustomerEngagement.Infrastructure.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -38,17 +37,17 @@ var connectionString = builder.Configuration["DATABASE_URL"]
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Database connection string is not configured.");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString, npgsql =>
     {
-        npgsql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+        npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
         npgsql.EnableRetryOnFailure(3);
     }));
 
 // ---------------------------------------------------------------------------
 // ASP.NET Core Identity
 // ---------------------------------------------------------------------------
-builder.Services.AddIdentity<User, IdentityRole<long>>(options =>
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     {
         options.Password.RequireDigit = true;
         options.Password.RequiredLength = 8;
@@ -56,7 +55,7 @@ builder.Services.AddIdentity<User, IdentityRole<long>>(options =>
         options.User.RequireUniqueEmail = true;
         options.SignIn.RequireConfirmedEmail = true;
     })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
 // ---------------------------------------------------------------------------
@@ -236,15 +235,16 @@ builder.Services.AddMediatR(cfg =>
 // ---------------------------------------------------------------------------
 // Infrastructure Services
 // ---------------------------------------------------------------------------
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IStorageService, StorageService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IWebhookService, WebhookService>();
-builder.Services.AddScoped<IReportingService, ReportingService>();
-builder.Services.AddScoped<ISearchService, SearchService>();
+// TODO: Register application services - implementations pending
+// builder.Services.AddScoped<IStorageService, StorageService>();
+// builder.Services.AddScoped<IEmailService, EmailService>();
+// builder.Services.AddScoped<INotificationService, NotificationService>();
+// builder.Services.AddScoped<ITokenService, TokenService>();
+// builder.Services.AddScoped<IWebhookService, WebhookService>();
+// builder.Services.AddScoped<IReportingService, ReportingService>();
+// builder.Services.AddScoped<ISearchService, SearchService>();
 
 // ---------------------------------------------------------------------------
 // Health Checks

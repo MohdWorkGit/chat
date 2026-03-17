@@ -1,11 +1,12 @@
 using System.Linq.Expressions;
+using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using CustomerEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace CustomerEngagement.Infrastructure.Repositories;
 
-public class GenericRepository<T> : IRepository<T> where T : class
+public class GenericRepository<T> : IRepository<T> where T : BaseEntity
 {
     protected readonly AppDbContext _context;
     protected readonly DbSet<T> _dbSet;
