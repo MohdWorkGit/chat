@@ -79,9 +79,36 @@ public class GenericRepository<T> : IRepository<T> where T : BaseEntity
         _context.Entry(entity).State = EntityState.Modified;
     }
 
+    public virtual Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
+    {
+        Update(entity);
+        return Task.CompletedTask;
+    }
+
     public virtual void Remove(T entity)
     {
         _dbSet.Remove(entity);
+    }
+
+    public virtual Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
+    {
+        Remove(entity);
+        return Task.CompletedTask;
+    }
+
+    public virtual async Task<IReadOnlyList<T>> ListAsync(object filter, CancellationToken cancellationToken = default)
+    {
+        IQueryable<T> query = _dbSet;
+        foreach (var prop in filter.GetType().GetProperties())
+        {
+            var value = prop.GetValue(filter);
+            var entityProp = typeof(T).GetProperty(prop.Name);
+            if (entityProp is not null && value is not null)
+            {
+                query = query.Where(e => EF.Property<object>(e, prop.Name).Equals(value));
+            }
+        }
+        return await query.ToListAsync(cancellationToken);
     }
 
     public virtual void RemoveRange(IEnumerable<T> entities)

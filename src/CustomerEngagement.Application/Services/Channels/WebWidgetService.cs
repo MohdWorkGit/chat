@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Interfaces;
 
 namespace CustomerEngagement.Application.Services.Channels;

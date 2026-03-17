@@ -1,3 +1,4 @@
+using CustomerEngagement.Core.Interfaces;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
@@ -8,21 +9,7 @@ using MimeKit;
 
 namespace CustomerEngagement.Infrastructure.ExternalServices.Email;
 
-public record ReceivedEmail(
-    string MessageId,
-    string From,
-    string FromName,
-    IReadOnlyList<string> To,
-    string Subject,
-    string? HtmlBody,
-    string? TextBody,
-    DateTimeOffset Date,
-    string? InReplyTo,
-    IReadOnlyList<ReceivedEmailAttachment> Attachments);
-
-public record ReceivedEmailAttachment(string FileName, byte[] Content, string ContentType);
-
-public class ImapEmailReceiver
+public class ImapEmailReceiver : IEmailReceiver
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<ImapEmailReceiver> _logger;

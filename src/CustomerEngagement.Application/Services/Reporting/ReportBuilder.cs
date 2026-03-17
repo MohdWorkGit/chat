@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -86,12 +87,12 @@ public class ReportBuilder : IReportBuilder
         return new ReportSummaryDto
         {
             TotalConversations = conversationList.Count,
-            ResolvedConversations = conversationList.Count(c => c.Status == 2),
-            OpenConversations = conversationList.Count(c => c.Status == 0),
-            PendingConversations = conversationList.Count(c => c.Status == 1),
+            ResolvedConversations = conversationList.Count(c => c.Status == ConversationStatus.Resolved),
+            OpenConversations = conversationList.Count(c => c.Status == ConversationStatus.Open),
+            PendingConversations = conversationList.Count(c => c.Status == ConversationStatus.Pending),
             TotalMessages = messageList.Count,
-            TotalIncomingMessages = messageList.Count(m => m.MessageType == 0),
-            TotalOutgoingMessages = messageList.Count(m => m.MessageType == 1)
+            TotalIncomingMessages = messageList.Count(m => m.MessageType == MessageType.Incoming),
+            TotalOutgoingMessages = messageList.Count(m => m.MessageType == MessageType.Outgoing)
         };
     }
 

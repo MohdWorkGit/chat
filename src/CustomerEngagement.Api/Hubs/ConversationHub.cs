@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
+using AppHub = CustomerEngagement.Application.Hubs;
 
 namespace CustomerEngagement.Api.Hubs;
 
 [Authorize]
-public class ConversationHub : Hub
+public class ConversationHub : AppHub.ConversationHub
 {
     private readonly ILogger<ConversationHub> _logger;
 

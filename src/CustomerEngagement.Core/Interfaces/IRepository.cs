@@ -10,8 +10,11 @@ public interface IRepository<T> where T : BaseEntity
     Task<T> AddAsync(T entity, CancellationToken cancellationToken = default);
     Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
     void Update(T entity);
+    Task UpdateAsync(T entity, CancellationToken cancellationToken = default);
     void Remove(T entity);
+    Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
     void RemoveRange(IEnumerable<T> entities);
+    Task<IReadOnlyList<T>> ListAsync(object filter, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
     Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);

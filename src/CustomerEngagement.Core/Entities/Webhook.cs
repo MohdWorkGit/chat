@@ -20,6 +20,10 @@ public class Webhook : BaseEntity
     [MaxLength(255)]
     public string? HmacToken { get; set; }
 
+    public string? EventTypes { get; set; }
+    public string? Secret { get; set; }
+    public bool IsActive { get; set; } = true;
+
     // Navigation properties
     public Account Account { get; set; } = null!;
 

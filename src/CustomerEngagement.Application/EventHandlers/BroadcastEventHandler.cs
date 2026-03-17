@@ -1,4 +1,4 @@
-using CustomerEngagement.Api.Hubs;
+using CustomerEngagement.Application.Hubs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;

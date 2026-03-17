@@ -5,7 +5,9 @@ namespace CustomerEngagement.Core.Entities.Channels;
 
 public class ChannelWebWidget : BaseEntity
 {
+    public int AccountId { get; set; }
     public int InboxId { get; set; }
+    public bool IsEnabled { get; set; } = true;
 
     [MaxLength(2048)]
     public string? WebsiteUrl { get; set; }
