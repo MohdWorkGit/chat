@@ -2,16 +2,17 @@ namespace CustomerEngagement.Enterprise.Captain.Services;
 
 public record ConversationContext(
     int ConversationId,
-    int ContactId,
-    IReadOnlyList<ChatMessage> PreviousMessages
+    IReadOnlyList<ChatMessage> PreviousMessages,
+    string? ContactName = null,
+    string? ContactEmail = null
 );
 
 public record ChatMessage(string Role, string Content);
 
 public record AssistantChatResponse(
     string Content,
-    bool RequiresHandoff,
-    string? HandoffReason
+    IReadOnlyList<string>? SourceDocuments = null,
+    bool HandoffRequested = false
 );
 
 public interface IAssistantChatService
@@ -19,6 +20,6 @@ public interface IAssistantChatService
     Task<AssistantChatResponse> ChatAsync(
         int assistantId,
         string message,
-        ConversationContext context,
+        ConversationContext conversationContext,
         CancellationToken cancellationToken = default);
 }
