@@ -62,7 +62,7 @@ public class ContactService : IContactService
             Name = request.Name,
             Email = request.Email,
             Phone = request.Phone,
-            CompanyName = request.CompanyName,
+            CompanyName = request.Company,
             Location = request.Location,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -84,7 +84,7 @@ public class ContactService : IContactService
         if (request.Name is not null) contact.Name = request.Name;
         if (request.Email is not null) contact.Email = request.Email;
         if (request.Phone is not null) contact.Phone = request.Phone;
-        if (request.CompanyName is not null) contact.CompanyName = request.CompanyName;
+        if (request.Company is not null) contact.CompanyName = request.Company;
         if (request.Location is not null) contact.Location = request.Location;
         contact.UpdatedAt = DateTime.UtcNow;
 
