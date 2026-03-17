@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
@@ -148,18 +149,16 @@ public class ContactSearchService : IContactSearchService
 
     private static ContactSummaryDto MapToSummaryDto(Contact contact)
     {
-        return new ContactSummaryDto
-        {
-            Id = contact.Id,
-            AccountId = contact.AccountId,
-            Name = contact.Name,
-            Email = contact.Email,
-            Phone = contact.Phone,
-            Identifier = contact.Identifier,
-            ContactType = contact.ContactType,
-            LastActivityAt = contact.LastActivityAt,
-            CreatedAt = contact.CreatedAt
-        };
+        return new ContactSummaryDto(
+            contact.Id,
+            contact.AccountId,
+            contact.Name,
+            contact.Email,
+            contact.Phone,
+            contact.Identifier,
+            contact.ContactType.ToString(),
+            contact.LastActivityAt,
+            contact.CreatedAt);
     }
 }
 
@@ -172,19 +171,6 @@ public class ContactFilterRequest
     public Dictionary<string, string>? CustomAttributes { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 25;
-}
-
-public class ContactSummaryDto
-{
-    public int Id { get; set; }
-    public int AccountId { get; set; }
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
-    public string? Identifier { get; set; }
-    public ContactType ContactType { get; set; }
-    public DateTime? LastActivityAt { get; set; }
-    public DateTime CreatedAt { get; set; }
 }
 
 public class PaginatedContactSearchResult

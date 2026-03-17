@@ -18,3 +18,8 @@ public record UpdateContactRequest(
     IDictionary<string, object>? CustomAttributes);
 
 public record MergeContactsRequest(int BaseContactId, int MergeContactId);
+
+public record ContactSummaryDto(
+    int Id, int AccountId, string? Name, string? Email,
+    string? Phone, string? Identifier, string ContactType,
+    DateTime? LastActivityAt, DateTime CreatedAt);
