@@ -2,15 +2,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy solution and project files first for layer caching
-COPY CustomerEngagement.sln .
+# Copy project files first for layer caching
 COPY src/CustomerEngagement.Api/CustomerEngagement.Api.csproj src/CustomerEngagement.Api/
 COPY src/CustomerEngagement.Core/CustomerEngagement.Core.csproj src/CustomerEngagement.Core/
 COPY src/CustomerEngagement.Application/CustomerEngagement.Application.csproj src/CustomerEngagement.Application/
 COPY src/CustomerEngagement.Infrastructure/CustomerEngagement.Infrastructure.csproj src/CustomerEngagement.Infrastructure/
 COPY src/CustomerEngagement.Enterprise/CustomerEngagement.Enterprise.csproj src/CustomerEngagement.Enterprise/
 
-RUN dotnet restore
+RUN dotnet restore src/CustomerEngagement.Api/CustomerEngagement.Api.csproj
 
 # Copy remaining source and publish
 COPY src/ src/
