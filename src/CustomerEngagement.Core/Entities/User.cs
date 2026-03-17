@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using CustomerEngagement.Core.Enums;
+using Microsoft.AspNetCore.Identity;
 
 namespace CustomerEngagement.Core.Entities;
 
-public class User : BaseEntity
+public class User : IdentityUser<int>
 {
     [Required]
     [MaxLength(255)]
@@ -11,11 +12,6 @@ public class User : BaseEntity
 
     [MaxLength(255)]
     public string? DisplayName { get; set; }
-
-    [Required]
-    [MaxLength(255)]
-    [EmailAddress]
-    public required string Email { get; set; }
 
     [MaxLength(255)]
     public string? PasswordDigest { get; set; }
@@ -30,7 +26,13 @@ public class User : BaseEntity
     public string? UiSettings { get; set; }
 
     [MaxLength(255)]
+    public string? Provider { get; set; }
+
+    [MaxLength(255)]
     public string? AccessToken { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
     public ICollection<AccountUser> AccountUsers { get; set; } = [];
