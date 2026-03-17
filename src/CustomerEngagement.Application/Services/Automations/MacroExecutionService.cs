@@ -41,7 +41,7 @@ public class MacroExecutionService : IMacroExecutionService
         {
             AccountId = accountId,
             Name = request.Name,
-            Visibility = request.Visibility,
+            Visibility = request.Visibility.ToString(),
             CreatedById = request.CreatedById,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -61,7 +61,7 @@ public class MacroExecutionService : IMacroExecutionService
             ?? throw new InvalidOperationException($"Macro {macroId} not found.");
 
         if (request.Name is not null) macro.Name = request.Name;
-        if (request.Visibility.HasValue) macro.Visibility = request.Visibility.Value;
+        if (request.Visibility.HasValue) macro.Visibility = request.Visibility.Value.ToString();
         macro.UpdatedAt = DateTime.UtcNow;
 
         await _macroRepository.UpdateAsync(macro, cancellationToken);
@@ -111,8 +111,8 @@ public class MacroExecutionService : IMacroExecutionService
             Id = macro.Id,
             AccountId = macro.AccountId,
             Name = macro.Name,
-            Visibility = macro.Visibility,
-            CreatedById = macro.CreatedById,
+            Visibility = int.TryParse(macro.Visibility, out var vis) ? vis : 0,
+            CreatedById = macro.CreatedById ?? 0,
             CreatedAt = macro.CreatedAt,
             UpdatedAt = macro.UpdatedAt
         };

@@ -50,9 +50,7 @@ public class NotificationService : INotificationService
             new { UserId = userId, AccountId = accountId },
             cancellationToken);
 
-        var totalCount = await _notificationRepository.CountAsync(
-            new { UserId = userId, AccountId = accountId },
-            cancellationToken);
+        var totalCount = notifications.Count;
 
         var items = notifications
             .OrderByDescending(n => n.CreatedAt)
@@ -109,18 +107,14 @@ public class NotificationService : INotificationService
 
     private static NotificationDto MapToDto(Notification notification)
     {
-        return new NotificationDto
-        {
-            Id = notification.Id,
-            AccountId = notification.AccountId,
-            UserId = notification.UserId,
-            NotificationType = notification.NotificationType,
-            PrimaryActorType = notification.PrimaryActorType,
-            PrimaryActorId = notification.PrimaryActorId,
-            SecondaryActorType = notification.SecondaryActorType,
-            SecondaryActorId = notification.SecondaryActorId,
-            ReadAt = notification.ReadAt,
-            CreatedAt = notification.CreatedAt
-        };
+        return new NotificationDto(
+            notification.Id,
+            notification.NotificationType,
+            notification.PrimaryActorType,
+            notification.PrimaryActorId,
+            notification.SecondaryActorType,
+            notification.SecondaryActorId,
+            notification.IsRead,
+            notification.CreatedAt);
     }
 }

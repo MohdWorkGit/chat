@@ -34,12 +34,10 @@ public class MessageService : IMessageService
         CancellationToken cancellationToken = default)
     {
         var messages = await _messageRepository.ListAsync(
-            new { ConversationId = conversationId },
+            new { ConversationId = (int)conversationId },
             cancellationToken);
 
-        var totalCount = await _messageRepository.CountAsync(
-            new { ConversationId = conversationId },
-            cancellationToken);
+        var totalCount = messages.Count;
 
         var items = messages
             .OrderBy(m => m.CreatedAt)
@@ -62,19 +60,18 @@ public class MessageService : IMessageService
         CreateMessageRequest request,
         CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
         var message = new Message
         {
-            ConversationId = conversationId,
+            ConversationId = (int)conversationId,
             AccountId = conversation.AccountId,
-            InboxId = conversation.InboxId,
             Content = request.Content,
-            MessageType = request.MessageType,
+            MessageType = (CustomerEngagement.Core.Enums.MessageType)request.MessageType,
             SenderId = request.SenderId,
             SenderType = request.SenderType,
-            IsPrivate = request.IsPrivate,
+            Private = request.IsPrivate,
             ContentType = request.ContentType,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -92,12 +89,10 @@ public class MessageService : IMessageService
                 {
                     MessageId = message.Id,
                     AccountId = conversation.AccountId,
-                    FileName = attachmentRequest.FileName,
-                    ContentType = attachmentRequest.ContentType,
-                    FileSize = attachmentRequest.FileSize,
-                    FileUrl = attachmentRequest.FileUrl,
-                    ThumbnailUrl = attachmentRequest.ThumbnailUrl,
-                    CreatedAt = DateTime.UtcNow
+                    FallbackTitle = attachmentRequest.FileName,
+                    ExternalUrl = attachmentRequest.FileUrl,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 };
 
                 await _attachmentRepository.AddAsync(attachment, cancellationToken);
@@ -124,7 +119,7 @@ public class MessageService : IMessageService
         UpdateMessageRequest request,
         CancellationToken cancellationToken = default)
     {
-        var message = await _messageRepository.GetByIdAsync(messageId, cancellationToken)
+        var message = await _messageRepository.GetByIdAsync((int)messageId, cancellationToken)
             ?? throw new InvalidOperationException($"Message {messageId} not found.");
 
         message.Content = request.Content;
@@ -138,7 +133,7 @@ public class MessageService : IMessageService
 
     public async Task DeleteAsync(long messageId, CancellationToken cancellationToken = default)
     {
-        var message = await _messageRepository.GetByIdAsync(messageId, cancellationToken)
+        var message = await _messageRepository.GetByIdAsync((int)messageId, cancellationToken)
             ?? throw new InvalidOperationException($"Message {messageId} not found.");
 
         await _messageRepository.DeleteAsync(message, cancellationToken);
@@ -147,21 +142,23 @@ public class MessageService : IMessageService
 
     private static MessageDto MapToDto(Message message)
     {
-        return new MessageDto
-        {
-            Id = message.Id,
-            ConversationId = message.ConversationId,
-            AccountId = message.AccountId,
-            InboxId = message.InboxId,
-            Content = message.Content,
-            MessageType = message.MessageType,
-            SenderId = message.SenderId,
-            SenderType = message.SenderType,
-            IsPrivate = message.IsPrivate,
-            ContentType = message.ContentType,
-            CreatedAt = message.CreatedAt,
-            UpdatedAt = message.UpdatedAt
-        };
+        var attachments = message.Attachments
+            .Select(a => new AttachmentDto(a.Id, a.FileType.ToString(), a.ExternalUrl, a.Extension, a.FallbackTitle))
+            .ToList();
+        return new MessageDto(
+            message.Id,
+            message.ConversationId,
+            message.AccountId,
+            message.SenderId,
+            message.SenderType,
+            message.Content,
+            message.ContentType,
+            message.MessageType.ToString(),
+            message.Private,
+            message.Status.ToString(),
+            message.SentAt,
+            message.CreatedAt,
+            attachments);
     }
 }
 

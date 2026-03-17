@@ -46,7 +46,7 @@ public class EmailNotificationService : IEmailNotificationService
         if (user is null || string.IsNullOrEmpty(user.Email))
             return;
 
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken);
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken);
         if (conversation is null)
             return;
 
@@ -70,7 +70,7 @@ public class EmailNotificationService : IEmailNotificationService
         if (user is null || string.IsNullOrEmpty(user.Email))
             return;
 
-        var message = await _messageRepository.GetByIdAsync(messageId, cancellationToken);
+        var message = await _messageRepository.GetByIdAsync((int)messageId, cancellationToken);
         if (message is null)
             return;
 

@@ -161,8 +161,8 @@ public class AutomationRuleEngine : IAutomationRuleEngine
             Name = rule.Name,
             Description = rule.Description,
             EventName = rule.EventName,
-            ConditionOperator = rule.ConditionOperator,
-            IsActive = rule.IsActive
+            ConditionOperator = "AND",
+            IsActive = rule.Active
             // Conditions and Actions would be deserialized from JSON stored in the entity
         };
     }

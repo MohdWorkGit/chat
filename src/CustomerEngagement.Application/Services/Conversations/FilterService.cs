@@ -49,7 +49,7 @@ public class FilterService : IFilterService
 
         if (filter.Status.HasValue)
         {
-            filtered = filtered.Where(c => c.Status == filter.Status.Value);
+            filtered = filtered.Where(c => c.Status == (CustomerEngagement.Core.Enums.ConversationStatus)(int)filter.Status.Value);
         }
 
         if (filter.InboxId.HasValue)
@@ -205,8 +205,8 @@ public class FilterService : IFilterService
             ContactId = conversation.ContactId,
             AssigneeId = conversation.AssigneeId,
             TeamId = conversation.TeamId,
-            Status = conversation.Status,
-            Priority = conversation.Priority,
+            Status = (ConversationStatus)(int)conversation.Status,
+            Priority = (ConversationPriority)(int)conversation.Priority,
             CreatedAt = conversation.CreatedAt,
             UpdatedAt = conversation.UpdatedAt
         };

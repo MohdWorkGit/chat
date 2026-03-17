@@ -47,7 +47,7 @@ public class PortalService : IPortalService
             PageTitle = request.PageTitle,
             HomepageLink = request.HomepageLink,
             Color = request.Color,
-            IsArchived = false,
+            Archived = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -69,7 +69,7 @@ public class PortalService : IPortalService
         if (request.PageTitle is not null) portal.PageTitle = request.PageTitle;
         if (request.HomepageLink is not null) portal.HomepageLink = request.HomepageLink;
         if (request.Color is not null) portal.Color = request.Color;
-        if (request.IsArchived.HasValue) portal.IsArchived = request.IsArchived.Value;
+        if (request.IsArchived.HasValue) portal.Archived = request.IsArchived.Value;
         portal.UpdatedAt = DateTime.UtcNow;
 
         await _portalRepository.UpdateAsync(portal, cancellationToken);
@@ -100,7 +100,7 @@ public class PortalService : IPortalService
             PageTitle = portal.PageTitle,
             HomepageLink = portal.HomepageLink,
             Color = portal.Color,
-            IsArchived = portal.IsArchived,
+            IsArchived = portal.Archived,
             CreatedAt = portal.CreatedAt,
             UpdatedAt = portal.UpdatedAt
         };
