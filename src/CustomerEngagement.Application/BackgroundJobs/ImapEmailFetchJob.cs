@@ -1,14 +1,13 @@
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
-using CustomerEngagement.Infrastructure.ExternalServices.Email;
 using Microsoft.Extensions.Logging;
 
 namespace CustomerEngagement.Application.BackgroundJobs;
 
 public class ImapEmailFetchJob
 {
-    private readonly ImapEmailReceiver _imapEmailReceiver;
+    private readonly IEmailReceiver _imapEmailReceiver;
     private readonly IRepository<Inbox> _inboxRepository;
     private readonly IRepository<Conversation> _conversationRepository;
     private readonly IRepository<Message> _messageRepository;
@@ -17,7 +16,7 @@ public class ImapEmailFetchJob
     private readonly ILogger<ImapEmailFetchJob> _logger;
 
     public ImapEmailFetchJob(
-        ImapEmailReceiver imapEmailReceiver,
+        IEmailReceiver imapEmailReceiver,
         IRepository<Inbox> inboxRepository,
         IRepository<Conversation> conversationRepository,
         IRepository<Message> messageRepository,

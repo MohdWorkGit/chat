@@ -13,15 +13,10 @@ public record TeamDto(int Id, string Name, string? Description, bool AllowAutoAs
 
 public record CannedResponseDto(int Id, string ShortCode, string Content);
 
-public record ContactSummaryDto(int Id, string? Name, string? Email, string? Phone, string? Avatar);
-
 public record NotificationDto(
     int Id, string? NotificationType, string? PrimaryActorType, int? PrimaryActorId,
     string? SecondaryActorType, int? SecondaryActorId,
     bool IsRead, DateTime CreatedAt);
-
-public record WebhookDto(
-    int Id, int AccountId, string Url, IReadOnlyList<string> SubscribedEvents, DateTime CreatedAt);
 
 public record AutomationRuleDto(
     int Id, string Name, string? Description, string EventName,
@@ -34,11 +29,22 @@ public record CampaignDto(
     string CampaignType, string? Audience, DateTime? ScheduledAt,
     bool Enabled, DateTime CreatedAt);
 
-public record ReportDataPointDto(DateTime Date, double Value);
+public class ReportDataPointDto
+{
+    public DateTime Date { get; set; }
+    public double Value { get; set; }
+    public string? Label { get; set; }
+}
 
-public record ReportDto(
-    string ReportType, DateTime From, DateTime To,
-    IReadOnlyList<ReportDataPointDto> DataPoints, double? Summary);
+public class ReportDto
+{
+    public string ReportName { get; set; } = string.Empty;
+    public DateTime Since { get; set; }
+    public DateTime Until { get; set; }
+    public string? GroupBy { get; set; }
+    public IReadOnlyList<ReportDataPointDto> DataPoints { get; set; } = [];
+    public double Total { get; set; }
+}
 
 public record AccountDto(
     int Id, string Name, string? Locale, string? Domain,
