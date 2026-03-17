@@ -63,7 +63,7 @@ public class ContactImportService : IContactImportService
                     Name = GetField(fields, nameIndex),
                     Email = GetField(fields, emailIndex),
                     Phone = GetField(fields, phoneIndex),
-                    Company = GetField(fields, companyIndex),
+                    CompanyName = GetField(fields, companyIndex),
                     Location = GetField(fields, locationIndex),
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow

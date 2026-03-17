@@ -29,7 +29,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task AssignToAgentAsync(long conversationId, int agentId, CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
         conversation.AssigneeId = agentId;
@@ -45,7 +45,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task AssignToTeamAsync(long conversationId, int teamId, CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
         conversation.TeamId = teamId;
@@ -61,7 +61,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task AutoAssignAsync(long conversationId, int inboxId, CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
         // Get all available agents for this inbox

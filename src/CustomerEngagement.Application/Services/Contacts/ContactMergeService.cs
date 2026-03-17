@@ -36,9 +36,8 @@ public class ContactMergeService : IContactMergeService
         baseContact.Name ??= mergeContact.Name;
         baseContact.Email ??= mergeContact.Email;
         baseContact.Phone ??= mergeContact.Phone;
-        baseContact.Company ??= mergeContact.Company;
+        baseContact.CompanyName ??= mergeContact.CompanyName;
         baseContact.Location ??= mergeContact.Location;
-        baseContact.AvatarUrl ??= mergeContact.AvatarUrl;
         baseContact.UpdatedAt = DateTime.UtcNow;
 
         // Reassign all conversations from merge contact to base contact
@@ -62,19 +61,22 @@ public class ContactMergeService : IContactMergeService
             new ContactMergedEvent(baseContactId, mergeContactId, baseContact.AccountId),
             cancellationToken);
 
-        return new ContactDto
-        {
-            Id = baseContact.Id,
-            AccountId = baseContact.AccountId,
-            Name = baseContact.Name,
-            Email = baseContact.Email,
-            Phone = baseContact.Phone,
-            Company = baseContact.Company,
-            Location = baseContact.Location,
-            AvatarUrl = baseContact.AvatarUrl,
-            CreatedAt = baseContact.CreatedAt,
-            UpdatedAt = baseContact.UpdatedAt
-        };
+        return new ContactDto(
+            baseContact.Id,
+            baseContact.AccountId,
+            baseContact.Name,
+            baseContact.Email,
+            baseContact.Phone,
+            baseContact.Identifier,
+            baseContact.ContactType.ToString(),
+            baseContact.CompanyName,
+            baseContact.Location,
+            baseContact.CountryCode,
+            baseContact.LastActivityAt,
+            baseContact.CreatedAt,
+            baseContact.UpdatedAt,
+            null,
+            0);
     }
 }
 

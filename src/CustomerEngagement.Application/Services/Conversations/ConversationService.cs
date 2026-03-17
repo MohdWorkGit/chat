@@ -23,7 +23,7 @@ public class ConversationService : IConversationService
 
     public async Task<ConversationDto?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(id, cancellationToken);
+        var conversation = await _conversationRepository.GetByIdAsync((int)id, cancellationToken);
         if (conversation is null)
             return null;
 
@@ -39,7 +39,7 @@ public class ConversationService : IConversationService
     {
         var spec = BuildSpecification(accountId, filter);
         var conversations = await _conversationRepository.ListAsync(spec, cancellationToken);
-        var totalCount = await _conversationRepository.CountAsync(spec, cancellationToken);
+        var totalCount = conversations.Count;
 
         var items = conversations
             .Skip((page - 1) * pageSize)
@@ -68,7 +68,7 @@ public class ConversationService : IConversationService
             ContactId = request.ContactId,
             AssigneeId = request.AssigneeId,
             TeamId = request.TeamId,
-            Status = (int)request.Status,
+            Status = (CustomerEngagement.Core.Enums.ConversationStatus)(int)request.Status,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -83,10 +83,10 @@ public class ConversationService : IConversationService
 
     public async Task UpdateStatusAsync(long conversationId, ConversationStatus status, CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
-        conversation.Status = (int)status;
+        conversation.Status = (CustomerEngagement.Core.Enums.ConversationStatus)(int)status;
         conversation.UpdatedAt = DateTime.UtcNow;
 
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
@@ -97,7 +97,7 @@ public class ConversationService : IConversationService
 
     public async Task AssignAsync(long conversationId, int? agentId, int? teamId, CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
         conversation.AssigneeId = agentId;
@@ -112,10 +112,12 @@ public class ConversationService : IConversationService
 
     public async Task TogglePriorityAsync(long conversationId, CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
-        conversation.Priority = conversation.Priority == null || conversation.Priority == 0 ? 1 : 0;
+        conversation.Priority = conversation.Priority == CustomerEngagement.Core.Enums.ConversationPriority.None
+            ? CustomerEngagement.Core.Enums.ConversationPriority.Urgent
+            : CustomerEngagement.Core.Enums.ConversationPriority.None;
         conversation.UpdatedAt = DateTime.UtcNow;
 
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
@@ -124,15 +126,22 @@ public class ConversationService : IConversationService
 
     public async Task MuteAsync(long conversationId, CancellationToken cancellationToken = default)
     {
-        await UpdateStatusAsync(conversationId, ConversationStatus.Muted);
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
+            ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
+
+        conversation.Muted = true;
+        conversation.UpdatedAt = DateTime.UtcNow;
+
+        await _conversationRepository.UpdateAsync(conversation, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task SnoozeAsync(long conversationId, DateTime snoozeUntil, CancellationToken cancellationToken = default)
     {
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
-        conversation.Status = (int)ConversationStatus.Snoozed;
+        conversation.Status = CustomerEngagement.Core.Enums.ConversationStatus.Snoozed;
         conversation.SnoozedUntil = snoozeUntil;
         conversation.UpdatedAt = DateTime.UtcNow;
 
@@ -154,19 +163,27 @@ public class ConversationService : IConversationService
 
     private static ConversationDto MapToDto(Conversation conversation)
     {
-        return new ConversationDto
-        {
-            Id = conversation.Id,
-            AccountId = conversation.AccountId,
-            InboxId = conversation.InboxId,
-            ContactId = conversation.ContactId,
-            AssigneeId = conversation.AssigneeId,
-            TeamId = conversation.TeamId,
-            Status = conversation.Status,
-            Priority = conversation.Priority,
-            CreatedAt = conversation.CreatedAt,
-            UpdatedAt = conversation.UpdatedAt
-        };
+        return new ConversationDto(
+            conversation.Id,
+            conversation.AccountId,
+            conversation.InboxId,
+            conversation.ContactId,
+            conversation.AssigneeId,
+            conversation.TeamId,
+            conversation.DisplayId,
+            conversation.Status.ToString(),
+            conversation.Priority.ToString(),
+            conversation.Identifier,
+            conversation.SnoozedUntil,
+            conversation.Muted,
+            conversation.LastActivityAt,
+            conversation.CreatedAt,
+            conversation.UpdatedAt,
+            null,
+            null,
+            null,
+            0,
+            []);
     }
 
     private static object BuildSpecification(int accountId, ConversationFilterDto filter)

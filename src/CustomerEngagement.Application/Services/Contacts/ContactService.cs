@@ -37,7 +37,7 @@ public class ContactService : IContactService
         CancellationToken cancellationToken = default)
     {
         var contacts = await _contactRepository.ListAsync(new { AccountId = accountId }, cancellationToken);
-        var totalCount = await _contactRepository.CountAsync(new { AccountId = accountId }, cancellationToken);
+        var totalCount = contacts.Count;
 
         var items = contacts
             .Skip((page - 1) * pageSize)
@@ -62,9 +62,8 @@ public class ContactService : IContactService
             Name = request.Name,
             Email = request.Email,
             Phone = request.Phone,
-            Company = request.Company,
+            CompanyName = request.CompanyName,
             Location = request.Location,
-            AvatarUrl = request.AvatarUrl,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -85,9 +84,8 @@ public class ContactService : IContactService
         if (request.Name is not null) contact.Name = request.Name;
         if (request.Email is not null) contact.Email = request.Email;
         if (request.Phone is not null) contact.Phone = request.Phone;
-        if (request.Company is not null) contact.Company = request.Company;
+        if (request.CompanyName is not null) contact.CompanyName = request.CompanyName;
         if (request.Location is not null) contact.Location = request.Location;
-        if (request.AvatarUrl is not null) contact.AvatarUrl = request.AvatarUrl;
         contact.UpdatedAt = DateTime.UtcNow;
 
         await _contactRepository.UpdateAsync(contact, cancellationToken);
@@ -141,19 +139,22 @@ public class ContactService : IContactService
 
     private static ContactDto MapToDto(Contact contact)
     {
-        return new ContactDto
-        {
-            Id = contact.Id,
-            AccountId = contact.AccountId,
-            Name = contact.Name,
-            Email = contact.Email,
-            Phone = contact.Phone,
-            Company = contact.Company,
-            Location = contact.Location,
-            AvatarUrl = contact.AvatarUrl,
-            CreatedAt = contact.CreatedAt,
-            UpdatedAt = contact.UpdatedAt
-        };
+        return new ContactDto(
+            contact.Id,
+            contact.AccountId,
+            contact.Name,
+            contact.Email,
+            contact.Phone,
+            contact.Identifier,
+            contact.ContactType.ToString(),
+            contact.CompanyName,
+            contact.Location,
+            contact.CountryCode,
+            contact.LastActivityAt,
+            contact.CreatedAt,
+            contact.UpdatedAt,
+            null,
+            0);
     }
 }
 

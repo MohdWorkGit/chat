@@ -47,11 +47,11 @@ public class CampaignService : ICampaignService
             Title = request.Title,
             Description = request.Description,
             Message = request.Message,
-            CampaignType = request.CampaignType,
-            InboxId = request.InboxId,
+            CampaignType = (CustomerEngagement.Core.Enums.CampaignType)request.CampaignType,
+            InboxId = request.InboxId ?? 0,
             Audience = request.Audience,
-            ScheduledAt = request.ScheduledAt,
-            IsEnabled = false,
+            ScheduledAt = request.ScheduledAt is not null ? DateTime.Parse(request.ScheduledAt, null, System.Globalization.DateTimeStyles.RoundtripKind) : null,
+            Enabled = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -71,7 +71,7 @@ public class CampaignService : ICampaignService
         if (request.Description is not null) campaign.Description = request.Description;
         if (request.Message is not null) campaign.Message = request.Message;
         if (request.Audience is not null) campaign.Audience = request.Audience;
-        if (request.ScheduledAt is not null) campaign.ScheduledAt = request.ScheduledAt;
+        if (request.ScheduledAt is not null) campaign.ScheduledAt = DateTime.Parse(request.ScheduledAt, null, System.Globalization.DateTimeStyles.RoundtripKind);
         campaign.UpdatedAt = DateTime.UtcNow;
 
         await _campaignRepository.UpdateAsync(campaign, cancellationToken);
@@ -94,7 +94,7 @@ public class CampaignService : ICampaignService
         var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken)
             ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
 
-        campaign.IsEnabled = true;
+        campaign.Enabled = true;
         campaign.UpdatedAt = DateTime.UtcNow;
 
         await _campaignRepository.UpdateAsync(campaign, cancellationToken);
@@ -106,7 +106,7 @@ public class CampaignService : ICampaignService
         var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken)
             ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
 
-        campaign.IsEnabled = false;
+        campaign.Enabled = false;
         campaign.UpdatedAt = DateTime.UtcNow;
 
         await _campaignRepository.UpdateAsync(campaign, cancellationToken);
@@ -118,7 +118,7 @@ public class CampaignService : ICampaignService
         var campaign = await _campaignRepository.GetByIdAsync(campaignId, cancellationToken)
             ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
 
-        if (!campaign.IsEnabled)
+        if (!campaign.Enabled)
         {
             _logger.LogWarning("Attempted to execute disabled campaign {CampaignId}", campaignId);
             return;
@@ -154,12 +154,12 @@ public class CampaignService : ICampaignService
             AccountId = campaign.AccountId,
             Title = campaign.Title,
             Description = campaign.Description,
-            Message = campaign.Message,
-            CampaignType = campaign.CampaignType,
+            Message = campaign.Message ?? string.Empty,
+            CampaignType = (int)campaign.CampaignType,
             InboxId = campaign.InboxId,
-            IsEnabled = campaign.IsEnabled,
+            IsEnabled = campaign.Enabled,
             Audience = campaign.Audience,
-            ScheduledAt = campaign.ScheduledAt,
+            ScheduledAt = campaign.ScheduledAt?.ToString("o"),
             CreatedAt = campaign.CreatedAt,
             UpdatedAt = campaign.UpdatedAt
         };
