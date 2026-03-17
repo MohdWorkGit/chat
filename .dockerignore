@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vs
+.vscode
+.idea
+*.swp
+*.swo
+
+# .NET build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# Node
+**/node_modules/
+**/dist/
+**/.angular/
+
+# Docker
+**/Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Misc
+**/*.md
+**/coverage/
+**/.env
+**/.env.*
+**/tests/
+LICENSE
