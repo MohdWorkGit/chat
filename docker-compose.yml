@@ -1,0 +1,167 @@
+services:
+  # ── Infrastructure ──────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-customer_engagement}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${MINIO_ROOT_USER:-minioadmin} $${MINIO_ROOT_PASSWORD:-minioadmin};
+      mc mb local/${MINIO_BUCKET:-customer-engagement} --ignore-existing;
+      exit 0;
+      "
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    profiles:
+      - dev
+
+  # ── Backend API ─────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: src/CustomerEngagement.Api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;Port=5432;Database=${POSTGRES_DB:-customer_engagement};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+      Redis__Url: redis:6379
+      Jwt__Secret: ${JWT_SECRET:-CHANGE_ME_TO_A_SECURE_SECRET_AT_LEAST_32_CHARS}
+      Jwt__Issuer: ${JWT_ISSUER:-CustomerEngagement}
+      Jwt__Audience: ${JWT_AUDIENCE:-CustomerEngagement}
+      Storage__Provider: S3
+      Storage__S3__AccessKey: ${MINIO_ACCESS_KEY:-minioadmin}
+      Storage__S3__SecretKey: ${MINIO_SECRET_KEY:-minioadmin}
+      Storage__S3__BucketName: ${MINIO_BUCKET:-customer-engagement}
+      Storage__S3__Endpoint: http://minio:9000
+      Storage__S3__ForcePathStyle: "true"
+      Email__Smtp__Host: ${SMTP_HOST:-mailhog}
+      Email__Smtp__Port: ${SMTP_PORT:-1025}
+      Email__Smtp__EnableSsl: "false"
+      Email__Smtp__FromAddress: ${SMTP_FROM:-noreply@example.com}
+      Ollama__BaseUrl: http://ollama:11434
+      Rasa__BaseUrl: http://rasa:5005
+      Cors__AllowedOrigins__0: http://localhost:3000
+      Cors__AllowedOrigins__1: http://localhost:3100
+      Cors__AllowedOrigins__2: http://localhost:4200
+    ports:
+      - "8080:8080"
+
+  # ── Frontend Applications ───────────────────────────────────────
+  dashboard:
+    build:
+      context: frontend/dashboard
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+
+  portal:
+    build:
+      context: frontend/portal
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3100:4000"
+
+  widget:
+    build:
+      context: frontend/widget
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3200:80"
+
+  # ── Optional AI Services ────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    profiles:
+      - ai
+
+  rasa:
+    image: rasa/rasa:3.6-full
+    restart: unless-stopped
+    volumes:
+      - rasa_data:/app
+    ports:
+      - "5005:5005"
+    profiles:
+      - ai
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  ollama_data:
+  rasa_data:
