@@ -1,0 +1,80 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{html,ts}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#1f93ff',
+          600: '#1b6fe0',
+          700: '#1a56b8',
+          800: '#1e3a8a',
+          900: '#1e2d5f',
+          950: '#0f172a',
+        },
+        secondary: {
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          200: '#bbf7d0',
+          300: '#86efac',
+          400: '#4ade80',
+          500: '#22c55e',
+          600: '#16a34a',
+          700: '#15803d',
+          800: '#166534',
+          900: '#14532d',
+        },
+        accent: {
+          50: '#faf5ff',
+          100: '#f3e8ff',
+          200: '#e9d5ff',
+          300: '#d8b4fe',
+          400: '#c084fc',
+          500: '#a855f7',
+          600: '#9333ea',
+          700: '#7e22ce',
+          800: '#6b21a8',
+          900: '#581c87',
+        },
+        woot: {
+          50: '#e8f4ff',
+          100: '#d0e8ff',
+          200: '#a3d1ff',
+          300: '#6bb5ff',
+          400: '#3d9dff',
+          500: '#1f93ff',
+          600: '#0070e0',
+          700: '#0058b3',
+          800: '#004080',
+          900: '#002952',
+        },
+        success: '#22c55e',
+        warning: '#f59e0b',
+        danger: '#ef4444',
+        info: '#3b82f6',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+      },
+      spacing: {
+        'sidebar': '240px',
+        'sidebar-collapsed': '64px',
+      },
+      minHeight: {
+        'screen-content': 'calc(100vh - 64px)',
+      },
+    },
+  },
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+  ],
+};

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.1" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.10" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.305.7" />
+    <PackageReference Include="MailKit" Version="4.3.0" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.20.9" />
+    <PackageReference Include="MaxMind.GeoIP2" Version="5.2.0" />
+    <PackageReference Include="WebPush" Version="1.0.12" />
+    <PackageReference Include="OtpNet" Version="1.4.0" />
+    <PackageReference Include="Fluid.Core" Version="2.5.0" />
+    <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.2.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CustomerEngagement.Application\CustomerEngagement.Application.csproj" />
+    <ProjectReference Include="..\CustomerEngagement.Core\CustomerEngagement.Core.csproj" />
+  </ItemGroup>
+
+</Project>
