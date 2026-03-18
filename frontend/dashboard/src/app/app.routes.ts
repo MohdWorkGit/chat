@@ -133,6 +133,34 @@ export const routes: Routes = [
             '@features/labels/label-list/label-list.component'
           ).then((m) => m.LabelListComponent),
       },
+      {
+        path: 'automations',
+        loadComponent: () =>
+          import(
+            '@features/automations/automation-list/automation-list.component'
+          ).then((m) => m.AutomationListComponent),
+      },
+      {
+        path: 'campaigns',
+        loadComponent: () =>
+          import(
+            '@features/campaigns/campaign-list/campaign-list.component'
+          ).then((m) => m.CampaignListComponent),
+      },
+      {
+        path: 'canned-responses',
+        loadComponent: () =>
+          import(
+            '@features/canned-responses/canned-response-list/canned-response-list.component'
+          ).then((m) => m.CannedResponseListComponent),
+      },
+      {
+        path: 'macros',
+        loadComponent: () =>
+          import(
+            '@features/macros/macro-list/macro-list.component'
+          ).then((m) => m.MacroListComponent),
+      },
     ],
   },
   {

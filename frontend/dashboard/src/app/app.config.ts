@@ -11,6 +11,10 @@ import { notificationsReducer } from '@store/notifications/notifications.reducer
 import { inboxesReducer } from '@store/inboxes/inboxes.reducer';
 import { teamsReducer } from '@store/teams/teams.reducer';
 import { labelsReducer } from '@store/labels/labels.reducer';
+import { automationsReducer } from '@store/automations/automations.reducer';
+import { campaignsReducer } from '@store/campaigns/campaigns.reducer';
+import { cannedResponsesReducer } from '@store/canned-responses/canned-responses.reducer';
+import { macrosReducer } from '@store/macros/macros.reducer';
 import * as authEffects from '@store/auth/auth.effects';
 import * as contactsEffects from '@store/contacts/contacts.effects';
 import * as conversationsEffects from '@store/conversations/conversations.effects';
@@ -18,6 +22,10 @@ import * as notificationsEffects from '@store/notifications/notifications.effect
 import * as inboxesEffects from '@store/inboxes/inboxes.effects';
 import * as teamsEffects from '@store/teams/teams.effects';
 import * as labelsEffects from '@store/labels/labels.effects';
+import * as automationsEffects from '@store/automations/automations.effects';
+import * as campaignsEffects from '@store/campaigns/campaigns.effects';
+import * as cannedResponsesEffects from '@store/canned-responses/canned-responses.effects';
+import * as macrosEffects from '@store/macros/macros.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -32,6 +40,10 @@ export const appConfig: ApplicationConfig = {
       inboxes: inboxesReducer,
       teams: teamsReducer,
       labels: labelsReducer,
+      automations: automationsReducer,
+      campaigns: campaignsReducer,
+      cannedResponses: cannedResponsesReducer,
+      macros: macrosReducer,
     }),
     provideEffects([
       authEffects,
@@ -41,6 +53,10 @@ export const appConfig: ApplicationConfig = {
       inboxesEffects,
       teamsEffects,
       labelsEffects,
+      automationsEffects,
+      campaignsEffects,
+      cannedResponsesEffects,
+      macrosEffects,
     ]),
   ]
 };

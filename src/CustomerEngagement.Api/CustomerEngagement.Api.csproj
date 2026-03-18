@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CustomerEngagement.Application\CustomerEngagement.Application.csproj" />
     <ProjectReference Include="..\CustomerEngagement.Infrastructure\CustomerEngagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\CustomerEngagement.Enterprise\CustomerEngagement.Enterprise.csproj" />
   </ItemGroup>
 
 </Project>
