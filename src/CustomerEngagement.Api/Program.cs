@@ -3,8 +3,13 @@ using System.Threading.RateLimiting;
 using CustomerEngagement.Api.Hubs;
 using CustomerEngagement.Api.Middleware;
 using CustomerEngagement.Application;
+using CustomerEngagement.Application.Auth;
+using CustomerEngagement.Application.Services.Contacts;
+using CustomerEngagement.Application.Services.Conversations;
+using CustomerEngagement.Application.Services.HelpCenter;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
+using CustomerEngagement.Infrastructure.Identity;
 using CustomerEngagement.Infrastructure.Persistence;
 using CustomerEngagement.Infrastructure.Repositories;
 using Hangfire;
@@ -237,14 +242,18 @@ builder.Services.AddMediatR(cfg =>
 // ---------------------------------------------------------------------------
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-// TODO: Register application services - implementations pending
-// builder.Services.AddScoped<IStorageService, StorageService>();
-// builder.Services.AddScoped<IEmailService, EmailService>();
-// builder.Services.AddScoped<INotificationService, NotificationService>();
-// builder.Services.AddScoped<ITokenService, TokenService>();
-// builder.Services.AddScoped<IWebhookService, WebhookService>();
-// builder.Services.AddScoped<IReportingService, ReportingService>();
-// builder.Services.AddScoped<ISearchService, SearchService>();
+
+// Application services
+builder.Services.AddScoped<IConversationService, ConversationService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<IContactMergeService, ContactMergeService>();
+builder.Services.AddScoped<IContactImportService, ContactImportService>();
+builder.Services.AddScoped<IAssignmentService, AssignmentService>();
+builder.Services.AddScoped<IArticleService, ArticleService>();
+builder.Services.AddScoped<IPortalService, PortalService>();
+builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<JwtTokenService>();
 
 // ---------------------------------------------------------------------------
 // Health Checks
@@ -262,6 +271,14 @@ builder.Services.AddControllers();
 // Build & Configure Pipeline
 // =========================================================================
 var app = builder.Build();
+
+// Apply pending migrations in development
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 // Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
