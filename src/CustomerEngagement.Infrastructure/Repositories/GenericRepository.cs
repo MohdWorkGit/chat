@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CustomerEngagement.Infrastructure.Repositories;
 
-public class GenericRepository<T> : IRepository<T> where T : BaseEntity
+public class GenericRepository<T> : IRepository<T> where T : class
 {
     protected readonly AppDbContext _context;
     protected readonly DbSet<T> _dbSet;

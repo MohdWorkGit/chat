@@ -16,7 +16,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         _context = context;
     }
 
-    public IRepository<T> Repository<T>() where T : BaseEntity
+    public IRepository<T> Repository<T>() where T : class
     {
         return (IRepository<T>)_repositories.GetOrAdd(typeof(T), _ => new GenericRepository<T>(_context));
     }
@@ -31,7 +31,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         await _context.Database.BeginTransactionAsync(cancellationToken);
     }
 
-    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+    public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
         if (_context.Database.CurrentTransaction is not null)
         {
@@ -39,7 +39,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         }
     }
 
-    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+    public async Task RollbackAsync(CancellationToken cancellationToken = default)
     {
         if (_context.Database.CurrentTransaction is not null)
         {

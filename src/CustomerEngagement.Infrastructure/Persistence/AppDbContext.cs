@@ -1,4 +1,5 @@
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Entities.Channels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
