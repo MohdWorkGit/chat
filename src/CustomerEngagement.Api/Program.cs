@@ -4,14 +4,21 @@ using CustomerEngagement.Api.Hubs;
 using CustomerEngagement.Api.Middleware;
 using CustomerEngagement.Application;
 using CustomerEngagement.Application.Auth;
+using CustomerEngagement.Application.Services.Automations;
+using CustomerEngagement.Application.Services.Channels;
 using CustomerEngagement.Application.Services.Contacts;
 using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Application.Services.HelpCenter;
+using CustomerEngagement.Application.Services.Integrations;
+using CustomerEngagement.Application.Services.Notifications;
+using CustomerEngagement.Application.Services.Reporting;
+using CustomerEngagement.Application.Services.Search;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using CustomerEngagement.Infrastructure.Identity;
 using CustomerEngagement.Infrastructure.Persistence;
 using CustomerEngagement.Infrastructure.Repositories;
+using CustomerEngagement.Application.BackgroundJobs;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -255,6 +262,35 @@ builder.Services.AddScoped<IPortalService, PortalService>();
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<JwtTokenService>();
 
+// Automation & workflow services
+builder.Services.AddScoped<IAutomationRuleEngine, AutomationRuleEngine>();
+builder.Services.AddScoped<ICampaignService, CampaignService>();
+builder.Services.AddScoped<IMacroExecutionService, MacroExecutionService>();
+
+// Channel services
+builder.Services.AddScoped<IEmailChannelService, EmailChannelService>();
+builder.Services.AddScoped<IWebWidgetService, WebWidgetService>();
+builder.Services.AddScoped<IApiChannelService, ApiChannelService>();
+
+// Notification services
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailNotificationService, EmailNotificationService>();
+builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+
+// Integration services
+builder.Services.AddScoped<IWebhookService, WebhookService>();
+builder.Services.AddScoped<IRasaNluService, RasaNluService>();
+
+// Reporting services
+builder.Services.AddScoped<IReportBuilder, ReportBuilder>();
+builder.Services.AddScoped<CsatReportService>();
+
+// Search & other services
+builder.Services.AddScoped<GlobalSearchService>();
+builder.Services.AddScoped<FilterService>();
+builder.Services.AddScoped<TypingStatusManager>();
+builder.Services.AddScoped<ContactSearchService>();
+
 // ---------------------------------------------------------------------------
 // Health Checks
 // ---------------------------------------------------------------------------
@@ -304,5 +340,23 @@ app.MapControllers();
 app.MapHub<ConversationHub>("/hubs/conversation");
 app.MapHangfireDashboard("/hangfire");
 app.MapHealthChecks("/health");
+
+// ---------------------------------------------------------------------------
+// Hangfire Recurring Jobs
+// ---------------------------------------------------------------------------
+app.Services.GetRequiredService<IRecurringJobManager>()
+    .AddOrUpdate<ConversationAutoResolveJob>("auto-resolve-conversations", job => job.ExecuteAsync(CancellationToken.None), Cron.Hourly);
+
+app.Services.GetRequiredService<IRecurringJobManager>()
+    .AddOrUpdate<ReopenSnoozedConversationsJob>("reopen-snoozed-conversations", job => job.ExecuteAsync(CancellationToken.None), "*/5 * * * *");
+
+app.Services.GetRequiredService<IRecurringJobManager>()
+    .AddOrUpdate<ImapEmailFetchJob>("imap-email-fetch", job => job.ExecuteAsync(CancellationToken.None), "*/2 * * * *");
+
+app.Services.GetRequiredService<IRecurringJobManager>()
+    .AddOrUpdate<CampaignTriggerJob>("campaign-trigger", job => job.ExecuteAsync(CancellationToken.None), "*/10 * * * *");
+
+app.Services.GetRequiredService<IRecurringJobManager>()
+    .AddOrUpdate<CleanupJob>("data-cleanup", job => job.ExecuteAsync(CancellationToken.None), Cron.Daily);
 
 app.Run();
