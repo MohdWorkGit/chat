@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.Auth;
 using CustomerEngagement.Core.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -5,9 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CustomerEngagement.Infrastructure.Identity;
 
-public record AuthResult(bool Succeeded, string? AccessToken, string? RefreshToken, IEnumerable<string>? Errors = null);
-
-public class IdentityService
+public class IdentityService : IIdentityService
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
