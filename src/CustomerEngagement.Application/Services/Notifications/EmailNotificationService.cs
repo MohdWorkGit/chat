@@ -9,17 +9,20 @@ public class EmailNotificationService : IEmailNotificationService
     private readonly IRepository<User> _userRepository;
     private readonly IRepository<Conversation> _conversationRepository;
     private readonly IRepository<Message> _messageRepository;
+    private readonly IEmailSender _emailSender;
     private readonly ILogger<EmailNotificationService> _logger;
 
     public EmailNotificationService(
         IRepository<User> userRepository,
         IRepository<Conversation> conversationRepository,
         IRepository<Message> messageRepository,
+        IEmailSender emailSender,
         ILogger<EmailNotificationService> logger)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _conversationRepository = conversationRepository ?? throw new ArgumentNullException(nameof(conversationRepository));
         _messageRepository = messageRepository ?? throw new ArgumentNullException(nameof(messageRepository));
+        _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -27,11 +30,15 @@ public class EmailNotificationService : IEmailNotificationService
     {
         try
         {
-            // The actual email sending is delegated to an infrastructure-layer email sender
-            // (e.g., SMTP, SendGrid, Mailgun). This service prepares the notification content.
-            _logger.LogInformation("Email notification queued for {To}: {Subject}", request.To, request.Subject);
+            _logger.LogInformation("Sending email notification to {To}: {Subject}", request.To, request.Subject);
 
-            await Task.CompletedTask;
+            await _emailSender.SendEmailAsync(
+                request.To,
+                request.To,
+                request.Subject,
+                request.HtmlBody ?? request.Body,
+                textBody: request.Body,
+                cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {

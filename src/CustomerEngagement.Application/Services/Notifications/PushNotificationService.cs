@@ -1,3 +1,4 @@
+using System.Text.Json;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -8,15 +9,18 @@ public class PushNotificationService : IPushNotificationService
 {
     private readonly IRepository<DeviceToken> _deviceTokenRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IWebPushSender _webPushSender;
     private readonly ILogger<PushNotificationService> _logger;
 
     public PushNotificationService(
         IRepository<DeviceToken> deviceTokenRepository,
         IUnitOfWork unitOfWork,
+        IWebPushSender webPushSender,
         ILogger<PushNotificationService> logger)
     {
         _deviceTokenRepository = deviceTokenRepository ?? throw new ArgumentNullException(nameof(deviceTokenRepository));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _webPushSender = webPushSender ?? throw new ArgumentNullException(nameof(webPushSender));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -37,12 +41,11 @@ public class PushNotificationService : IPushNotificationService
             {
                 try
                 {
-                    // Delegate to platform-specific push notification provider
-                    // (Firebase Cloud Messaging, APNs, etc.)
-                    // The actual sending is handled by infrastructure-layer implementations.
                     _logger.LogInformation(
                         "Sending push notification to user {UserId} on platform {Platform}",
                         userId, token.Platform);
+
+                    await _webPushSender.SendAsync(token.Token, title, body, data, cancellationToken);
                 }
                 catch (Exception ex)
                 {

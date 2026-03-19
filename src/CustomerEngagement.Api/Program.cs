@@ -16,6 +16,8 @@ using CustomerEngagement.Application.Services.Search;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using CustomerEngagement.Enterprise.Saml.Services;
+using CustomerEngagement.Infrastructure.ExternalServices.Email;
+using CustomerEngagement.Infrastructure.ExternalServices.Push;
 using CustomerEngagement.Infrastructure.Identity;
 using CustomerEngagement.Infrastructure.Persistence;
 using CustomerEngagement.Infrastructure.Repositories;
@@ -277,6 +279,10 @@ builder.Services.AddScoped<IApiChannelService, ApiChannelService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailNotificationService, EmailNotificationService>();
 builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+
+// Infrastructure email & push services
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddSingleton<IWebPushSender, VapidWebPushService>();
 
 // Integration services
 builder.Services.AddScoped<IWebhookService, WebhookService>();
