@@ -1,3 +1,4 @@
+using CustomerEngagement.Core.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
@@ -6,7 +7,7 @@ using MimeKit;
 
 namespace CustomerEngagement.Infrastructure.ExternalServices.Email;
 
-public class SmtpEmailSender
+public class SmtpEmailSender : IEmailSender
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<SmtpEmailSender> _logger;

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CustomerEngagement.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using WebPush;
@@ -9,7 +10,7 @@ public record PushSubscriptionInfo(string Endpoint, string P256dh, string Auth);
 
 public record PushNotificationPayload(string Title, string Body, string? Icon = null, string? Url = null, object? Data = null);
 
-public class VapidWebPushService
+public class VapidWebPushService : IWebPushSender
 {
     private readonly WebPushClient _pushClient;
     private readonly VapidDetails _vapidDetails;
@@ -90,6 +91,26 @@ public class VapidWebPushService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send push notification to {Endpoint}", subscription.Endpoint);
+        }
+    }
+
+    public async Task SendAsync(string subscriptionToken, string title, string body, Dictionary<string, string>? data = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var subscription = JsonSerializer.Deserialize<PushSubscriptionInfo>(subscriptionToken);
+            if (subscription is null)
+            {
+                _logger.LogWarning("Invalid push subscription token, skipping notification");
+                return;
+            }
+
+            var payload = new PushNotificationPayload(title, body, Data: data);
+            await SendNotificationAsync(subscription, payload, cancellationToken);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(ex, "Could not parse push subscription token, treating as non-web-push token");
         }
     }
 }
