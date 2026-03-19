@@ -318,12 +318,23 @@ builder.Services.AddControllers();
 // =========================================================================
 var app = builder.Build();
 
-// Apply pending migrations in development
-if (app.Environment.IsDevelopment())
+// Auto-create database schema on startup
+// Uses EnsureCreated since no EF migrations have been generated yet.
+// Once migrations are added, switch this to Database.Migrate().
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        db.Database.EnsureCreated();
+        Log.Information("Database schema ensured");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Failed to initialize database — retrying in 5s");
+        await Task.Delay(5000);
+        db.Database.EnsureCreated();
+    }
 }
 
 // Middleware
