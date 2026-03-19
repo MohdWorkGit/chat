@@ -15,6 +15,7 @@ using CustomerEngagement.Application.Services.Reporting;
 using CustomerEngagement.Application.Services.Search;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
+using CustomerEngagement.Enterprise.Saml.Services;
 using CustomerEngagement.Infrastructure.Identity;
 using CustomerEngagement.Infrastructure.Persistence;
 using CustomerEngagement.Infrastructure.Repositories;
@@ -284,6 +285,9 @@ builder.Services.AddScoped<IRasaNluService, RasaNluService>();
 // Reporting services
 builder.Services.AddScoped<IReportBuilder, ReportBuilder>();
 builder.Services.AddScoped<CsatReportService>();
+
+// Enterprise services
+builder.Services.AddScoped<ISamlAuthService, SamlAuthService>();
 
 // Search & other services
 builder.Services.AddScoped<GlobalSearchService>();
