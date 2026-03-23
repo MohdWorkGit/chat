@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -47,7 +48,7 @@ public class ApiChannelService : IApiChannelService
             var message = await _messageService.CreateAsync(conversation.Id, new CreateMessageRequest
             {
                 Content = request.Content,
-                MessageType = 0, // Incoming
+                MessageType = (int)MessageType.Incoming,
                 ContentType = request.ContentType
             }, cancellationToken);
 
@@ -76,7 +77,7 @@ public class ApiChannelService : IApiChannelService
             var message = await _messageService.CreateAsync(request.ConversationId, new CreateMessageRequest
             {
                 Content = request.Content,
-                MessageType = 1, // Outgoing
+                MessageType = (int)MessageType.Outgoing,
                 ContentType = request.ContentType,
                 SenderId = request.SenderId,
                 SenderType = "User"
