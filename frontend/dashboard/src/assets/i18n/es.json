@@ -1,0 +1,226 @@
+{
+  "COMMON": {
+    "SAVE": "Guardar",
+    "CANCEL": "Cancelar",
+    "DELETE": "Eliminar",
+    "EDIT": "Editar",
+    "CREATE": "Crear",
+    "SEARCH": "Buscar",
+    "LOADING": "Cargando...",
+    "NO_RESULTS": "No se encontraron resultados",
+    "CONFIRM": "Confirmar",
+    "BACK": "Atrás",
+    "NEXT": "Siguiente",
+    "CLOSE": "Cerrar",
+    "YES": "Sí",
+    "NO": "No",
+    "ACTIONS": "Acciones",
+    "STATUS": "Estado",
+    "NAME": "Nombre",
+    "EMAIL": "Correo electrónico",
+    "PHONE": "Teléfono",
+    "DESCRIPTION": "Descripción",
+    "CREATED_AT": "Creado el",
+    "UPDATED_AT": "Actualizado el"
+  },
+  "AUTH": {
+    "LOGIN": "Iniciar sesión",
+    "REGISTER": "Registrarse",
+    "LOGOUT": "Cerrar sesión",
+    "FORGOT_PASSWORD": "Olvidé mi contraseña",
+    "RESET_PASSWORD": "Restablecer contraseña",
+    "EMAIL_PLACEHOLDER": "Ingrese su correo electrónico",
+    "PASSWORD_PLACEHOLDER": "Ingrese su contraseña",
+    "CONFIRM_PASSWORD": "Confirmar contraseña",
+    "REMEMBER_ME": "Recordarme",
+    "SIGN_IN": "Iniciar sesión",
+    "SIGN_UP": "Registrarse",
+    "NO_ACCOUNT": "¿No tienes una cuenta?",
+    "ALREADY_HAVE_ACCOUNT": "¿Ya tienes una cuenta?"
+  },
+  "SIDEBAR": {
+    "CONVERSATIONS": "Conversaciones",
+    "CONTACTS": "Contactos",
+    "REPORTS": "Reportes",
+    "SETTINGS": "Configuración",
+    "NOTIFICATIONS": "Notificaciones",
+    "HELP_CENTER": "Centro de Ayuda",
+    "CAPTAIN": "Captain IA",
+    "SUPER_ADMIN": "Super Administrador"
+  },
+  "CONVERSATIONS": {
+    "TITLE": "Conversaciones",
+    "NEW": "Nueva conversación",
+    "ALL": "Todas las conversaciones",
+    "MINE": "Mías",
+    "UNASSIGNED": "Sin asignar",
+    "STATUS": {
+      "OPEN": "Abierta",
+      "RESOLVED": "Resuelta",
+      "PENDING": "Pendiente",
+      "SNOOZED": "Pospuesta"
+    },
+    "PRIORITY": {
+      "NONE": "Ninguna",
+      "LOW": "Baja",
+      "MEDIUM": "Media",
+      "HIGH": "Alta",
+      "URGENT": "Urgente"
+    },
+    "ASSIGN_AGENT": "Asignar agente",
+    "ASSIGN_TEAM": "Asignar equipo",
+    "ADD_LABEL": "Agregar etiqueta",
+    "REPLY": "Responder",
+    "NOTE": "Nota",
+    "RESOLVE": "Resolver",
+    "REOPEN": "Reabrir",
+    "MUTE": "Silenciar",
+    "SNOOZE": "Posponer",
+    "TYPE_MESSAGE": "Escribe un mensaje...",
+    "SEND": "Enviar",
+    "ATTACHMENT": "Agregar adjunto"
+  },
+  "CONTACTS": {
+    "TITLE": "Contactos",
+    "NEW": "Nuevo contacto",
+    "IMPORT": "Importar contactos",
+    "MERGE": "Fusionar contactos",
+    "TYPE": {
+      "VISITOR": "Visitante",
+      "LEAD": "Prospecto",
+      "CUSTOMER": "Cliente"
+    },
+    "DETAILS": "Detalles del contacto",
+    "CONVERSATIONS": "Conversaciones",
+    "NOTES": "Notas",
+    "LABELS": "Etiquetas",
+    "CUSTOM_ATTRIBUTES": "Atributos personalizados"
+  },
+  "INBOXES": {
+    "TITLE": "Bandejas de entrada",
+    "NEW": "Nueva bandeja de entrada",
+    "CHANNEL_TYPE": "Tipo de canal",
+    "WEB_WIDGET": "Widget web",
+    "EMAIL": "Correo electrónico",
+    "API": "API",
+    "MEMBERS": "Miembros de la bandeja",
+    "WORKING_HOURS": "Horario laboral",
+    "ASSIGNMENT_POLICY": "Política de asignación"
+  },
+  "TEAMS": {
+    "TITLE": "Equipos",
+    "NEW": "Nuevo equipo",
+    "MEMBERS": "Miembros del equipo",
+    "AUTO_ASSIGN": "Asignación automática"
+  },
+  "LABELS": {
+    "TITLE": "Etiquetas",
+    "NEW": "Nueva etiqueta",
+    "COLOR": "Color",
+    "SHOW_ON_SIDEBAR": "Mostrar en la barra lateral"
+  },
+  "AUTOMATIONS": {
+    "TITLE": "Reglas de automatización",
+    "NEW": "Nueva regla",
+    "TRIGGER": "Disparador",
+    "CONDITIONS": "Condiciones",
+    "ACTIONS": "Acciones",
+    "ACTIVE": "Activa",
+    "INACTIVE": "Inactiva"
+  },
+  "CAMPAIGNS": {
+    "TITLE": "Campañas",
+    "NEW": "Nueva campaña",
+    "TYPE": {
+      "ONGOING": "Continua",
+      "ONE_OFF": "Única"
+    },
+    "SCHEDULED_AT": "Programada para",
+    "AUDIENCE": "Audiencia"
+  },
+  "CANNED_RESPONSES": {
+    "TITLE": "Respuestas predefinidas",
+    "NEW": "Nueva respuesta predefinida",
+    "SHORT_CODE": "Código corto",
+    "CONTENT": "Contenido"
+  },
+  "MACROS": {
+    "TITLE": "Macros",
+    "NEW": "Nuevo macro",
+    "VISIBILITY": {
+      "PERSONAL": "Personal",
+      "GLOBAL": "Global"
+    },
+    "ACTIONS": "Acciones"
+  },
+  "REPORTS": {
+    "TITLE": "Reportes",
+    "OVERVIEW": "Resumen",
+    "CONVERSATIONS": "Conversaciones",
+    "AGENTS": "Agentes",
+    "INBOXES": "Bandejas de entrada",
+    "TEAMS": "Equipos",
+    "LABELS": "Etiquetas",
+    "CSAT": "CSAT",
+    "DATE_RANGE": "Rango de fechas",
+    "FROM": "Desde",
+    "TO": "Hasta",
+    "TOTAL_CONVERSATIONS": "Total de conversaciones",
+    "RESOLVED": "Resueltas",
+    "AVG_RESPONSE_TIME": "Tiempo promedio de respuesta",
+    "CSAT_SCORE": "Puntuación CSAT"
+  },
+  "HELP_CENTER": {
+    "TITLE": "Centro de Ayuda",
+    "ARTICLES": "Artículos",
+    "CATEGORIES": "Categorías",
+    "PORTALS": "Portales",
+    "NEW_ARTICLE": "Nuevo artículo",
+    "NEW_CATEGORY": "Nueva categoría",
+    "STATUS": {
+      "DRAFT": "Borrador",
+      "PUBLISHED": "Publicado",
+      "ARCHIVED": "Archivado"
+    }
+  },
+  "CAPTAIN": {
+    "TITLE": "Captain IA",
+    "ASSISTANTS": "Asistentes",
+    "NEW_ASSISTANT": "Nuevo asistente",
+    "DOCUMENTS": "Documentos",
+    "UPLOAD_DOCUMENT": "Subir documento",
+    "MODEL": "Modelo",
+    "TEMPERATURE": "Temperatura",
+    "GUIDELINES": "Directrices de respuesta",
+    "GUARDRAILS": "Restricciones",
+    "PROCESSING": "Procesando...",
+    "PROCESSED": "Procesado"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "Notificaciones",
+    "MARK_ALL_READ": "Marcar todas como leídas",
+    "NO_NOTIFICATIONS": "Sin notificaciones",
+    "NEW_MESSAGE": "Nuevo mensaje",
+    "ASSIGNED": "Asignado a ti",
+    "MENTIONED": "Te han mencionado"
+  },
+  "SETTINGS": {
+    "TITLE": "Configuración",
+    "PROFILE": "Perfil",
+    "ACCOUNT": "Cuenta",
+    "AVAILABILITY": "Disponibilidad",
+    "NOTIFICATION_PREFERENCES": "Preferencias de notificación",
+    "ONLINE": "En línea",
+    "OFFLINE": "Desconectado",
+    "BUSY": "Ocupado"
+  },
+  "SUPER_ADMIN": {
+    "TITLE": "Super Administrador",
+    "ACCOUNTS": "Cuentas",
+    "USERS": "Usuarios",
+    "CONFIG": "Configuración",
+    "TOTAL_ACCOUNTS": "Total de cuentas",
+    "TOTAL_USERS": "Total de usuarios",
+    "ACTIVE_CONVERSATIONS": "Conversaciones activas"
+  }
+}

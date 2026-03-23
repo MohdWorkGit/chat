@@ -1,0 +1,226 @@
+{
+  "COMMON": {
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "DELETE": "Delete",
+    "EDIT": "Edit",
+    "CREATE": "Create",
+    "SEARCH": "Search",
+    "LOADING": "Loading...",
+    "NO_RESULTS": "No results found",
+    "CONFIRM": "Confirm",
+    "BACK": "Back",
+    "NEXT": "Next",
+    "CLOSE": "Close",
+    "YES": "Yes",
+    "NO": "No",
+    "ACTIONS": "Actions",
+    "STATUS": "Status",
+    "NAME": "Name",
+    "EMAIL": "Email",
+    "PHONE": "Phone",
+    "DESCRIPTION": "Description",
+    "CREATED_AT": "Created at",
+    "UPDATED_AT": "Updated at"
+  },
+  "AUTH": {
+    "LOGIN": "Login",
+    "REGISTER": "Register",
+    "LOGOUT": "Logout",
+    "FORGOT_PASSWORD": "Forgot Password",
+    "RESET_PASSWORD": "Reset Password",
+    "EMAIL_PLACEHOLDER": "Enter your email",
+    "PASSWORD_PLACEHOLDER": "Enter your password",
+    "CONFIRM_PASSWORD": "Confirm Password",
+    "REMEMBER_ME": "Remember me",
+    "SIGN_IN": "Sign In",
+    "SIGN_UP": "Sign Up",
+    "NO_ACCOUNT": "Don't have an account?",
+    "ALREADY_HAVE_ACCOUNT": "Already have an account?"
+  },
+  "SIDEBAR": {
+    "CONVERSATIONS": "Conversations",
+    "CONTACTS": "Contacts",
+    "REPORTS": "Reports",
+    "SETTINGS": "Settings",
+    "NOTIFICATIONS": "Notifications",
+    "HELP_CENTER": "Help Center",
+    "CAPTAIN": "Captain AI",
+    "SUPER_ADMIN": "Super Admin"
+  },
+  "CONVERSATIONS": {
+    "TITLE": "Conversations",
+    "NEW": "New Conversation",
+    "ALL": "All Conversations",
+    "MINE": "Mine",
+    "UNASSIGNED": "Unassigned",
+    "STATUS": {
+      "OPEN": "Open",
+      "RESOLVED": "Resolved",
+      "PENDING": "Pending",
+      "SNOOZED": "Snoozed"
+    },
+    "PRIORITY": {
+      "NONE": "None",
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "URGENT": "Urgent"
+    },
+    "ASSIGN_AGENT": "Assign Agent",
+    "ASSIGN_TEAM": "Assign Team",
+    "ADD_LABEL": "Add Label",
+    "REPLY": "Reply",
+    "NOTE": "Note",
+    "RESOLVE": "Resolve",
+    "REOPEN": "Reopen",
+    "MUTE": "Mute",
+    "SNOOZE": "Snooze",
+    "TYPE_MESSAGE": "Type a message...",
+    "SEND": "Send",
+    "ATTACHMENT": "Add attachment"
+  },
+  "CONTACTS": {
+    "TITLE": "Contacts",
+    "NEW": "New Contact",
+    "IMPORT": "Import Contacts",
+    "MERGE": "Merge Contacts",
+    "TYPE": {
+      "VISITOR": "Visitor",
+      "LEAD": "Lead",
+      "CUSTOMER": "Customer"
+    },
+    "DETAILS": "Contact Details",
+    "CONVERSATIONS": "Conversations",
+    "NOTES": "Notes",
+    "LABELS": "Labels",
+    "CUSTOM_ATTRIBUTES": "Custom Attributes"
+  },
+  "INBOXES": {
+    "TITLE": "Inboxes",
+    "NEW": "New Inbox",
+    "CHANNEL_TYPE": "Channel Type",
+    "WEB_WIDGET": "Web Widget",
+    "EMAIL": "Email",
+    "API": "API",
+    "MEMBERS": "Inbox Members",
+    "WORKING_HOURS": "Working Hours",
+    "ASSIGNMENT_POLICY": "Assignment Policy"
+  },
+  "TEAMS": {
+    "TITLE": "Teams",
+    "NEW": "New Team",
+    "MEMBERS": "Team Members",
+    "AUTO_ASSIGN": "Auto Assign"
+  },
+  "LABELS": {
+    "TITLE": "Labels",
+    "NEW": "New Label",
+    "COLOR": "Color",
+    "SHOW_ON_SIDEBAR": "Show on sidebar"
+  },
+  "AUTOMATIONS": {
+    "TITLE": "Automation Rules",
+    "NEW": "New Rule",
+    "TRIGGER": "Trigger",
+    "CONDITIONS": "Conditions",
+    "ACTIONS": "Actions",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive"
+  },
+  "CAMPAIGNS": {
+    "TITLE": "Campaigns",
+    "NEW": "New Campaign",
+    "TYPE": {
+      "ONGOING": "Ongoing",
+      "ONE_OFF": "One-off"
+    },
+    "SCHEDULED_AT": "Scheduled At",
+    "AUDIENCE": "Audience"
+  },
+  "CANNED_RESPONSES": {
+    "TITLE": "Canned Responses",
+    "NEW": "New Canned Response",
+    "SHORT_CODE": "Short Code",
+    "CONTENT": "Content"
+  },
+  "MACROS": {
+    "TITLE": "Macros",
+    "NEW": "New Macro",
+    "VISIBILITY": {
+      "PERSONAL": "Personal",
+      "GLOBAL": "Global"
+    },
+    "ACTIONS": "Actions"
+  },
+  "REPORTS": {
+    "TITLE": "Reports",
+    "OVERVIEW": "Overview",
+    "CONVERSATIONS": "Conversations",
+    "AGENTS": "Agents",
+    "INBOXES": "Inboxes",
+    "TEAMS": "Teams",
+    "LABELS": "Labels",
+    "CSAT": "CSAT",
+    "DATE_RANGE": "Date Range",
+    "FROM": "From",
+    "TO": "To",
+    "TOTAL_CONVERSATIONS": "Total Conversations",
+    "RESOLVED": "Resolved",
+    "AVG_RESPONSE_TIME": "Avg Response Time",
+    "CSAT_SCORE": "CSAT Score"
+  },
+  "HELP_CENTER": {
+    "TITLE": "Help Center",
+    "ARTICLES": "Articles",
+    "CATEGORIES": "Categories",
+    "PORTALS": "Portals",
+    "NEW_ARTICLE": "New Article",
+    "NEW_CATEGORY": "New Category",
+    "STATUS": {
+      "DRAFT": "Draft",
+      "PUBLISHED": "Published",
+      "ARCHIVED": "Archived"
+    }
+  },
+  "CAPTAIN": {
+    "TITLE": "Captain AI",
+    "ASSISTANTS": "Assistants",
+    "NEW_ASSISTANT": "New Assistant",
+    "DOCUMENTS": "Documents",
+    "UPLOAD_DOCUMENT": "Upload Document",
+    "MODEL": "Model",
+    "TEMPERATURE": "Temperature",
+    "GUIDELINES": "Response Guidelines",
+    "GUARDRAILS": "Guardrails",
+    "PROCESSING": "Processing...",
+    "PROCESSED": "Processed"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "Notifications",
+    "MARK_ALL_READ": "Mark all as read",
+    "NO_NOTIFICATIONS": "No notifications",
+    "NEW_MESSAGE": "New message",
+    "ASSIGNED": "Assigned to you",
+    "MENTIONED": "You were mentioned"
+  },
+  "SETTINGS": {
+    "TITLE": "Settings",
+    "PROFILE": "Profile",
+    "ACCOUNT": "Account",
+    "AVAILABILITY": "Availability",
+    "NOTIFICATION_PREFERENCES": "Notification Preferences",
+    "ONLINE": "Online",
+    "OFFLINE": "Offline",
+    "BUSY": "Busy"
+  },
+  "SUPER_ADMIN": {
+    "TITLE": "Super Admin",
+    "ACCOUNTS": "Accounts",
+    "USERS": "Users",
+    "CONFIG": "Configuration",
+    "TOTAL_ACCOUNTS": "Total Accounts",
+    "TOTAL_USERS": "Total Users",
+    "ACTIVE_CONVERSATIONS": "Active Conversations"
+  }
+}

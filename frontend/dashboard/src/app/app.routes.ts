@@ -196,6 +196,45 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'captain',
+    loadComponent: () =>
+      import('./layout/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import(
+            '@features/captain/assistant-list/assistant-list.component'
+          ).then((m) => m.AssistantListComponent),
+      },
+      {
+        path: ':id/documents',
+        loadComponent: () =>
+          import(
+            '@features/captain/document-manager/document-manager.component'
+          ).then((m) => m.DocumentManagerComponent),
+      },
+    ],
+  },
+  {
+    path: 'super-admin',
+    loadComponent: () =>
+      import('./layout/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import(
+            '@features/super-admin/admin-dashboard/admin-dashboard.component'
+          ).then((m) => m.AdminDashboardComponent),
+      },
+    ],
+  },
+  {
     path: '',
     redirectTo: '/conversations',
     pathMatch: 'full',
