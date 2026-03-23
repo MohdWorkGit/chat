@@ -138,7 +138,7 @@ public class CopilotService : ICopilotService
     private static string FormatMessages(List<Message> messages)
     {
         return string.Join("\n", messages.Select(m =>
-            $"[{(m.SenderType == 0 ? "Customer" : "Agent")}]: {m.Content}"));
+            $"[{(m.SenderType == "User" ? "Customer" : "Agent")}]: {m.Content}"));
     }
 
     private async Task<string> CallOllamaAsync(string prompt, CancellationToken cancellationToken)
