@@ -1,5 +1,7 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using CustomerEngagement.Enterprise.Captain.Entities;
 using CustomerEngagement.Enterprise.Captain.Services;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +16,13 @@ public class CaptainDocumentsController : ControllerBase
 {
     private readonly DbContext _dbContext;
     private readonly IEmbeddingService _embeddingService;
+    private readonly IBackgroundJobClient _backgroundJobClient;
 
-    public CaptainDocumentsController(DbContext dbContext, IEmbeddingService embeddingService)
+    public CaptainDocumentsController(DbContext dbContext, IEmbeddingService embeddingService, IBackgroundJobClient backgroundJobClient)
     {
         _dbContext = dbContext;
         _embeddingService = embeddingService;
+        _backgroundJobClient = backgroundJobClient;
     }
 
     [HttpGet]
@@ -69,8 +73,7 @@ public class CaptainDocumentsController : ControllerBase
         _dbContext.Set<CaptainDocument>().Add(document);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // TODO: Queue background job to process document and generate embeddings
-        // await _backgroundJobService.EnqueueAsync<ProcessDocumentJob>(j => j.ProcessAsync(document.Id));
+        _backgroundJobClient.Enqueue<ProcessDocumentJob>(j => j.ExecuteAsync(document.Id, CancellationToken.None));
 
         return CreatedAtAction(nameof(GetAll), new { accountId, assistantId }, document);
     }
