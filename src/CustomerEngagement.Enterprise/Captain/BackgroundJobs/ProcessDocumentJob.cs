@@ -3,7 +3,7 @@ using CustomerEngagement.Enterprise.Captain.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace CustomerEngagement.Application.BackgroundJobs;
+namespace CustomerEngagement.Enterprise.Captain.BackgroundJobs;
 
 public class ProcessDocumentJob
 {
