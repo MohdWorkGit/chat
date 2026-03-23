@@ -25,7 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="..\CustomerEngagement.Application\CustomerEngagement.Application.csproj" />
     <ProjectReference Include="..\CustomerEngagement.Core\CustomerEngagement.Core.csproj" />
-    <ProjectReference Include="..\CustomerEngagement.Infrastructure\CustomerEngagement.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
