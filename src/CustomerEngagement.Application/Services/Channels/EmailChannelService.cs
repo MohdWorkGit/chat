@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -106,7 +107,7 @@ public class EmailChannelService : IEmailChannelService
             await _messageService.CreateAsync(conversationId, new CreateMessageRequest
             {
                 Content = request.Body,
-                MessageType = 0, // Incoming
+                MessageType = (int)MessageType.Incoming,
                 ContentType = string.IsNullOrEmpty(request.HtmlBody) ? "text" : "html",
                 Attachments = attachments
             }, cancellationToken);
