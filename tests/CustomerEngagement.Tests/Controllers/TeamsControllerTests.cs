@@ -99,8 +99,8 @@ public class TeamsControllerTests
     {
         var members = new List<UserDto>
         {
-            new(1, "Agent One", "agent1@example.com", "Agent"),
-            new(2, "Agent Two", "agent2@example.com", "Agent")
+            new(1, "Agent One", "Agent One", "agent1@example.com", "Online", null, "Agent", DateTime.UtcNow),
+            new(2, "Agent Two", "Agent Two", "agent2@example.com", "Online", null, "Agent", DateTime.UtcNow)
         }.AsReadOnly();
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<IRequest<IReadOnlyList<UserDto>>>(), It.IsAny<CancellationToken>()))
