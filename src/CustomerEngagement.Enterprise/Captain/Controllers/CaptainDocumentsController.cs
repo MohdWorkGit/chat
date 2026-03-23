@@ -1,4 +1,4 @@
-using CustomerEngagement.Application.BackgroundJobs;
+using CustomerEngagement.Enterprise.Captain.BackgroundJobs;
 using CustomerEngagement.Enterprise.Captain.Entities;
 using CustomerEngagement.Enterprise.Captain.Services;
 using Hangfire;
