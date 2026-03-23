@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerEngagement.Applicat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerEngagement.Infrastructure.Tests", "tests\CustomerEngagement.Infrastructure.Tests\CustomerEngagement.Infrastructure.Tests.csproj", "{A1B2C3D4-1111-2222-3333-4444555566DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerEngagement.Tests", "tests\CustomerEngagement.Tests\CustomerEngagement.Tests.csproj", "{A1B2C3D4-1111-2222-3333-4444555566EE}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E1F2A3B4-5555-6666-7777-888899990000}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E1F2A3B4-5555-6666-7777-888899990001}"
@@ -61,6 +63,10 @@ Global
 		{A1B2C3D4-1111-2222-3333-4444555566DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-1111-2222-3333-4444555566DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-1111-2222-3333-4444555566DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-4444555566EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-4444555566EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-4444555566EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-4444555566EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,5 +80,6 @@ Global
 		{A1B2C3D4-1111-2222-3333-4444555566BB} = {E1F2A3B4-5555-6666-7777-888899990001}
 		{A1B2C3D4-1111-2222-3333-4444555566CC} = {E1F2A3B4-5555-6666-7777-888899990001}
 		{A1B2C3D4-1111-2222-3333-4444555566DD} = {E1F2A3B4-5555-6666-7777-888899990001}
+		{A1B2C3D4-1111-2222-3333-4444555566EE} = {E1F2A3B4-5555-6666-7777-888899990001}
 	EndGlobalSection
 EndGlobal

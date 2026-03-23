@@ -35,7 +35,7 @@ public class InboxesControllerTests
     [Fact]
     public async Task GetById_ReturnsOkWithInbox()
     {
-        var inbox = new InboxDto(1, 1, "Email Inbox", "email", true, null, null, DateTime.UtcNow);
+        var inbox = new InboxDto(1, 1, "Email Inbox", "email", true, "Hello!", true, false, false, null, DateTime.UtcNow);
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<IRequest<InboxDto>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(inbox);
@@ -52,9 +52,8 @@ public class InboxesControllerTests
         _mediatorMock.Setup(m => m.Send(It.IsAny<IRequest<long>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(42L);
 
-        var command = new Application.Inboxes.Commands.CreateInboxCommand(0, "New Inbox", "web_widget");
-
-        var result = await _controller.Create(1, command);
+        var result = await _controller.Create(1,
+            new Application.Inboxes.Commands.CreateInboxCommand(0, "New Inbox", "web_widget"));
 
         var createdResult = result.Should().BeOfType<CreatedAtActionResult>().Subject;
         createdResult.ActionName.Should().Be(nameof(InboxesController.GetById));
@@ -66,9 +65,8 @@ public class InboxesControllerTests
         _mediatorMock.Setup(m => m.Send(It.IsAny<IRequest>(), It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult<Unit>(Unit.Value));
 
-        var command = new Application.Inboxes.Commands.UpdateInboxCommand(0, 0, "Updated Inbox", true);
-
-        var result = await _controller.Update(1, 1, command);
+        var result = await _controller.Update(1, 1,
+            new Application.Inboxes.Commands.UpdateInboxCommand(0, 0, "Updated Inbox", true));
 
         result.Should().BeOfType<NoContentResult>();
     }
@@ -89,8 +87,8 @@ public class InboxesControllerTests
     {
         var members = new List<UserDto>
         {
-            new(1, "Agent One", "agent1@example.com", "Agent"),
-            new(2, "Agent Two", "agent2@example.com", "Agent")
+            new(1, "Agent One", "Agent One", "agent1@example.com", "Online", null, "Agent", DateTime.UtcNow),
+            new(2, "Agent Two", "Agent Two", "agent2@example.com", "Online", null, "Agent", DateTime.UtcNow)
         }.AsReadOnly();
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<IRequest<IReadOnlyList<UserDto>>>(), It.IsAny<CancellationToken>()))
@@ -108,9 +106,8 @@ public class InboxesControllerTests
         _mediatorMock.Setup(m => m.Send(It.IsAny<IRequest>(), It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult<Unit>(Unit.Value));
 
-        var command = new Application.Inboxes.Commands.AddInboxMemberCommand(0, 0, 5);
-
-        var result = await _controller.AddMember(1, 1, command);
+        var result = await _controller.AddMember(1, 1,
+            new Application.Inboxes.Commands.AddInboxMemberCommand(0, 0, 5));
 
         result.Should().BeOfType<OkResult>();
     }
