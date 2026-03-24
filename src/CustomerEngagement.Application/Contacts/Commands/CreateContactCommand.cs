@@ -24,12 +24,10 @@ public class CreateContactCommandHandler : IRequestHandler<CreateContactCommand,
 
     public async Task<long> Handle(CreateContactCommand request, CancellationToken cancellationToken)
     {
-        var createRequest = new Services.Contacts.CreateContactRequest
-        {
-            Name = request.Name,
-            Email = request.Email,
-            Phone = request.Phone
-        };
+        var createRequest = new CreateContactRequest(
+            request.Name, request.Email, request.Phone,
+            null, request.ContactType, request.CompanyName,
+            null, request.CustomAttributes);
 
         var result = await _contactService.CreateAsync((int)request.AccountId, createRequest, cancellationToken);
         return result.Id;

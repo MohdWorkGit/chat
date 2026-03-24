@@ -3,7 +3,7 @@ using CustomerEngagement.Application.Services.Contacts;
 using CustomerEngagement.Application.Services.Conversations;
 using MediatR;
 
-namespace CustomerEngagement.Application.Queries;
+namespace CustomerEngagement.Application.Search.Queries;
 
 public record SearchQuery(
     int AccountId,

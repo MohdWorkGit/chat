@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Application.Services.Contacts;
 using MediatR;
 
@@ -21,12 +22,9 @@ public class UpdateContactCommandHandler : IRequestHandler<UpdateContactCommand>
 
     public async Task Handle(UpdateContactCommand request, CancellationToken cancellationToken)
     {
-        var updateRequest = new Services.Contacts.UpdateContactRequest
-        {
-            Name = request.Name,
-            Email = request.Email,
-            Phone = request.Phone
-        };
+        var updateRequest = new UpdateContactRequest(
+            request.Name, request.Email, request.Phone,
+            null, null, null, null);
 
         await _contactService.UpdateAsync((int)request.Id, updateRequest, cancellationToken);
     }

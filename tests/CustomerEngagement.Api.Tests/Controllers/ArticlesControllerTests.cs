@@ -1,5 +1,4 @@
 using CustomerEngagement.Application.DTOs;
-using CustomerEngagement.Application.Services.HelpCenter;
 using CustomerEngagement.Api.Controllers.V1;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
