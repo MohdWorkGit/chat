@@ -107,5 +107,3 @@ public class SmtpEmailSender : IEmailSender
         }
     }
 }
-
-public record EmailAttachment(string FileName, byte[] Content, string ContentType);
