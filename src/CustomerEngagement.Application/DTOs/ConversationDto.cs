@@ -12,9 +12,5 @@ public record ConversationDto(
 public record ConversationListDto(
     IReadOnlyList<ConversationDto> Data, MetaDto Meta);
 
-public record CreateConversationRequest(
-    int InboxId, int ContactId, string? Message,
-    int? AssigneeId, int? TeamId, string? Status);
-
 public record UpdateConversationRequest(
     string? Status, int? AssigneeId, int? TeamId, string? Priority, bool? Muted);

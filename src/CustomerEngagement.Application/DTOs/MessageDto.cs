@@ -7,8 +7,3 @@ public record MessageDto(
     DateTime? SentAt, DateTime CreatedAt,
     IReadOnlyList<AttachmentDto> Attachments);
 
-public record CreateMessageRequest(
-    string Content, string? ContentType, string MessageType,
-    bool Private, IReadOnlyList<CreateAttachmentRequest>? Attachments);
-
-public record UpdateMessageRequest(string Content);

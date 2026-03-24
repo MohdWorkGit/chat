@@ -30,8 +30,10 @@ public class Account : BaseEntity
 
     public bool DomainEmailsEnabled { get; set; }
 
+    public string? SettingsFlags { get; set; }
+
     // Navigation properties
-    public ICollection<AccountUser> Users { get; set; } = [];
+    public ICollection<AccountUser> AccountUsers { get; set; } = [];
     public ICollection<Inbox> Inboxes { get; set; } = [];
     public ICollection<Conversation> Conversations { get; set; } = [];
     public ICollection<Contact> Contacts { get; set; } = [];

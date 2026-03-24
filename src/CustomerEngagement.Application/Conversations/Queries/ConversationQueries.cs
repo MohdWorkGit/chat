@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Application.Services.Conversations;
+using CustomerEngagement.Core.Enums;
 using MediatR;
 
 namespace CustomerEngagement.Application.Conversations.Queries;

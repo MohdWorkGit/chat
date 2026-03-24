@@ -27,10 +27,16 @@ public class Inbox : BaseEntity
 
     public bool LockToSingleConversation { get; set; }
 
+    public bool EnableEmailCollect { get; set; } = true;
+
+    public bool AllowMessagesAfterResolved { get; set; } = true;
+
     // Navigation properties
     public Account Account { get; set; } = null!;
     public ICollection<InboxMember> InboxMembers { get; set; } = [];
     public ICollection<WorkingHour> WorkingHours { get; set; } = [];
+    public ICollection<Conversation> Conversations { get; set; } = [];
+    public ICollection<ContactInbox> ContactInboxes { get; set; } = [];
 
     /// <summary>
     /// True when auto-assignment is enabled for this inbox.

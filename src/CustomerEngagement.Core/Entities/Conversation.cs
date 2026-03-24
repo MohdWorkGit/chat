@@ -27,6 +27,9 @@ public class Conversation : BaseEntity
     [MaxLength(255)]
     public string? Identifier { get; set; }
 
+    [MaxLength(255)]
+    public string? Uuid { get; set; }
+
     [JsonPropertyName("additional_attributes")]
     public string? AdditionalAttributes { get; set; }
 
