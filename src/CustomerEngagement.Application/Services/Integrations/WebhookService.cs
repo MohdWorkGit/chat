@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using Microsoft.Extensions.Logging;

@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Interfaces;

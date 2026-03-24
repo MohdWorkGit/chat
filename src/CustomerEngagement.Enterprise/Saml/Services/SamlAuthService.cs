@@ -2,6 +2,7 @@ using System.Text;
 using System.Xml.Linq;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
+using CustomerEngagement.Enterprise.Saml.DTOs;
 using CustomerEngagement.Enterprise.Saml.Entities;
 using Microsoft.Extensions.Logging;
 

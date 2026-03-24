@@ -1,25 +1,7 @@
 using CustomerEngagement.Core.Enums;
+using CustomerEngagement.Enterprise.Saml.DTOs;
 
 namespace CustomerEngagement.Enterprise.Saml.Services;
-
-public record SamlConfigDto(
-    int Id,
-    int AccountId,
-    string IdpEntityId,
-    string IdpSsoTargetUrl,
-    string IdpCertificate,
-    string SpEntityId,
-    string AssertionConsumerServiceUrl,
-    string? NameIdentifierFormat,
-    bool Enabled,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
-
-public record SamlValidationResult(
-    string Email,
-    string NameId,
-    Dictionary<string, string> Attributes,
-    UserRole? MappedRole);
 
 public interface ISamlAuthService
 {
@@ -31,9 +13,3 @@ public interface ISamlAuthService
     Task DeleteRoleMappingAsync(int roleMappingId, CancellationToken cancellationToken = default);
     Task<string> GenerateSpMetadataXmlAsync(int accountId, CancellationToken cancellationToken = default);
 }
-
-public record SamlRoleMappingDto(
-    int Id,
-    int SamlConfigId,
-    string SamlAttributeValue,
-    UserRole UserRole);

@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 

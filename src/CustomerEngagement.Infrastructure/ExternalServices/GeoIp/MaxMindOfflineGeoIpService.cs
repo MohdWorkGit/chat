@@ -1,19 +1,10 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using MaxMind.GeoIP2;
 using MaxMind.GeoIP2.Responses;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CustomerEngagement.Infrastructure.ExternalServices.GeoIp;
-
-public record GeoIpResult(
-    string? Country,
-    string? CountryCode,
-    string? City,
-    string? Region,
-    double? Latitude,
-    double? Longitude,
-    string? PostalCode,
-    string? TimeZone);
 
 public class MaxMindOfflineGeoIpService : IDisposable
 {

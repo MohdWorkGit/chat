@@ -1,3 +1,4 @@
+using CustomerEngagement.Enterprise.Captain.DTOs;
 using CustomerEngagement.Enterprise.Captain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

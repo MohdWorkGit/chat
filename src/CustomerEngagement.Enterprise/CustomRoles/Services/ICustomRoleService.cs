@@ -1,26 +1,7 @@
+using CustomerEngagement.Enterprise.CustomRoles.DTOs;
 using CustomerEngagement.Enterprise.CustomRoles.Entities;
 
 namespace CustomerEngagement.Enterprise.CustomRoles.Services;
-
-public record CustomRoleDto(
-    int Id,
-    int AccountId,
-    string Name,
-    string? Description,
-    List<string> Permissions,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
-
-public record CreateCustomRoleRequest(
-    int AccountId,
-    string Name,
-    string? Description,
-    List<string>? Permissions);
-
-public record UpdateCustomRoleRequest(
-    string Name,
-    string? Description,
-    List<string>? Permissions);
 
 public interface ICustomRoleService
 {

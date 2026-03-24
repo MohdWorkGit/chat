@@ -1,5 +1,6 @@
 using System.Text.Json;
 using CustomerEngagement.Core.Interfaces;
+using CustomerEngagement.Enterprise.CustomRoles.DTOs;
 using CustomerEngagement.Enterprise.CustomRoles.Entities;
 using Microsoft.Extensions.Logging;
 

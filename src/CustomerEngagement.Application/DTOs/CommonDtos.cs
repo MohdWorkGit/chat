@@ -18,12 +18,6 @@ public record NotificationDto(
     string? SecondaryActorType, int? SecondaryActorId,
     bool IsRead, DateTime CreatedAt);
 
-public record AutomationRuleDto(
-    int Id, string Name, string? Description, string EventName,
-    object? Conditions, object? Actions, bool Active);
-
-public record MacroDto(int Id, string Name, object? Actions, string Visibility);
-
 public record CampaignDto(
     int Id, int AccountId, string Title, string? Description, string Message,
     int CampaignType, int? InboxId, bool Enabled, string? Audience,
