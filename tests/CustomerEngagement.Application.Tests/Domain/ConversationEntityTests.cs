@@ -1,6 +1,7 @@
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using FluentAssertions;
+using Xunit;
 
 namespace CustomerEngagement.Application.Tests.Domain;
 

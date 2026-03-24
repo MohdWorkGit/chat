@@ -20,13 +20,17 @@ public class JwtTokenService
         _logger = logger;
     }
 
+    private string GetSecretKey() =>
+        _configuration["JWT_SECRET"]
+        ?? _configuration["Jwt:Secret"]
+        ?? throw new InvalidOperationException("JWT secret key is not configured.");
+
     public string GenerateAccessToken(User user, int accountId, string role)
     {
-        var secretKey = _configuration["Jwt:SecretKey"]
-            ?? throw new InvalidOperationException("JWT secret key is not configured.");
+        var secretKey = GetSecretKey();
         var issuer = _configuration["Jwt:Issuer"] ?? "CustomerEngagement";
         var audience = _configuration["Jwt:Audience"] ?? "CustomerEngagement";
-        var expirationMinutes = int.Parse(_configuration["Jwt:ExpirationMinutes"] ?? "60");
+        var expirationMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "60");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -36,7 +40,9 @@ public class JwtTokenService
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new("uid", user.Id.ToString()),
             new("UserId", user.Id.ToString()),
+            new("account_id", accountId.ToString()),
             new("AccountId", accountId.ToString()),
             new(ClaimTypes.Role, role),
             new("Name", user.Name ?? string.Empty)
@@ -64,8 +70,7 @@ public class JwtTokenService
 
     public ClaimsPrincipal? ValidateToken(string token)
     {
-        var secretKey = _configuration["Jwt:SecretKey"]
-            ?? throw new InvalidOperationException("JWT secret key is not configured.");
+        var secretKey = GetSecretKey();
         var issuer = _configuration["Jwt:Issuer"] ?? "CustomerEngagement";
         var audience = _configuration["Jwt:Audience"] ?? "CustomerEngagement";
 

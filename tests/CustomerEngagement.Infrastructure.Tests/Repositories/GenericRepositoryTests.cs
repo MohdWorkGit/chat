@@ -4,6 +4,7 @@ using CustomerEngagement.Infrastructure.Persistence;
 using CustomerEngagement.Infrastructure.Repositories;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 namespace CustomerEngagement.Infrastructure.Tests.Repositories;
 

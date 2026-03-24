@@ -68,7 +68,7 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
         options.Password.RequiredLength = 8;
         options.Password.RequireNonAlphanumeric = false;
         options.User.RequireUniqueEmail = true;
-        options.SignIn.RequireConfirmedEmail = true;
+        options.SignIn.RequireConfirmedEmail = false;
     })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
@@ -334,6 +334,62 @@ var app = builder.Build();
         Log.Error(ex, "Failed to initialize database — retrying in 5s");
         await Task.Delay(5000);
         db.Database.EnsureCreated();
+    }
+
+    // Seed roles, default account, and admin user
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
+    string[] roles = ["Administrator", "Agent"];
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole<int> { Name = role });
+            Log.Information("Created role: {Role}", role);
+        }
+    }
+
+    // Ensure default account exists
+    if (!db.Set<Account>().Any())
+    {
+        var account = new Account { Name = "Default Account", Locale = "en", AutoResolveAfterDays = 14 };
+        db.Set<Account>().Add(account);
+        await db.SaveChangesAsync();
+        Log.Information("Created default account (Id={AccountId})", account.Id);
+    }
+
+    // Seed admin user
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    const string adminEmail = "admin@example.com";
+    if (await userManager.FindByEmailAsync(adminEmail) is null)
+    {
+        var adminUser = new User
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            Name = "Admin",
+            Provider = "email",
+            EmailConfirmed = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var createResult = await userManager.CreateAsync(adminUser, "Admin123!");
+        if (createResult.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, "Administrator");
+            var defaultAccount = db.Set<Account>().First();
+            db.Set<AccountUser>().Add(new AccountUser
+            {
+                AccountId = defaultAccount.Id,
+                UserId = adminUser.Id,
+                Role = CustomerEngagement.Core.Enums.UserRole.Administrator
+            });
+            await db.SaveChangesAsync();
+            Log.Information("Created admin user: {Email} (password: Admin123!)", adminEmail);
+        }
+        else
+        {
+            Log.Error("Failed to create admin user: {Errors}", string.Join(", ", createResult.Errors.Select(e => e.Description)));
+        }
     }
 }
 

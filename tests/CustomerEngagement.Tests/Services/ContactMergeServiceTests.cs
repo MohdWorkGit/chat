@@ -6,6 +6,7 @@ using CustomerEngagement.Core.Interfaces;
 using MediatR;
 using Moq;
 using FluentAssertions;
+using Xunit;
 
 namespace CustomerEngagement.Tests.Services;
 

@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using FluentAssertions;
+using Xunit;
 
 namespace CustomerEngagement.Api.Tests.Controllers;
 

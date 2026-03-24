@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
 using FluentAssertions;
+using Xunit;
 
 namespace CustomerEngagement.Tests.Enterprise;
 

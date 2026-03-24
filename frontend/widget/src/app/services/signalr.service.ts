@@ -17,7 +17,7 @@ export class SignalrService {
 
   initialize(websiteToken: string): void {
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/widget', {
+      .withUrl('/hubs/conversation', {
         accessTokenFactory: () => websiteToken,
         transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
       })
@@ -49,20 +49,18 @@ export class SignalrService {
   private registerHandlers(): void {
     if (!this.hubConnection) return;
 
-    this.hubConnection.on('ReceiveMessage', (message: Message) => {
+    this.hubConnection.on('message.created', (message: Message) => {
       this.messagesSubject.next(message);
     });
 
-    this.hubConnection.on('AgentTyping', (isTyping: boolean) => {
-      this.typingSubject.next(isTyping);
+    this.hubConnection.on('TypingStatus', (data: { isTyping: boolean }) => {
+      this.typingSubject.next(data.isTyping);
     });
 
-    this.hubConnection.on('ConversationResolved', (conversationId: number) => {
-      this.conversationResolvedSubject.next(conversationId);
-    });
-
-    this.hubConnection.on('ConversationAssigned', (_agentName: string) => {
-      // Handle agent assignment update
+    this.hubConnection.on('conversation.status_changed', (data: { conversationId: number; newStatus: string }) => {
+      if (data.newStatus === 'Resolved') {
+        this.conversationResolvedSubject.next(data.conversationId);
+      }
     });
   }
 

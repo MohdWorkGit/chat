@@ -25,13 +25,15 @@ export class SignalRService implements OnDestroy {
   private connection: signalR.HubConnection | null = null;
 
   private readonly messageCreatedSubject = new Subject<Message>();
-  private readonly conversationUpdatedSubject = new Subject<{ conversationId: number; updates: Record<string, unknown> }>();
+  private readonly conversationCreatedSubject = new Subject<Record<string, unknown>>();
+  private readonly conversationStatusChangedSubject = new Subject<{ conversationId: number; accountId: number; previousStatus: string; newStatus: string }>();
   private readonly typingSubject = new Subject<TypingEvent>();
   private readonly presenceSubject = new Subject<PresenceEvent>();
   private readonly connectionStateSubject = new Subject<signalR.HubConnectionState>();
 
   readonly messageCreated$: Observable<Message> = this.messageCreatedSubject.asObservable();
-  readonly conversationUpdated$: Observable<{ conversationId: number; updates: Record<string, unknown> }> = this.conversationUpdatedSubject.asObservable();
+  readonly conversationCreated$: Observable<Record<string, unknown>> = this.conversationCreatedSubject.asObservable();
+  readonly conversationStatusChanged$: Observable<{ conversationId: number; accountId: number; previousStatus: string; newStatus: string }> = this.conversationStatusChangedSubject.asObservable();
   readonly typing$: Observable<TypingEvent> = this.typingSubject.asObservable();
   readonly presence$: Observable<PresenceEvent> = this.presenceSubject.asObservable();
   readonly connectionState$: Observable<signalR.HubConnectionState> = this.connectionStateSubject.asObservable();
@@ -111,7 +113,8 @@ export class SignalRService implements OnDestroy {
   ngOnDestroy(): void {
     this.disconnect();
     this.messageCreatedSubject.complete();
-    this.conversationUpdatedSubject.complete();
+    this.conversationCreatedSubject.complete();
+    this.conversationStatusChangedSubject.complete();
     this.typingSubject.complete();
     this.presenceSubject.complete();
     this.connectionStateSubject.complete();
@@ -124,11 +127,15 @@ export class SignalRService implements OnDestroy {
       this.messageCreatedSubject.next(message);
     });
 
-    this.connection.on('conversation.updated', (data: { conversationId: number; updates: Record<string, unknown> }) => {
-      this.conversationUpdatedSubject.next(data);
+    this.connection.on('conversation.created', (data: Record<string, unknown>) => {
+      this.conversationCreatedSubject.next(data);
     });
 
-    this.connection.on('typing', (event: TypingEvent) => {
+    this.connection.on('conversation.status_changed', (data: { conversationId: number; accountId: number; previousStatus: string; newStatus: string }) => {
+      this.conversationStatusChangedSubject.next(data);
+    });
+
+    this.connection.on('TypingStatus', (event: TypingEvent) => {
       this.typingSubject.next(event);
     });
 

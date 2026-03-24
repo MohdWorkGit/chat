@@ -62,7 +62,8 @@ public class IdentityService : IIdentityService
 
         _logger.LogInformation("User {Email} registered successfully", email);
 
-        return new AuthResult(true, accessToken, refreshToken);
+        var userInfo = new AuthUserInfo(user.Id, user.Name, user.Email ?? email, user.Avatar, role, accountId, user.AvailabilityStatus.ToString());
+        return new AuthResult(true, accessToken, refreshToken, User: userInfo);
     }
 
     public async Task<AuthResult> LoginAsync(string email, string password, int accountId)
@@ -95,7 +96,8 @@ public class IdentityService : IIdentityService
 
         _logger.LogInformation("User {Email} logged in successfully", email);
 
-        return new AuthResult(true, accessToken, refreshToken);
+        var userInfo = new AuthUserInfo(user.Id, user.Name, user.Email ?? email, user.Avatar, role, accountId, user.AvailabilityStatus.ToString());
+        return new AuthResult(true, accessToken, refreshToken, User: userInfo);
     }
 
     public async Task<AuthResult> RefreshTokenAsync(string accessToken, string refreshToken, int accountId)

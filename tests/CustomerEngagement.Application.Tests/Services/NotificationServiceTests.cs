@@ -4,6 +4,7 @@ using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using Moq;
 using FluentAssertions;
+using Xunit;
 
 namespace CustomerEngagement.Application.Tests.Services;
 
