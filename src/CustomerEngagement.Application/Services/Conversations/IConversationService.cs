@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 
 namespace CustomerEngagement.Application.Services.Conversations;
 
@@ -57,11 +58,3 @@ public class CreateConversationRequest
     public Dictionary<string, object>? AdditionalAttributes { get; set; }
 }
 
-public enum ConversationStatus
-{
-    Open,
-    Pending,
-    Resolved,
-    Snoozed,
-    Muted
-}

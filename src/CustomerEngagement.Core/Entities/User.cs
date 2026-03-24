@@ -21,6 +21,21 @@ public class User : IdentityUser<int>
     [MaxLength(512)]
     public string? Avatar { get; set; }
 
+    [MaxLength(2048)]
+    public string? AvatarUrl { get; set; }
+
+    [MaxLength(255)]
+    public string? Uid { get; set; }
+
+    public string? CustomAttributes { get; set; }
+
+    public string? MessageSignature { get; set; }
+
+    public int Availability { get; set; }
+
+    [MaxLength(50)]
+    public string? Type { get; set; }
+
     public DateTime? ConfirmedAt { get; set; }
 
     public string? UiSettings { get; set; }
@@ -36,6 +51,11 @@ public class User : IdentityUser<int>
 
     // Navigation properties
     public ICollection<AccountUser> AccountUsers { get; set; } = [];
+    public ICollection<Conversation> AssignedConversations { get; set; } = [];
+    public ICollection<InboxMember> InboxMembers { get; set; } = [];
+    public ICollection<TeamMember> TeamMembers { get; set; } = [];
+    public ICollection<Mention> Mentions { get; set; } = [];
+    public ICollection<Notification> Notifications { get; set; } = [];
 
     /// <summary>
     /// True when the user's availability status is Online.

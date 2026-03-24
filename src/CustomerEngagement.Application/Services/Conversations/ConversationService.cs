@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -68,7 +69,7 @@ public class ConversationService : IConversationService
             ContactId = request.ContactId,
             AssigneeId = request.AssigneeId,
             TeamId = request.TeamId,
-            Status = (CustomerEngagement.Core.Enums.ConversationStatus)(int)request.Status,
+            Status = request.Status,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -86,7 +87,7 @@ public class ConversationService : IConversationService
         var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
 
-        conversation.Status = (CustomerEngagement.Core.Enums.ConversationStatus)(int)status;
+        conversation.Status = status;
         conversation.UpdatedAt = DateTime.UtcNow;
 
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);

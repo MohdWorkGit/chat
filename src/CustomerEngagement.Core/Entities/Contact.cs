@@ -46,6 +46,9 @@ public class Contact : BaseEntity
     [MaxLength(255)]
     public string? CompanyName { get; set; }
 
+    [MaxLength(2048)]
+    public string? AvatarUrl { get; set; }
+
     // Navigation properties
     public Account Account { get; set; } = null!;
     public ICollection<Conversation> Conversations { get; set; } = [];

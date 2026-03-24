@@ -18,4 +18,5 @@ public class Team : BaseEntity
     // Navigation properties
     public Account Account { get; set; } = null!;
     public ICollection<TeamMember> TeamMembers { get; set; } = [];
+    public ICollection<Conversation> Conversations { get; set; } = [];
 }

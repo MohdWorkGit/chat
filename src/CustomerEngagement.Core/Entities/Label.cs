@@ -18,6 +18,9 @@ public class Label : BaseEntity
 
     public bool ShowOnSidebar { get; set; } = true;
 
+    public int? ConversationId { get; set; }
+
     // Navigation properties
     public Account Account { get; set; } = null!;
+    public Conversation? Conversation { get; set; }
 }

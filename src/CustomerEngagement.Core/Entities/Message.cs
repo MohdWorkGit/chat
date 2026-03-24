@@ -9,6 +9,7 @@ public class Message : BaseEntity
     public int ConversationId { get; set; }
     public int AccountId { get; set; }
     public int? SenderId { get; set; }
+    public int? ContactId { get; set; }
 
     [MaxLength(50)]
     public string? SenderType { get; set; }
@@ -34,6 +35,8 @@ public class Message : BaseEntity
 
     // Navigation properties
     public Conversation Conversation { get; set; } = null!;
+    public User? Sender { get; set; }
+    public Contact? Contact { get; set; }
     public ICollection<Attachment> Attachments { get; set; } = [];
 
     /// <summary>
