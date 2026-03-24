@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
@@ -148,21 +149,19 @@ public class CampaignService : ICampaignService
 
     private static CampaignDto MapToDto(Campaign campaign)
     {
-        return new CampaignDto
-        {
-            Id = campaign.Id,
-            AccountId = campaign.AccountId,
-            Title = campaign.Title,
-            Description = campaign.Description,
-            Message = campaign.Message ?? string.Empty,
-            CampaignType = (int)campaign.CampaignType,
-            InboxId = campaign.InboxId,
-            IsEnabled = campaign.Enabled,
-            Audience = campaign.Audience,
-            ScheduledAt = campaign.ScheduledAt?.ToString("o"),
-            CreatedAt = campaign.CreatedAt,
-            UpdatedAt = campaign.UpdatedAt
-        };
+        return new CampaignDto(
+            campaign.Id,
+            campaign.AccountId,
+            campaign.Title,
+            campaign.Description,
+            campaign.Message ?? string.Empty,
+            (int)campaign.CampaignType,
+            campaign.InboxId,
+            campaign.Enabled,
+            campaign.Audience,
+            campaign.ScheduledAt?.ToString("o"),
+            campaign.CreatedAt,
+            campaign.UpdatedAt);
     }
 }
 

@@ -2,7 +2,7 @@ using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Application.Services.Conversations;
 using MediatR;
 
-namespace CustomerEngagement.Application.Commands;
+namespace CustomerEngagement.Application.Messages.Commands;
 
 public record CreateMessageCommand(
     long ConversationId,
@@ -24,7 +24,7 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
 
     public async Task<MessageDto> Handle(CreateMessageCommand request, CancellationToken cancellationToken)
     {
-        var createRequest = new Services.Conversations.CreateMessageRequest
+        var createRequest = new CreateMessageRequest
         {
             Content = request.Content,
             ContentType = request.ContentType ?? "text",

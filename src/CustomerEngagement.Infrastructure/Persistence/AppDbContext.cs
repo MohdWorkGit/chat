@@ -1,5 +1,7 @@
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Entities.Channels;
+using CustomerEngagement.Enterprise.Captain.Entities;
+using CustomerEngagement.Enterprise.CustomRoles.Entities;
 using CustomerEngagement.Enterprise.Saml.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -72,6 +74,20 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<SamlConfig> SamlConfigs => Set<SamlConfig>();
     public DbSet<SamlRoleMapping> SamlRoleMappings => Set<SamlRoleMapping>();
+
+    // Enterprise – Captain AI module
+    public DbSet<CaptainAssistant> CaptainAssistants => Set<CaptainAssistant>();
+    public DbSet<CaptainDocument> CaptainDocuments => Set<CaptainDocument>();
+    public DbSet<CaptainCustomTool> CaptainCustomTools => Set<CaptainCustomTool>();
+    public DbSet<CaptainScenario> CaptainScenarios => Set<CaptainScenario>();
+    public DbSet<CaptainInbox> CaptainInboxes => Set<CaptainInbox>();
+    public DbSet<ArticleEmbedding> ArticleEmbeddings => Set<ArticleEmbedding>();
+    public DbSet<CopilotThread> CopilotThreads => Set<CopilotThread>();
+    public DbSet<CopilotMessage> CopilotMessages => Set<CopilotMessage>();
+
+    // Enterprise – Custom Roles module
+    public DbSet<CustomRole> CustomRoles => Set<CustomRole>();
+    public DbSet<CustomRoleAssignment> CustomRoleAssignments => Set<CustomRoleAssignment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

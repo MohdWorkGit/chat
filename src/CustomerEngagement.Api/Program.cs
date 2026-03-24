@@ -15,6 +15,8 @@ using CustomerEngagement.Application.Services.Reporting;
 using CustomerEngagement.Application.Services.Search;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
+using CustomerEngagement.Enterprise.Captain.Services;
+using CustomerEngagement.Enterprise.CustomRoles.Services;
 using CustomerEngagement.Enterprise.Saml.Services;
 using CustomerEngagement.Infrastructure.ExternalServices.Email;
 using CustomerEngagement.Infrastructure.ExternalServices.Push;
@@ -294,6 +296,19 @@ builder.Services.AddScoped<CsatReportService>();
 
 // Enterprise services
 builder.Services.AddScoped<ISamlAuthService, SamlAuthService>();
+builder.Services.AddScoped<ICustomRoleService, CustomRoleService>();
+
+// Enterprise – Captain AI services
+// Register DbContext so Enterprise services can resolve it from AppDbContext
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
+builder.Services.AddScoped<IAssistantChatService, AssistantChatService>();
+builder.Services.AddScoped<ICopilotService, CopilotService>();
+builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
+builder.Services.AddScoped<IToolRegistryService, ToolRegistryService>();
+builder.Services.AddHttpClient<AssistantChatService>();
+builder.Services.AddHttpClient<CopilotService>();
+builder.Services.AddHttpClient<EmbeddingService>();
+builder.Services.AddHttpClient<ToolRegistryService>();
 
 // Search & other services
 builder.Services.AddScoped<GlobalSearchService>();

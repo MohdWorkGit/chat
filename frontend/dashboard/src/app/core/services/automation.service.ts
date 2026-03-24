@@ -8,25 +8,27 @@ import { AutomationRule } from '@core/models/automation.model';
 })
 export class AutomationService {
   private readonly api = inject(ApiService);
-  private readonly basePath = '/automation-rules';
+  private basePath(): string {
+    return this.api.accountPath('/automation_rules');
+  }
 
   getAll(): Observable<AutomationRule[]> {
-    return this.api.get<AutomationRule[]>(this.basePath);
+    return this.api.get<AutomationRule[]>(this.basePath());
   }
 
   getById(id: number): Observable<AutomationRule> {
-    return this.api.get<AutomationRule>(`${this.basePath}/${id}`);
+    return this.api.get<AutomationRule>(`${this.basePath()}/${id}`);
   }
 
   create(data: Partial<AutomationRule>): Observable<AutomationRule> {
-    return this.api.post<AutomationRule>(this.basePath, data);
+    return this.api.post<AutomationRule>(this.basePath(), data);
   }
 
   update(id: number, data: Partial<AutomationRule>): Observable<AutomationRule> {
-    return this.api.patch<AutomationRule>(`${this.basePath}/${id}`, data);
+    return this.api.patch<AutomationRule>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
-    return this.api.delete<void>(`${this.basePath}/${id}`);
+    return this.api.delete<void>(`${this.basePath()}/${id}`);
   }
 }

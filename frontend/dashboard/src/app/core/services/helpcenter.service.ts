@@ -9,28 +9,28 @@ import { Article, Portal, Category } from '@core/models/helpcenter.model';
 export class HelpCenterService {
   private readonly api = inject(ApiService);
 
-  getArticles(): Observable<Article[]> {
-    return this.api.get('/articles');
-  }
-
-  getArticle(id: number): Observable<Article> {
-    return this.api.get(`/articles/${id}`);
-  }
-
-  createArticle(data: Partial<Article>): Observable<Article> {
-    return this.api.post('/articles', data);
-  }
-
-  updateArticle(id: number, data: Partial<Article>): Observable<Article> {
-    return this.api.put(`/articles/${id}`, data);
-  }
-
-  deleteArticle(id: number): Observable<void> {
-    return this.api.delete(`/articles/${id}`);
-  }
-
   getPortals(): Observable<Portal[]> {
     return this.api.get('/portals');
+  }
+
+  getArticles(portalId: number): Observable<Article[]> {
+    return this.api.get(`/portals/${portalId}/articles`);
+  }
+
+  getArticle(portalId: number, id: number): Observable<Article> {
+    return this.api.get(`/portals/${portalId}/articles/${id}`);
+  }
+
+  createArticle(portalId: number, data: Partial<Article>): Observable<Article> {
+    return this.api.post(`/portals/${portalId}/articles`, data);
+  }
+
+  updateArticle(portalId: number, id: number, data: Partial<Article>): Observable<Article> {
+    return this.api.put(`/portals/${portalId}/articles/${id}`, data);
+  }
+
+  deleteArticle(portalId: number, id: number): Observable<void> {
+    return this.api.delete(`/portals/${portalId}/articles/${id}`);
   }
 
   getCategories(portalId: number): Observable<Category[]> {

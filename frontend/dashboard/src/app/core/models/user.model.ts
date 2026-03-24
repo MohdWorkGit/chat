@@ -16,13 +16,10 @@ export interface User {
   displayName?: string;
   email: string;
   avatar?: string;
-  role: UserRole;
-  availability: UserAvailability;
-  confirmed: boolean;
+  role?: string;
+  availabilityStatus?: string;
   accountId: number;
-  customAttributes: Record<string, unknown>;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface AccountUser {
