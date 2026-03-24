@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -6,10 +7,10 @@ namespace CustomerEngagement.Application.Services.Search;
 
 public interface IGlobalSearchService
 {
-    Task<SearchResultDto> SearchAsync(int accountId, string query, int page = 1, int pageSize = 25, CancellationToken cancellationToken = default);
-    Task<SearchResultDto> SearchConversationsAsync(int accountId, string query, int page = 1, int pageSize = 25, CancellationToken cancellationToken = default);
-    Task<SearchResultDto> SearchContactsAsync(int accountId, string query, int page = 1, int pageSize = 25, CancellationToken cancellationToken = default);
-    Task<SearchResultDto> SearchMessagesAsync(int accountId, string query, int page = 1, int pageSize = 25, CancellationToken cancellationToken = default);
+    Task<GlobalSearchResultDto> SearchAsync(int accountId, string query, int page = 1, int pageSize = 25, CancellationToken cancellationToken = default);
+    Task<GlobalSearchResultDto> SearchConversationsAsync(int accountId, string query, int page = 1, int pageSize = 25, CancellationToken cancellationToken = default);
+    Task<GlobalSearchResultDto> SearchContactsAsync(int accountId, string query, int page = 1, int pageSize = 25, CancellationToken cancellationToken = default);
+    Task<GlobalSearchResultDto> SearchMessagesAsync(int accountId, string query, int page = 1, int pageSize = 25, CancellationToken cancellationToken = default);
 }
 
 public class GlobalSearchService : IGlobalSearchService
@@ -31,7 +32,7 @@ public class GlobalSearchService : IGlobalSearchService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<SearchResultDto> SearchAsync(
+    public async Task<GlobalSearchResultDto> SearchAsync(
         int accountId,
         string query,
         int page = 1,
@@ -39,7 +40,7 @@ public class GlobalSearchService : IGlobalSearchService
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return SearchResultDto.Empty;
+            return GlobalSearchResultDto.Empty;
 
         var normalizedQuery = query.Trim().ToLowerInvariant();
 
@@ -47,7 +48,7 @@ public class GlobalSearchService : IGlobalSearchService
         var contacts = await FindContactsAsync(accountId, normalizedQuery, cancellationToken);
         var messages = await FindMessagesAsync(accountId, normalizedQuery, cancellationToken);
 
-        return new SearchResultDto
+        return new GlobalSearchResultDto
         {
             Conversations = conversations
                 .Skip((page - 1) * pageSize)
@@ -65,7 +66,7 @@ public class GlobalSearchService : IGlobalSearchService
         };
     }
 
-    public async Task<SearchResultDto> SearchConversationsAsync(
+    public async Task<GlobalSearchResultDto> SearchConversationsAsync(
         int accountId,
         string query,
         int page = 1,
@@ -73,12 +74,12 @@ public class GlobalSearchService : IGlobalSearchService
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return SearchResultDto.Empty;
+            return GlobalSearchResultDto.Empty;
 
         var normalizedQuery = query.Trim().ToLowerInvariant();
         var conversations = await FindConversationsAsync(accountId, normalizedQuery, cancellationToken);
 
-        return new SearchResultDto
+        return new GlobalSearchResultDto
         {
             Conversations = conversations
                 .Skip((page - 1) * pageSize)
@@ -88,7 +89,7 @@ public class GlobalSearchService : IGlobalSearchService
         };
     }
 
-    public async Task<SearchResultDto> SearchContactsAsync(
+    public async Task<GlobalSearchResultDto> SearchContactsAsync(
         int accountId,
         string query,
         int page = 1,
@@ -96,12 +97,12 @@ public class GlobalSearchService : IGlobalSearchService
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return SearchResultDto.Empty;
+            return GlobalSearchResultDto.Empty;
 
         var normalizedQuery = query.Trim().ToLowerInvariant();
         var contacts = await FindContactsAsync(accountId, normalizedQuery, cancellationToken);
 
-        return new SearchResultDto
+        return new GlobalSearchResultDto
         {
             Contacts = contacts
                 .Skip((page - 1) * pageSize)
@@ -111,7 +112,7 @@ public class GlobalSearchService : IGlobalSearchService
         };
     }
 
-    public async Task<SearchResultDto> SearchMessagesAsync(
+    public async Task<GlobalSearchResultDto> SearchMessagesAsync(
         int accountId,
         string query,
         int page = 1,
@@ -119,12 +120,12 @@ public class GlobalSearchService : IGlobalSearchService
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return SearchResultDto.Empty;
+            return GlobalSearchResultDto.Empty;
 
         var normalizedQuery = query.Trim().ToLowerInvariant();
         var messages = await FindMessagesAsync(accountId, normalizedQuery, cancellationToken);
 
-        return new SearchResultDto
+        return new GlobalSearchResultDto
         {
             Messages = messages
                 .Skip((page - 1) * pageSize)
@@ -203,46 +204,4 @@ public class GlobalSearchService : IGlobalSearchService
             CreatedAt = m.CreatedAt
         }).ToList();
     }
-}
-
-public class SearchResultDto
-{
-    public List<ConversationSearchResult> Conversations { get; set; } = [];
-    public List<ContactSearchResult> Contacts { get; set; } = [];
-    public List<MessageSearchResult> Messages { get; set; } = [];
-    public int TotalCount { get; set; }
-
-    public static SearchResultDto Empty => new();
-}
-
-public class ConversationSearchResult
-{
-    public int Id { get; set; }
-    public int AccountId { get; set; }
-    public int InboxId { get; set; }
-    public int ContactId { get; set; }
-    public string? Identifier { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-}
-
-public class ContactSearchResult
-{
-    public int Id { get; set; }
-    public int AccountId { get; set; }
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
-    public string? Identifier { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-public class MessageSearchResult
-{
-    public int Id { get; set; }
-    public int ConversationId { get; set; }
-    public string? Content { get; set; }
-    public string? SenderType { get; set; }
-    public string MessageType { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
 }

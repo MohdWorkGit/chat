@@ -19,16 +19,3 @@ public interface INotificationService
 
     Task DeleteAsync(int notificationId, CancellationToken cancellationToken = default);
 }
-
-public class CreateNotificationRequest
-{
-    public int AccountId { get; set; }
-    public int UserId { get; set; }
-    public string NotificationType { get; set; } = string.Empty;
-    public string? PrimaryActorType { get; set; }
-    public int? PrimaryActorId { get; set; }
-    public string? SecondaryActorType { get; set; }
-    public int? SecondaryActorId { get; set; }
-    public long? ConversationId { get; set; }
-    public long? MessageId { get; set; }
-}

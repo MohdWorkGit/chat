@@ -1,8 +1,7 @@
+using CustomerEngagement.Enterprise.Captain.DTOs;
 using CustomerEngagement.Enterprise.Captain.Entities;
 
 namespace CustomerEngagement.Enterprise.Captain.Services;
-
-public record ToolExecutionResult(bool Success, string? Output, string? Error = null);
 
 public interface IToolRegistryService
 {

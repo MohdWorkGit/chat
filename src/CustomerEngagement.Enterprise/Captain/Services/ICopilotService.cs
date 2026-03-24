@@ -1,8 +1,6 @@
-namespace CustomerEngagement.Enterprise.Captain.Services;
+using CustomerEngagement.Enterprise.Captain.DTOs;
 
-public record CopilotSuggestion(string Content, double Confidence);
-public record RewriteResult(string OriginalText, string RewrittenText, string Tone);
-public record ConversationSummary(string Summary, IReadOnlyList<string> KeyPoints);
+namespace CustomerEngagement.Enterprise.Captain.Services;
 
 public interface ICopilotService
 {

@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using CustomerEngagement.Enterprise.Captain.DTOs;
 using CustomerEngagement.Enterprise.Captain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

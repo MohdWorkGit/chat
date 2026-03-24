@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using CustomerEngagement.Application.DTOs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

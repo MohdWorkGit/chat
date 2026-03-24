@@ -1,4 +1,3 @@
-using CustomerEngagement.Application.Services.Automations;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;

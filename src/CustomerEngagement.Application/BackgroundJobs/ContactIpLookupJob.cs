@@ -14,11 +14,14 @@ public interface IGeoIpService
 }
 
 public record GeoIpResult(
-    string? City,
     string? Country,
     string? CountryCode,
+    string? City,
+    string? Region,
     double? Latitude,
-    double? Longitude);
+    double? Longitude,
+    string? PostalCode,
+    string? TimeZone);
 
 public class ContactIpLookupJob
 {
