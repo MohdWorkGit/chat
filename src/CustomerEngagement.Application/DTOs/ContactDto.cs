@@ -10,11 +10,12 @@ public record ContactDto(
 public record CreateContactRequest(
     string? Name, string? Email, string? Phone,
     string? Identifier, string? ContactType,
-    string? CompanyName, IDictionary<string, object>? CustomAttributes);
+    string? CompanyName, string? Location,
+    IDictionary<string, object>? CustomAttributes);
 
 public record UpdateContactRequest(
     string? Name, string? Email, string? Phone,
-    string? CompanyName, string? Identifier,
+    string? CompanyName, string? Location, string? Identifier,
     IDictionary<string, object>? CustomAttributes);
 
 public record MergeContactsRequest(int BaseContactId, int MergeContactId);

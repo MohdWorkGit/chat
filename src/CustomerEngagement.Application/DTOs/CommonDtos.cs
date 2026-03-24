@@ -25,9 +25,9 @@ public record AutomationRuleDto(
 public record MacroDto(int Id, string Name, object? Actions, string Visibility);
 
 public record CampaignDto(
-    int Id, string Title, string? Description, string? Message,
-    string CampaignType, string? Audience, DateTime? ScheduledAt,
-    bool Enabled, DateTime CreatedAt);
+    int Id, int AccountId, string Title, string? Description, string Message,
+    int CampaignType, int? InboxId, bool Enabled, string? Audience,
+    string? ScheduledAt, DateTime CreatedAt, DateTime UpdatedAt);
 
 public class ReportDataPointDto
 {

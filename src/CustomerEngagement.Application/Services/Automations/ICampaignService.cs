@@ -1,3 +1,5 @@
+using CustomerEngagement.Application.DTOs;
+
 namespace CustomerEngagement.Application.Services.Automations;
 
 public interface ICampaignService
@@ -17,22 +19,6 @@ public interface ICampaignService
     Task DeactivateAsync(int campaignId, CancellationToken cancellationToken = default);
 
     Task ExecuteAsync(int campaignId, CancellationToken cancellationToken = default);
-}
-
-public class CampaignDto
-{
-    public int Id { get; set; }
-    public int AccountId { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public int CampaignType { get; set; }
-    public int? InboxId { get; set; }
-    public bool IsEnabled { get; set; }
-    public string? Audience { get; set; }
-    public string? ScheduledAt { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 }
 
 public class CreateCampaignRequest

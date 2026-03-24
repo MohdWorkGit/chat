@@ -8,25 +8,27 @@ import { Campaign } from '@core/models/campaign.model';
 })
 export class CampaignService {
   private readonly api = inject(ApiService);
-  private readonly basePath = '/campaigns';
+  private basePath(): string {
+    return this.api.accountPath('/campaigns');
+  }
 
   getAll(): Observable<Campaign[]> {
-    return this.api.get<Campaign[]>(this.basePath);
+    return this.api.get<Campaign[]>(this.basePath());
   }
 
   getById(id: number): Observable<Campaign> {
-    return this.api.get<Campaign>(`${this.basePath}/${id}`);
+    return this.api.get<Campaign>(`${this.basePath()}/${id}`);
   }
 
   create(data: Partial<Campaign>): Observable<Campaign> {
-    return this.api.post<Campaign>(this.basePath, data);
+    return this.api.post<Campaign>(this.basePath(), data);
   }
 
   update(id: number, data: Partial<Campaign>): Observable<Campaign> {
-    return this.api.patch<Campaign>(`${this.basePath}/${id}`, data);
+    return this.api.patch<Campaign>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
-    return this.api.delete<void>(`${this.basePath}/${id}`);
+    return this.api.delete<void>(`${this.basePath()}/${id}`);
   }
 }

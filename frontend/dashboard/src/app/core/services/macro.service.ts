@@ -8,29 +8,31 @@ import { Macro } from '@core/models/macro.model';
 })
 export class MacroService {
   private readonly api = inject(ApiService);
-  private readonly basePath = '/macros';
+  private basePath(): string {
+    return this.api.accountPath('/macros');
+  }
 
   getAll(): Observable<Macro[]> {
-    return this.api.get<Macro[]>(this.basePath);
+    return this.api.get<Macro[]>(this.basePath());
   }
 
   getById(id: number): Observable<Macro> {
-    return this.api.get<Macro>(`${this.basePath}/${id}`);
+    return this.api.get<Macro>(`${this.basePath()}/${id}`);
   }
 
   create(data: Partial<Macro>): Observable<Macro> {
-    return this.api.post<Macro>(this.basePath, data);
+    return this.api.post<Macro>(this.basePath(), data);
   }
 
   update(id: number, data: Partial<Macro>): Observable<Macro> {
-    return this.api.patch<Macro>(`${this.basePath}/${id}`, data);
+    return this.api.patch<Macro>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
-    return this.api.delete<void>(`${this.basePath}/${id}`);
+    return this.api.delete<void>(`${this.basePath()}/${id}`);
   }
 
   execute(id: number, conversationId: number): Observable<void> {
-    return this.api.post<void>(`${this.basePath}/${id}/execute`, { conversationId });
+    return this.api.post<void>(`${this.basePath()}/${id}/execute`, { conversationId });
   }
 }

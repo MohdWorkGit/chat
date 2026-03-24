@@ -9,37 +9,39 @@ import { PaginatedResult } from '@core/models/common.model';
 })
 export class NotificationService {
   private readonly api = inject(ApiService);
-  private readonly basePath = '/notifications';
+  private basePath(): string {
+    return this.api.accountPath('/notifications');
+  }
 
   getAll(page = 1): Observable<PaginatedResult<Notification>> {
-    return this.api.get<PaginatedResult<Notification>>(this.basePath, { page });
+    return this.api.get<PaginatedResult<Notification>>(this.basePath(), { page });
   }
 
   markAsRead(id: number): Observable<Notification> {
-    return this.api.patch<Notification>(`${this.basePath}/${id}/read`, {});
+    return this.api.patch<Notification>(`${this.basePath()}/${id}/read`, {});
   }
 
   markAllAsRead(): Observable<void> {
-    return this.api.post<void>(`${this.basePath}/read-all`);
+    return this.api.post<void>(`${this.basePath()}/read-all`);
   }
 
   snooze(id: number, snoozedUntil: string): Observable<Notification> {
-    return this.api.patch<Notification>(`${this.basePath}/${id}/snooze`, { snoozedUntil });
+    return this.api.patch<Notification>(`${this.basePath()}/${id}/snooze`, { snoozedUntil });
   }
 
   delete(id: number): Observable<void> {
-    return this.api.delete<void>(`${this.basePath}/${id}`);
+    return this.api.delete<void>(`${this.basePath()}/${id}`);
   }
 
   getUnreadCount(): Observable<{ count: number }> {
-    return this.api.get<{ count: number }>(`${this.basePath}/unread-count`);
+    return this.api.get<{ count: number }>(`${this.basePath()}/unread-count`);
   }
 
   getSettings(): Observable<NotificationSetting> {
-    return this.api.get<NotificationSetting>(`${this.basePath}/settings`);
+    return this.api.get<NotificationSetting>(`${this.basePath()}/settings`);
   }
 
   updateSettings(settings: Partial<NotificationSetting>): Observable<NotificationSetting> {
-    return this.api.patch<NotificationSetting>(`${this.basePath}/settings`, settings);
+    return this.api.patch<NotificationSetting>(`${this.basePath()}/settings`, settings);
   }
 }

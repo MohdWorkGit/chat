@@ -61,6 +61,11 @@ export class AuthService {
     );
   }
 
+  currentAccountId(): number {
+    const user = this.currentUserSubject.getValue();
+    return user?.accountId ?? 0;
+  }
+
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
   }

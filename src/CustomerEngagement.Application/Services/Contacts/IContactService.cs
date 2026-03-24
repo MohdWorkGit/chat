@@ -27,25 +27,3 @@ public interface IContactService
 
     Task<ContactDto> MergeAsync(int baseContactId, int mergeContactId, CancellationToken cancellationToken = default);
 }
-
-public class CreateContactRequest
-{
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
-    public string? Company { get; set; }
-    public string? Location { get; set; }
-    public string? AvatarUrl { get; set; }
-    public Dictionary<string, object>? CustomAttributes { get; set; }
-}
-
-public class UpdateContactRequest
-{
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
-    public string? Company { get; set; }
-    public string? Location { get; set; }
-    public string? AvatarUrl { get; set; }
-    public Dictionary<string, object>? CustomAttributes { get; set; }
-}

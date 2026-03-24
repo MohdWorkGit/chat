@@ -2,13 +2,24 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
   private readonly baseUrl = environment.apiUrl;
+
+  /**
+   * Builds the full path for account-scoped endpoints.
+   * Most V1 API routes require /accounts/{accountId} prefix.
+   */
+  accountPath(path: string): string {
+    const accountId = this.auth.currentAccountId();
+    return `/accounts/${accountId}${path}`;
+  }
 
   get<T>(path: string, params?: Record<string, string | number | boolean>): Observable<T> {
     let httpParams = new HttpParams();
