@@ -6,6 +6,7 @@ using CustomerEngagement.Core.Interfaces;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Xunit;
 
 namespace CustomerEngagement.Application.Tests.Services;
 

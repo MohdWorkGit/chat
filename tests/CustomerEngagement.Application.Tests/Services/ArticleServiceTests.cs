@@ -5,6 +5,7 @@ using CustomerEngagement.Core.Interfaces;
 using Moq;
 using FluentAssertions;
 using System.Linq.Expressions;
+using Xunit;
 
 namespace CustomerEngagement.Application.Tests.Services;
 

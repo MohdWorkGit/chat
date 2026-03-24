@@ -1,6 +1,8 @@
 namespace CustomerEngagement.Application.Auth;
 
-public record AuthResult(bool Succeeded, string? AccessToken, string? RefreshToken, IEnumerable<string>? Errors = null);
+public record AuthUserInfo(int Id, string Name, string Email, string? Avatar, string Role, int AccountId, string Availability);
+
+public record AuthResult(bool Succeeded, string? AccessToken, string? RefreshToken, IEnumerable<string>? Errors = null, AuthUserInfo? User = null);
 
 public interface IIdentityService
 {

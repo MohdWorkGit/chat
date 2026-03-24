@@ -23,6 +23,8 @@ public class AuthController : ControllerBase
         [FromBody] Application.Auth.Commands.RegisterCommand command)
     {
         var result = await _mediator.Send(command);
+        if (!result.Succeeded)
+            return BadRequest(new { message = string.Join("; ", result.Errors ?? []) });
         return CreatedAtAction(nameof(GetCurrentUser), new { }, result);
     }
 
@@ -32,6 +34,8 @@ public class AuthController : ControllerBase
         [FromBody] Application.Auth.Commands.LoginCommand command)
     {
         var result = await _mediator.Send(command);
+        if (!result.Succeeded)
+            return Unauthorized(new { message = string.Join("; ", result.Errors ?? []) });
         return Ok(result);
     }
 
@@ -54,7 +58,7 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("forgot_password")]
+    [HttpPost("forgot-password")]
     [AllowAnonymous]
     public async Task<ActionResult> ForgotPassword(
         [FromBody] Application.Auth.Commands.ForgotPasswordCommand command)
@@ -63,7 +67,7 @@ public class AuthController : ControllerBase
         return Ok(new { Message = "If the email exists, a reset link has been sent." });
     }
 
-    [HttpPost("reset_password")]
+    [HttpPost("reset-password")]
     [AllowAnonymous]
     public async Task<ActionResult> ResetPassword(
         [FromBody] Application.Auth.Commands.ResetPasswordCommand command)
@@ -72,7 +76,7 @@ public class AuthController : ControllerBase
         return Ok(new { Message = "Password has been reset successfully." });
     }
 
-    [HttpPost("confirm_email")]
+    [HttpPost("confirm-email")]
     [AllowAnonymous]
     public async Task<ActionResult> ConfirmEmail(
         [FromBody] Application.Auth.Commands.ConfirmEmailCommand command)
