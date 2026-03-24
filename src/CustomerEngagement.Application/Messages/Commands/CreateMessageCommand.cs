@@ -5,6 +5,7 @@ using MediatR;
 namespace CustomerEngagement.Application.Messages.Commands;
 
 public record CreateMessageCommand(
+    long AccountId,
     long ConversationId,
     string Content,
     string? ContentType,
