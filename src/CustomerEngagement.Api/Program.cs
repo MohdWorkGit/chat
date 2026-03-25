@@ -374,7 +374,7 @@ builder.Services.AddHttpClient<ToolRegistryService>();
 builder.Services.AddScoped<GlobalSearchService>();
 builder.Services.AddScoped<FilterService>();
 builder.Services.AddScoped<TypingStatusManager>();
-builder.Services.AddScoped<ContactSearchService>();
+builder.Services.AddScoped<IContactSearchService, ContactSearchService>();
 
 // ---------------------------------------------------------------------------
 // Health Checks
