@@ -26,7 +26,7 @@ import { ReplyBoxComponent } from '../reply-box/reply-box.component';
           <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
             <div class="flex items-center gap-3">
               @if (conversation.contact?.avatar) {
-                <img [src]="conversation.contact.avatar" class="h-9 w-9 rounded-full object-cover" />
+                <img [src]="conversation.contact!.avatar" class="h-9 w-9 rounded-full object-cover" />
               } @else {
                 <div class="h-9 w-9 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
                   {{ getInitials(conversation.contact?.name || 'U') }}
@@ -39,7 +39,7 @@ import { ReplyBoxComponent } from '../reply-box/reply-box.component';
                 <p class="text-xs text-gray-500">
                   #{{ conversation.displayId }}
                   @if (conversation.contact?.email) {
-                    <span class="ml-1">{{ conversation.contact.email }}</span>
+                    <span class="ml-1">{{ conversation.contact!.email }}</span>
                   }
                 </p>
               </div>

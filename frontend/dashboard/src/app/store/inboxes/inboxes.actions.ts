@@ -27,6 +27,14 @@ export const InboxesActions = createActionGroup({
 
     'Select Inbox': props<{ id: number | null }>(),
 
+    'Add Member': props<{ inboxId: number; userId: number }>(),
+    'Add Member Success': props<{ inbox: Inbox }>(),
+    'Add Member Failure': props<{ error: ApiError }>(),
+
+    'Remove Member': props<{ inboxId: number; memberId: number }>(),
+    'Remove Member Success': props<{ inbox: Inbox }>(),
+    'Remove Member Failure': props<{ error: ApiError }>(),
+
     'Clear Error': emptyProps(),
   },
 });

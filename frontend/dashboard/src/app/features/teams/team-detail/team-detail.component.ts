@@ -181,7 +181,7 @@ export class TeamDetailComponent implements OnInit {
     this.store.dispatch(
       TeamsActions.updateTeam({
         id: Number(this.id),
-        changes: this.teamForm.value,
+        data: this.teamForm.value,
       })
     );
     this.teamForm.markAsPristine();

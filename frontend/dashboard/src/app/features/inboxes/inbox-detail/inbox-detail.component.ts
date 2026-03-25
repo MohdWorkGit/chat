@@ -200,7 +200,7 @@ export class InboxDetailComponent implements OnInit {
     this.store.dispatch(
       InboxesActions.updateInbox({
         id: Number(this.id),
-        changes: this.inboxForm.value,
+        data: this.inboxForm.value,
       })
     );
     this.inboxForm.markAsPristine();

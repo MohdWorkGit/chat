@@ -83,7 +83,7 @@ import { ConversationStatus, ConversationPriority, Conversation } from '@core/mo
             <!-- Avatar -->
             <div class="flex-shrink-0">
               @if (conversation.contact?.avatar) {
-                <img [src]="conversation.contact.avatar" [alt]="conversation.contact.name" class="h-10 w-10 rounded-full object-cover" />
+                <img [src]="conversation.contact!.avatar" [alt]="conversation.contact!.name" class="h-10 w-10 rounded-full object-cover" />
               } @else {
                 <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
                   {{ getInitials(conversation.contact?.name || 'U') }}

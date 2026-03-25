@@ -6,6 +6,7 @@ import { PaginatedResult } from '@core/models/common.model';
 
 export interface ConversationFilters {
   status?: string;
+  assigneeType?: string;
   assigneeId?: number;
   teamId?: number;
   inboxId?: number;

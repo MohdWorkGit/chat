@@ -171,7 +171,7 @@ export class LabelListComponent implements OnInit {
 
   createLabel(): void {
     if (this.createForm.invalid) return;
-    this.store.dispatch(LabelsActions.createLabel({ label: this.createForm.value }));
+    this.store.dispatch(LabelsActions.createLabel({ data: this.createForm.value }));
     this.createForm.reset({ color: '#1F93FF', title: '', description: '' });
   }
 
@@ -193,7 +193,7 @@ export class LabelListComponent implements OnInit {
     this.store.dispatch(
       LabelsActions.updateLabel({
         id: labelId,
-        changes: this.editForm.value,
+        data: this.editForm.value,
       })
     );
     this.editingLabelId = null;
