@@ -20,7 +20,9 @@ using CustomerEngagement.Enterprise.Captain.Services;
 using CustomerEngagement.Enterprise.CustomRoles.Services;
 using CustomerEngagement.Enterprise.Saml.Services;
 using CustomerEngagement.Infrastructure.ExternalServices.Email;
+using CustomerEngagement.Infrastructure.ExternalServices.GeoIp;
 using CustomerEngagement.Infrastructure.ExternalServices.Push;
+using CustomerEngagement.Infrastructure.ExternalServices.Storage;
 using CustomerEngagement.Infrastructure.Identity;
 using CustomerEngagement.Infrastructure.Persistence;
 using CustomerEngagement.Infrastructure.Repositories;
@@ -342,15 +344,20 @@ builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
 
 // Infrastructure email & push services
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<IEmailReceiver, ImapEmailReceiver>();
 builder.Services.AddSingleton<IWebPushSender, VapidWebPushService>();
 
 // Integration services
 builder.Services.AddScoped<IWebhookService, WebhookService>();
-builder.Services.AddScoped<IRasaNluService, RasaNluService>();
+builder.Services.AddHttpClient<IRasaNluService, RasaNluService>();
 
 // Reporting services
 builder.Services.AddScoped<IReportBuilder, ReportBuilder>();
-builder.Services.AddScoped<CsatReportService>();
+builder.Services.AddScoped<ICsatReportService, CsatReportService>();
+
+// Storage & GeoIP services
+builder.Services.AddScoped<IStorageService, MinioStorageService>();
+builder.Services.AddSingleton<IGeoIpService, MaxMindOfflineGeoIpService>();
 
 // Enterprise services
 builder.Services.AddScoped<ISamlAuthService, SamlAuthService>();
@@ -371,9 +378,9 @@ builder.Services.AddHttpClient<EmbeddingService>();
 builder.Services.AddHttpClient<ToolRegistryService>();
 
 // Search & other services
-builder.Services.AddScoped<GlobalSearchService>();
-builder.Services.AddScoped<FilterService>();
-builder.Services.AddScoped<TypingStatusManager>();
+builder.Services.AddScoped<IGlobalSearchService, GlobalSearchService>();
+builder.Services.AddScoped<IFilterService, FilterService>();
+builder.Services.AddScoped<ITypingStatusManager, TypingStatusManager>();
 builder.Services.AddScoped<IContactSearchService, ContactSearchService>();
 
 // ---------------------------------------------------------------------------

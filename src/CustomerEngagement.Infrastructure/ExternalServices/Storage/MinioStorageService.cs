@@ -1,11 +1,12 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+using CustomerEngagement.Application.BackgroundJobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CustomerEngagement.Infrastructure.ExternalServices.Storage;
 
-public class MinioStorageService
+public class MinioStorageService : IStorageService
 {
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;
