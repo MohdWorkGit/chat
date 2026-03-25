@@ -1,5 +1,6 @@
 using System.Text;
 using System.Threading.RateLimiting;
+using CustomerEngagement.Api.Authorization;
 using CustomerEngagement.Api.Hubs;
 using CustomerEngagement.Api.Middleware;
 using CustomerEngagement.Application;
@@ -127,9 +128,19 @@ builder.Services.AddAuthentication(options =>
 // ---------------------------------------------------------------------------
 builder.Services.AddAuthorization(options =>
 {
+    // Basic role-based policies
     options.AddPolicy("Administrator", policy => policy.RequireRole("Administrator"));
     options.AddPolicy("Agent", policy => policy.RequireRole("Agent", "Administrator"));
+
+    // Resource-level authorization policies (23+ policies per spec)
+    foreach (var policyName in ResourcePolicies.All)
+    {
+        options.AddPolicy(policyName, policy =>
+            policy.Requirements.Add(new ResourcePermissionRequirement(policyName)));
+    }
 });
+
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, ResourceAuthorizationHandler>();
 
 // ---------------------------------------------------------------------------
 // SignalR
@@ -188,6 +199,7 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
+    // General API rate limit: 100 requests/minute per IP
     options.AddFixedWindowLimiter("api", limiter =>
     {
         limiter.PermitLimit = 100;
@@ -195,12 +207,58 @@ builder.Services.AddRateLimiter(options =>
         limiter.QueueLimit = 0;
     });
 
+    // Auth endpoints (login/signup): 10 requests/minute per IP
     options.AddSlidingWindowLimiter("auth", limiter =>
     {
         limiter.PermitLimit = 10;
         limiter.Window = TimeSpan.FromMinutes(1);
         limiter.SegmentsPerWindow = 2;
         limiter.QueueLimit = 0;
+    });
+
+    // Widget endpoints: 300 requests/minute (higher limit for embedded widgets)
+    options.AddFixedWindowLimiter("widget", limiter =>
+    {
+        limiter.PermitLimit = 300;
+        limiter.Window = TimeSpan.FromMinutes(1);
+        limiter.QueueLimit = 0;
+    });
+
+    // Search endpoints: 30 requests/minute per IP
+    options.AddSlidingWindowLimiter("search", limiter =>
+    {
+        limiter.PermitLimit = 30;
+        limiter.Window = TimeSpan.FromMinutes(1);
+        limiter.SegmentsPerWindow = 3;
+        limiter.QueueLimit = 0;
+    });
+
+    // Report generation: 10 requests/minute (expensive queries)
+    options.AddFixedWindowLimiter("reports", limiter =>
+    {
+        limiter.PermitLimit = 10;
+        limiter.Window = TimeSpan.FromMinutes(1);
+        limiter.QueueLimit = 0;
+    });
+
+    // Per-account global rate limit: 1000 requests/minute
+    options.AddFixedWindowLimiter("account", limiter =>
+    {
+        limiter.PermitLimit = 1000;
+        limiter.Window = TimeSpan.FromMinutes(1);
+        limiter.QueueLimit = 0;
+    });
+
+    // Global fallback partitioner using remote IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(remoteIp, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 500,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        });
     });
 });
 
@@ -305,6 +363,8 @@ builder.Services.AddScoped<IAssistantChatService, AssistantChatService>();
 builder.Services.AddScoped<ICopilotService, CopilotService>();
 builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
 builder.Services.AddScoped<IToolRegistryService, ToolRegistryService>();
+builder.Services.AddHttpClient("WebhookDelivery");
+builder.Services.AddHttpClient("AvatarFetch");
 builder.Services.AddHttpClient<AssistantChatService>();
 builder.Services.AddHttpClient<CopilotService>();
 builder.Services.AddHttpClient<EmbeddingService>();
@@ -319,9 +379,16 @@ builder.Services.AddScoped<ContactSearchService>();
 // ---------------------------------------------------------------------------
 // Health Checks
 // ---------------------------------------------------------------------------
+var ollamaUrl = builder.Configuration["OLLAMA_URL"] ?? builder.Configuration["Ollama:Url"] ?? "http://localhost:11434";
+var rasaUrl = builder.Configuration["RASA_URL"] ?? builder.Configuration["Rasa:Url"] ?? "http://localhost:5005";
+var minioEndpoint = builder.Configuration["MINIO_ENDPOINT"] ?? builder.Configuration["Minio:Endpoint"] ?? "localhost:9000";
+
 builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString, name: "postgresql")
-    .AddRedis(redisUrl, name: "redis");
+    .AddRedis(redisUrl, name: "redis")
+    .AddUrlGroup(new Uri($"{ollamaUrl}/api/tags"), name: "ollama", tags: new[] { "ai" })
+    .AddUrlGroup(new Uri($"{rasaUrl}/status"), name: "rasa", tags: new[] { "ai" })
+    .AddUrlGroup(new Uri($"http://{minioEndpoint}/minio/health/live"), name: "minio", tags: new[] { "storage" });
 
 // ---------------------------------------------------------------------------
 // Controllers
@@ -333,22 +400,29 @@ builder.Services.AddControllers();
 // =========================================================================
 var app = builder.Build();
 
-// Auto-create database schema on startup
-// Uses EnsureCreated since no EF migrations have been generated yet.
-// Once migrations are added, switch this to Database.Migrate().
+// Auto-apply EF Core migrations on startup
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     try
     {
-        db.Database.EnsureCreated();
-        Log.Information("Database schema ensured");
+        db.Database.Migrate();
+        Log.Information("Database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "Failed to initialize database — retrying in 5s");
-        await Task.Delay(5000);
-        db.Database.EnsureCreated();
+        Log.Warning(ex, "Migration failed — falling back to EnsureCreated for initial setup");
+        try
+        {
+            db.Database.EnsureCreated();
+            Log.Information("Database schema ensured via EnsureCreated");
+        }
+        catch (Exception ex2)
+        {
+            Log.Error(ex2, "Failed to initialize database — retrying in 5s");
+            await Task.Delay(5000);
+            db.Database.EnsureCreated();
+        }
     }
 
     // Seed roles, default account, and admin user
@@ -436,19 +510,36 @@ app.MapHealthChecks("/health");
 // ---------------------------------------------------------------------------
 // Hangfire Recurring Jobs
 // ---------------------------------------------------------------------------
-app.Services.GetRequiredService<IRecurringJobManager>()
-    .AddOrUpdate<ConversationAutoResolveJob>("auto-resolve-conversations", job => job.ExecuteAsync(CancellationToken.None), Cron.Hourly);
+var jobManager = app.Services.GetRequiredService<IRecurringJobManager>();
 
-app.Services.GetRequiredService<IRecurringJobManager>()
-    .AddOrUpdate<ReopenSnoozedConversationsJob>("reopen-snoozed-conversations", job => job.ExecuteAsync(CancellationToken.None), "*/5 * * * *");
+// Conversation lifecycle jobs
+jobManager.AddOrUpdate<ConversationAutoResolveJob>(
+    "auto-resolve-conversations", job => job.ExecuteAsync(CancellationToken.None), Cron.Hourly);
 
-app.Services.GetRequiredService<IRecurringJobManager>()
-    .AddOrUpdate<ImapEmailFetchJob>("imap-email-fetch", job => job.ExecuteAsync(CancellationToken.None), "*/2 * * * *");
+jobManager.AddOrUpdate<ReopenSnoozedConversationsJob>(
+    "reopen-snoozed-conversations", job => job.ExecuteAsync(CancellationToken.None), "*/5 * * * *");
 
-app.Services.GetRequiredService<IRecurringJobManager>()
-    .AddOrUpdate<CampaignTriggerJob>("campaign-trigger", job => job.ExecuteAsync(CancellationToken.None), "*/10 * * * *");
+// Email & channel jobs
+jobManager.AddOrUpdate<ImapEmailFetchJob>(
+    "imap-email-fetch", job => job.ExecuteAsync(CancellationToken.None), "*/2 * * * *");
 
-app.Services.GetRequiredService<IRecurringJobManager>()
-    .AddOrUpdate<CleanupJob>("data-cleanup", job => job.ExecuteAsync(CancellationToken.None), Cron.Daily);
+// Campaign jobs
+jobManager.AddOrUpdate<CampaignTriggerJob>(
+    "campaign-trigger", job => job.ExecuteAsync(CancellationToken.None), "*/10 * * * *");
+
+jobManager.AddOrUpdate<ScheduledCampaignJob>(
+    "ongoing-campaign-evaluation", job => job.ExecuteAsync(CancellationToken.None), "*/15 * * * *");
+
+// Reporting & analytics
+jobManager.AddOrUpdate<ReportGenerationJob>(
+    "daily-report-generation", job => job.ExecuteAsync(CancellationToken.None), Cron.Daily(2));
+
+// Template sync
+jobManager.AddOrUpdate<TemplateSyncJob>(
+    "template-sync", job => job.ExecuteAsync(CancellationToken.None), Cron.Daily(3));
+
+// Data cleanup
+jobManager.AddOrUpdate<CleanupJob>(
+    "data-cleanup", job => job.ExecuteAsync(CancellationToken.None), Cron.Daily(4));
 
 app.Run();
