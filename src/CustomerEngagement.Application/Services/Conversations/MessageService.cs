@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -68,7 +69,7 @@ public class MessageService : IMessageService
             ConversationId = (int)conversationId,
             AccountId = conversation.AccountId,
             Content = request.Content,
-            MessageType = (CustomerEngagement.Core.Enums.MessageType)request.MessageType,
+            MessageType = (MessageType)request.MessageType,
             SenderId = request.SenderId,
             SenderType = request.SenderType,
             Private = request.IsPrivate,

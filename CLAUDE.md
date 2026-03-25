@@ -16,6 +16,11 @@
 
 6. **No .NET SDK available in this environment** — `dotnet build` cannot be run. Compensate by being extra rigorous with manual verification of types, namespaces, and signatures before committing.
 
+7. **Enums require explicit using** — Types in `CustomerEngagement.Core.Enums` (e.g., `ConversationStatus`, `MessageType`, `CampaignType`, `UserRole`, `ContactType`) are NOT auto-imported. Any file that references these enums directly (not just via entity properties) must have `using CustomerEngagement.Core.Enums;`. When fixing a missing-using error, run this to find ALL files with the same issue:
+   ```
+   grep -rln "EnumTypeName" src/ --include="*.cs" | xargs grep -L "using CustomerEngagement.Core.Enums"
+   ```
+
 ## Project Structure
 
 - **Backend**: .NET 8 Clean Architecture at `src/`

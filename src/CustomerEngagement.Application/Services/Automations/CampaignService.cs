@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -48,7 +49,7 @@ public class CampaignService : ICampaignService
             Title = request.Title,
             Description = request.Description,
             Message = request.Message,
-            CampaignType = (CustomerEngagement.Core.Enums.CampaignType)request.CampaignType,
+            CampaignType = (CampaignType)request.CampaignType,
             InboxId = request.InboxId ?? 0,
             Audience = request.Audience,
             ScheduledAt = request.ScheduledAt is not null ? DateTime.Parse(request.ScheduledAt, null, System.Globalization.DateTimeStyles.RoundtripKind) : null,
