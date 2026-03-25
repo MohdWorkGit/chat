@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CustomerEngagement.Infrastructure.ExternalServices.GeoIp;
 
-public class MaxMindOfflineGeoIpService : IDisposable
+public class MaxMindOfflineGeoIpService : IGeoIpService, IDisposable
 {
     private readonly DatabaseReader? _reader;
     private readonly ILogger<MaxMindOfflineGeoIpService> _logger;
@@ -34,6 +34,11 @@ public class MaxMindOfflineGeoIpService : IDisposable
         {
             _logger.LogError(ex, "Failed to load MaxMind GeoIP2 database from {Path}", databasePath);
         }
+    }
+
+    public Task<GeoIpResult?> LookupAsync(string ipAddress, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(Lookup(ipAddress));
     }
 
     public GeoIpResult? Lookup(string ipAddress)

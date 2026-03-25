@@ -105,7 +105,8 @@ services:
       Rasa__BaseUrl: http://rasa:5005
       Cors__AllowedOrigins__0: http://localhost:3000
       Cors__AllowedOrigins__1: http://localhost:3100
-      Cors__AllowedOrigins__2: http://localhost:4200
+      Cors__AllowedOrigins__2: http://localhost:3200
+      Cors__AllowedOrigins__3: http://localhost:4200
     ports:
       - "8080:8080"
 
@@ -127,6 +128,8 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+    environment:
+      API_BASE_URL: http://api:8080
     ports:
       - "3100:4000"
 
