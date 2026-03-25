@@ -1,6 +1,7 @@
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
+using CustomerEngagement.Application.Services.Automations;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
