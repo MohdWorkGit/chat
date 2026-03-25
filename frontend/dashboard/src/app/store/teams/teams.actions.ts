@@ -27,6 +27,14 @@ export const TeamsActions = createActionGroup({
 
     'Select Team': props<{ id: number | null }>(),
 
+    'Add Member': props<{ teamId: number; userId: number }>(),
+    'Add Member Success': props<{ team: Team }>(),
+    'Add Member Failure': props<{ error: ApiError }>(),
+
+    'Remove Member': props<{ teamId: number; memberId: number }>(),
+    'Remove Member Success': props<{ team: Team }>(),
+    'Remove Member Failure': props<{ error: ApiError }>(),
+
     'Clear Error': emptyProps(),
   },
 });

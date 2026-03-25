@@ -17,6 +17,7 @@ export interface User {
   email: string;
   avatar?: string;
   role?: string;
+  availability?: string;
   availabilityStatus?: string;
   accountId: number;
   createdAt: string;

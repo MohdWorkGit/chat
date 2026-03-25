@@ -25,7 +25,8 @@
       "@store/*": ["src/app/store/*"],
       "@features/*": ["src/app/features/*"],
       "@app/*": ["src/app/*"],
-      "@env/*": ["src/environments/*"]
+      "@env/*": ["src/environments/*"],
+      "@ngrx/store/src/models": ["node_modules/@ngrx/store"]
     }
   },
   "angularCompilerOptions": {
