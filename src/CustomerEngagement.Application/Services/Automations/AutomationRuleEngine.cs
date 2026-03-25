@@ -1,6 +1,7 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
