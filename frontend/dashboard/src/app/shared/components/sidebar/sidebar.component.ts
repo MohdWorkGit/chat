@@ -160,7 +160,7 @@ export class SidebarComponent {
           name: user.name,
           displayName: user.displayName,
           avatar: user.avatar,
-          availability: user.availability,
+          availability: user.availability || 'offline',
           accountId: user.accountId,
         };
       }
