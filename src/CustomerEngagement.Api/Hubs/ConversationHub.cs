@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using AppHub = CustomerEngagement.Application.Hubs;
 
 namespace CustomerEngagement.Api.Hubs;
