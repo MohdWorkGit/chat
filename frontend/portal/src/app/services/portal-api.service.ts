@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 export interface Category {
   id: number;
@@ -46,7 +47,9 @@ export class PortalApiService {
   constructor(private readonly http: HttpClient) {}
 
   getCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${this.baseUrl}/categories`);
+    return this.http.get<Category[]>(`${this.baseUrl}/categories`).pipe(
+      catchError(() => of([])),
+    );
   }
 
   getCategory(slug: string): Observable<Category> {
@@ -54,7 +57,9 @@ export class PortalApiService {
   }
 
   getCategoryArticles(slug: string): Observable<ArticleSummary[]> {
-    return this.http.get<ArticleSummary[]>(`${this.baseUrl}/categories/${slug}/articles`);
+    return this.http.get<ArticleSummary[]>(`${this.baseUrl}/categories/${slug}/articles`).pipe(
+      catchError(() => of([])),
+    );
   }
 
   getArticle(slug: string): Observable<Article> {
@@ -63,6 +68,8 @@ export class PortalApiService {
 
   searchArticles(query: string): Observable<ArticleSummary[]> {
     const params = new HttpParams().set('q', query);
-    return this.http.get<ArticleSummary[]>(`${this.baseUrl}/articles/search`, { params });
+    return this.http.get<ArticleSummary[]>(`${this.baseUrl}/articles/search`, { params }).pipe(
+      catchError(() => of([])),
+    );
   }
 }
