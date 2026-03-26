@@ -7,7 +7,6 @@ import {
   OnInit,
   OnDestroy,
   signal,
-  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,10 +17,12 @@ import { CsatSurveyComponent, CsatData } from '../csat-survey/csat-survey.compon
 import { TypingIndicatorComponent } from '../typing-indicator/typing-indicator.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { EmojiPickerComponent } from '../emoji-picker/emoji-picker.component';
+import { AgentAvailabilityComponent, AgentAvailabilityStatus } from '../agent-availability/agent-availability.component';
+import { GreetingMessageComponent } from '../greeting-message/greeting-message.component';
 import { WidgetApiService, Message, Conversation } from '../../services/widget-api.service';
 import { SignalrService } from '../../services/signalr.service';
 
-type ChatView = 'pre-chat' | 'conversation' | 'csat';
+type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
 
 @Component({
   selector: 'cew-chat-window',
@@ -35,19 +36,17 @@ type ChatView = 'pre-chat' | 'conversation' | 'csat';
     TypingIndicatorComponent,
     FileUploadComponent,
     EmojiPickerComponent,
+    AgentAvailabilityComponent,
+    GreetingMessageComponent,
   ],
   template: `
     <div class="chat-window">
       <div class="chat-header">
-        <div class="chat-header-info">
-          <div class="agent-avatar">
-            {{ agentInitials() }}
-          </div>
-          <div>
-            <div style="font-weight: 600; font-size: 15px;">{{ agentName() }}</div>
-            <div style="font-size: 12px; opacity: 0.85;">{{ agentStatus() }}</div>
-          </div>
-        </div>
+        <cew-agent-availability
+          [name]="agentName()"
+          [avatarUrl]="agentAvatarUrl()"
+          [status]="agentAvailability()"
+          [replyTimeMinutes]="agentReplyTime()" />
         <button
           style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
           (click)="close.emit()"
@@ -59,6 +58,13 @@ type ChatView = 'pre-chat' | 'conversation' | 'csat';
       </div>
 
       @switch (currentView()) {
+        @case ('greeting') {
+          <cew-greeting-message
+            [teamName]="agentName()"
+            [greetingTitle]="greetingTitle"
+            [greetingText]="greetingText"
+            (startConversation)="onStartConversation()" />
+        }
         @case ('pre-chat') {
           <cew-pre-chat-form (formSubmit)="onPreChatSubmit($event)" />
         }
@@ -134,20 +140,19 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   @Input() locale = 'en';
   @Output() close = new EventEmitter<void>();
 
-  currentView = signal<ChatView>('pre-chat');
+  currentView = signal<ChatView>('greeting');
   messages = signal<Message[]>([]);
   conversationId = signal<number>(0);
   agentName = signal('Support');
-  agentStatus = signal('We typically reply within a few minutes');
+  agentAvatarUrl = signal('');
+  agentAvailability = signal<AgentAvailabilityStatus>('online');
+  agentReplyTime = signal(5);
   isAgentTyping = signal(false);
   showEmojiPicker = signal(false);
   showFileUpload = signal(false);
   newMessage = '';
-
-  agentInitials = computed(() => {
-    const name = this.agentName();
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  });
+  greetingTitle = 'Hi there!';
+  greetingText = 'We are here to help. Ask us anything, or share your feedback.';
 
   private readonly destroy$ = new Subject<void>();
 
@@ -179,6 +184,10 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  onStartConversation(): void {
+    this.currentView.set('pre-chat');
   }
 
   onPreChatSubmit(data: PreChatFormData): void {
@@ -217,7 +226,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
     this.apiService.submitCsat(this.websiteToken, this.conversationId(), data)
       .subscribe({
         next: () => {
-          this.currentView.set('pre-chat');
+          this.currentView.set('greeting');
           this.messages.set([]);
           this.conversationId.set(0);
         },

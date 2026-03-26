@@ -26,6 +26,8 @@ import * as automationsEffects from '@store/automations/automations.effects';
 import * as campaignsEffects from '@store/campaigns/campaigns.effects';
 import * as cannedResponsesEffects from '@store/canned-responses/canned-responses.effects';
 import * as macrosEffects from '@store/macros/macros.effects';
+import { customAttributesReducer } from '@store/custom-attributes/custom-attributes.reducer';
+import * as customAttributesEffects from '@store/custom-attributes/custom-attributes.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -44,6 +46,7 @@ export const appConfig: ApplicationConfig = {
       campaigns: campaignsReducer,
       cannedResponses: cannedResponsesReducer,
       macros: macrosReducer,
+      customAttributes: customAttributesReducer,
     }),
     provideEffects([
       authEffects,
@@ -57,6 +60,7 @@ export const appConfig: ApplicationConfig = {
       campaignsEffects,
       cannedResponsesEffects,
       macrosEffects,
+      customAttributesEffects,
     ]),
   ]
 };

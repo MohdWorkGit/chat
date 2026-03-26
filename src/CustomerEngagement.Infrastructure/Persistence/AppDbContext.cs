@@ -89,6 +89,9 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<CustomRole> CustomRoles => Set<CustomRole>();
     public DbSet<CustomRoleAssignment> CustomRoleAssignments => Set<CustomRoleAssignment>();
 
+    // Enterprise – Audit Logs module
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -120,6 +123,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             builder.Entity<WorkingHour>().HasQueryFilter(e => e.AccountId == _currentAccountId);
             builder.Entity<Note>().HasQueryFilter(e => e.AccountId == _currentAccountId);
             builder.Entity<Mention>().HasQueryFilter(e => e.AccountId == _currentAccountId);
+            builder.Entity<AuditLog>().HasQueryFilter(e => e.AccountId == _currentAccountId);
         }
     }
 }

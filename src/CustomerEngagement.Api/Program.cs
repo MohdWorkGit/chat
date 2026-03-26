@@ -17,6 +17,7 @@ using CustomerEngagement.Application.Services.Search;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using CustomerEngagement.Enterprise.Captain.Services;
+using CustomerEngagement.Enterprise.AuditLogs.Services;
 using CustomerEngagement.Enterprise.CustomRoles.Services;
 using CustomerEngagement.Enterprise.Saml.Services;
 using CustomerEngagement.Infrastructure.ExternalServices.Email;
@@ -362,6 +363,7 @@ builder.Services.AddSingleton<IGeoIpService, MaxMindOfflineGeoIpService>();
 // Enterprise services
 builder.Services.AddScoped<ISamlAuthService, SamlAuthService>();
 builder.Services.AddScoped<ICustomRoleService, CustomRoleService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 // Enterprise – Captain AI services
 // Register DbContext so Enterprise services can resolve it from AppDbContext

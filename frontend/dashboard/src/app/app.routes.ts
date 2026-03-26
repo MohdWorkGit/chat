@@ -37,6 +37,13 @@ export const routes: Routes = [
           ).then((m) => m.ConversationListComponent),
       },
       {
+        path: 'new',
+        loadComponent: () =>
+          import(
+            '@features/conversations/conversation-create/conversation-create.component'
+          ).then((m) => m.ConversationCreateComponent),
+      },
+      {
         path: ':id',
         loadComponent: () =>
           import(
@@ -58,6 +65,13 @@ export const routes: Routes = [
           import(
             '@features/contacts/contact-list/contact-list.component'
           ).then((m) => m.ContactListComponent),
+      },
+      {
+        path: 'new',
+        loadComponent: () =>
+          import(
+            '@features/contacts/contact-create/contact-create.component'
+          ).then((m) => m.ContactCreateComponent),
       },
       {
         path: ':id',
@@ -106,11 +120,25 @@ export const routes: Routes = [
           ).then((m) => m.InboxListComponent),
       },
       {
+        path: 'inboxes/new',
+        loadComponent: () =>
+          import(
+            '@features/inboxes/inbox-create/inbox-create.component'
+          ).then((m) => m.InboxCreateComponent),
+      },
+      {
         path: 'inboxes/:id',
         loadComponent: () =>
           import(
             '@features/inboxes/inbox-detail/inbox-detail.component'
           ).then((m) => m.InboxDetailComponent),
+      },
+      {
+        path: 'inboxes/:id/working-hours',
+        loadComponent: () =>
+          import(
+            '@features/settings/working-hours/working-hours.component'
+          ).then((m) => m.WorkingHoursComponent),
       },
       {
         path: 'teams',
@@ -141,6 +169,13 @@ export const routes: Routes = [
           ).then((m) => m.AutomationListComponent),
       },
       {
+        path: 'automations/new',
+        loadComponent: () =>
+          import(
+            '@features/automations/automation-form/automation-form.component'
+          ).then((m) => m.AutomationFormComponent),
+      },
+      {
         path: 'campaigns',
         loadComponent: () =>
           import(
@@ -155,11 +190,53 @@ export const routes: Routes = [
           ).then((m) => m.CannedResponseListComponent),
       },
       {
+        path: 'canned-responses/new',
+        loadComponent: () =>
+          import(
+            '@features/canned-responses/canned-response-form/canned-response-form.component'
+          ).then((m) => m.CannedResponseFormComponent),
+      },
+      {
         path: 'macros',
         loadComponent: () =>
           import(
             '@features/macros/macro-list/macro-list.component'
           ).then((m) => m.MacroListComponent),
+      },
+      {
+        path: 'macros/new',
+        loadComponent: () =>
+          import(
+            '@features/macros/macro-form/macro-form.component'
+          ).then((m) => m.MacroFormComponent),
+      },
+      {
+        path: 'macros/:id',
+        loadComponent: () =>
+          import(
+            '@features/macros/macro-form/macro-form.component'
+          ).then((m) => m.MacroFormComponent),
+      },
+      {
+        path: 'custom-attributes',
+        loadComponent: () =>
+          import(
+            '@features/settings/custom-attributes/custom-attributes-list.component'
+          ).then((m) => m.CustomAttributesListComponent),
+      },
+      {
+        path: 'custom-attributes/new',
+        loadComponent: () =>
+          import(
+            '@features/settings/custom-attributes/custom-attribute-form.component'
+          ).then((m) => m.CustomAttributeFormComponent),
+      },
+      {
+        path: 'custom-attributes/:id',
+        loadComponent: () =>
+          import(
+            '@features/settings/custom-attributes/custom-attribute-form.component'
+          ).then((m) => m.CustomAttributeFormComponent),
       },
       {
         path: 'profile',
