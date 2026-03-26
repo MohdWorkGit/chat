@@ -182,6 +182,27 @@ export const routes: Routes = [
             '@features/settings/notification-preferences/notification-preferences.component'
           ).then((m) => m.NotificationPreferencesComponent),
       },
+      {
+        path: 'agents',
+        loadComponent: () =>
+          import(
+            '@features/settings/agents/agent-list/agent-list.component'
+          ).then((m) => m.AgentListComponent),
+      },
+      {
+        path: 'custom-roles',
+        loadComponent: () =>
+          import(
+            '@features/settings/custom-roles/custom-roles.component'
+          ).then((m) => m.CustomRolesComponent),
+      },
+      {
+        path: 'saml',
+        loadComponent: () =>
+          import(
+            '@features/settings/saml-config/saml-config.component'
+          ).then((m) => m.SamlConfigComponent),
+      },
     ],
   },
   {

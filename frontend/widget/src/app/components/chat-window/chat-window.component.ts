@@ -223,4 +223,35 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
         },
       });
   }
+
+  toggleEmojiPicker(): void {
+    this.showEmojiPicker.update(v => !v);
+    if (this.showEmojiPicker()) {
+      this.showFileUpload.set(false);
+    }
+  }
+
+  toggleFileUpload(): void {
+    this.showFileUpload.update(v => !v);
+    if (this.showFileUpload()) {
+      this.showEmojiPicker.set(false);
+    }
+  }
+
+  onEmojiSelected(emoji: string): void {
+    this.newMessage += emoji;
+    this.showEmojiPicker.set(false);
+  }
+
+  onFileSelected(file: File): void {
+    if (!this.conversationId()) return;
+
+    this.apiService.uploadAttachment(this.conversationId(), file)
+      .subscribe({
+        next: (message: Message) => {
+          this.messages.update(msgs => [...msgs, message]);
+          this.showFileUpload.set(false);
+        },
+      });
+  }
 }

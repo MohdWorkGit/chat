@@ -230,3 +230,197 @@ a:hover {
 .toc a.active {
   color: var(--portal-primary);
 }
+
+/* Breadcrumb */
+.portal-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 0;
+  font-size: 0.875rem;
+  color: var(--portal-text-secondary);
+}
+
+.portal-breadcrumb a {
+  color: var(--portal-text-secondary);
+  text-decoration: none;
+}
+
+.portal-breadcrumb a:hover {
+  color: var(--portal-primary);
+  text-decoration: underline;
+}
+
+.portal-breadcrumb-separator {
+  color: var(--portal-border);
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.portal-breadcrumb-current {
+  color: var(--portal-text);
+  font-weight: 500;
+}
+
+/* Locale Switcher */
+.portal-locale-switcher {
+  position: relative;
+  display: inline-block;
+}
+
+.portal-locale-switcher-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  font-size: 0.875rem;
+  font-family: var(--portal-font);
+  color: var(--portal-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.portal-locale-switcher-toggle:hover {
+  border-color: var(--portal-primary);
+}
+
+.portal-locale-switcher-arrow {
+  font-size: 0.625rem;
+  transition: transform 0.2s;
+}
+
+.portal-locale-switcher-arrow.open {
+  transform: rotate(180deg);
+}
+
+.portal-locale-switcher-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 140px;
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 4px 0;
+  z-index: 200;
+}
+
+.portal-locale-switcher-dropdown li {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  color: var(--portal-text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.portal-locale-switcher-dropdown li:hover {
+  background: var(--portal-bg);
+}
+
+.portal-locale-switcher-dropdown li.active {
+  color: var(--portal-primary);
+  font-weight: 500;
+}
+
+/* Related Articles */
+.portal-related-articles {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--portal-border);
+}
+
+.portal-related-articles-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--portal-text);
+}
+
+.portal-related-articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.portal-related-article-card {
+  display: block;
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  padding: 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.portal-related-article-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: inherit;
+}
+
+.portal-related-article-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--portal-primary);
+}
+
+.portal-related-article-card p {
+  font-size: 0.875rem;
+  color: var(--portal-text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Search Pagination */
+.portal-search-meta p {
+  color: var(--portal-text-secondary);
+  margin-bottom: 24px;
+}
+
+.portal-search-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 0;
+}
+
+.portal-pagination-btn {
+  padding: 8px 20px;
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  font-size: 0.875rem;
+  font-family: var(--portal-font);
+  color: var(--portal-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.portal-pagination-btn:hover:not(:disabled) {
+  background: var(--portal-bg);
+  border-color: var(--portal-primary);
+}
+
+.portal-pagination-btn:disabled {
+  color: var(--portal-text-secondary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.portal-pagination-info {
+  font-size: 0.875rem;
+  color: var(--portal-text-secondary);
+}

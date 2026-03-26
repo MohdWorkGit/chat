@@ -1,12 +1,15 @@
-import { Component, ChangeDetectionStrategy, Input, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input, OnInit, OnDestroy, ViewEncapsulation, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
 import { ChatWindowComponent } from './components/chat-window/chat-window.component';
-import { SignalrService } from './services/signalr.service';
+import { UnreadBadgeComponent } from './components/unread-badge/unread-badge.component';
+import { CampaignBannerComponent } from './components/campaign-banner/campaign-banner.component';
+import { SignalrService, CampaignMessage } from './services/signalr.service';
 
 @Component({
   selector: 'cew-root',
   standalone: true,
-  imports: [CommonModule, ChatWindowComponent],
+  imports: [CommonModule, ChatWindowComponent, UnreadBadgeComponent, CampaignBannerComponent],
   template: `
     <div class="widget-container">
       @if (isChatOpen) {
@@ -16,10 +19,22 @@ import { SignalrService } from './services/signalr.service';
           (close)="toggleChat()" />
       }
 
+      @if (!isChatOpen && campaignMessage()) {
+        <cew-campaign-banner
+          [message]="campaignMessage()!.message"
+          [senderName]="campaignMessage()!.senderName"
+          [avatarUrl]="campaignMessage()!.avatarUrl"
+          (bannerClick)="onCampaignBannerClick()"
+          (bannerClose)="dismissCampaignBanner()" />
+      }
+
       <button
         class="widget-launcher"
         (click)="toggleChat()"
         [attr.aria-label]="isChatOpen ? 'Close chat' : 'Open chat'">
+        @if (!isChatOpen) {
+          <cew-unread-badge [count]="unreadCount()" />
+        }
         @if (isChatOpen) {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -41,6 +56,10 @@ export class AppComponent implements OnInit, OnDestroy {
   @Input() locale = 'en';
 
   isChatOpen = false;
+  unreadCount = signal(0);
+  campaignMessage = signal<CampaignMessage | null>(null);
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(private readonly signalrService: SignalrService) {}
 
@@ -48,13 +67,45 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.websiteToken) {
       this.signalrService.initialize(this.websiteToken);
     }
+
+    this.signalrService.messages$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (!this.isChatOpen) {
+          this.unreadCount.update(c => c + 1);
+        }
+      });
+
+    this.signalrService.campaignMessage$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((msg: CampaignMessage) => {
+        if (!this.isChatOpen) {
+          this.campaignMessage.set(msg);
+        }
+      });
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.signalrService.disconnect();
   }
 
   toggleChat(): void {
     this.isChatOpen = !this.isChatOpen;
+    if (this.isChatOpen) {
+      this.unreadCount.set(0);
+      this.campaignMessage.set(null);
+    }
+  }
+
+  onCampaignBannerClick(): void {
+    this.campaignMessage.set(null);
+    this.isChatOpen = true;
+    this.unreadCount.set(0);
+  }
+
+  dismissCampaignBanner(): void {
+    this.campaignMessage.set(null);
   }
 }
