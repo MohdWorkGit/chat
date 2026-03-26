@@ -161,6 +161,27 @@ export const routes: Routes = [
             '@features/macros/macro-list/macro-list.component'
           ).then((m) => m.MacroListComponent),
       },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import(
+            '@features/settings/profile-settings/profile-settings.component'
+          ).then((m) => m.ProfileSettingsComponent),
+      },
+      {
+        path: 'account',
+        loadComponent: () =>
+          import(
+            '@features/settings/account-settings/account-settings.component'
+          ).then((m) => m.AccountSettingsComponent),
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import(
+            '@features/settings/notification-preferences/notification-preferences.component'
+          ).then((m) => m.NotificationPreferencesComponent),
+      },
     ],
   },
   {
@@ -235,8 +256,24 @@ export const routes: Routes = [
     ],
   },
   {
-    path: '',
-    redirectTo: '/conversations',
+    path: 'dashboard',
+    redirectTo: '',
     pathMatch: 'full',
+  },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./layout/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import(
+            '@features/dashboard-home/dashboard-home.component'
+          ).then((m) => m.DashboardHomeComponent),
+      },
+    ],
   },
 ];

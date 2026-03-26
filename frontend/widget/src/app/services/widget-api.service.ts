@@ -26,6 +26,14 @@ export interface CreateConversationRequest {
   customFields?: Record<string, string>;
 }
 
+export interface WidgetConfig {
+  websiteToken: string;
+  inboxName: string;
+  welcomeMessage: string;
+  preChatFormEnabled: boolean;
+  primaryColor: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WidgetApiService {
   private readonly baseUrl = '/api/v1/widget';
@@ -74,6 +82,22 @@ export class WidgetApiService {
     return this.http.post<void>(
       `${this.baseUrl}/conversations/${conversationId}/typing`,
       { typing },
+      { headers: { 'X-Website-Token': websiteToken } },
+    );
+  }
+
+  uploadAttachment(conversationId: number, file: File): Observable<Message> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<Message>(
+      `${this.baseUrl}/conversations/${conversationId}/attachments`,
+      formData,
+    );
+  }
+
+  getWidgetConfig(websiteToken: string): Observable<WidgetConfig> {
+    return this.http.get<WidgetConfig>(
+      `${this.baseUrl}/config`,
       { headers: { 'X-Website-Token': websiteToken } },
     );
   }

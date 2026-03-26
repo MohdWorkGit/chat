@@ -1,8 +1,10 @@
-import { Component, ChangeDetectionStrategy, OnInit, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PortalApiService, ArticleSummary } from '../../services/portal-api.service';
+
+const RESULTS_PER_PAGE = 10;
 
 @Component({
   selector: 'portal-search',
@@ -23,12 +25,14 @@ import { PortalApiService, ArticleSummary } from '../../services/portal-api.serv
         </div>
 
         @if (hasSearched()) {
-          <p style="color: var(--portal-text-secondary); margin-bottom: 24px;">
-            {{ results().length }} result(s) for "{{ lastQuery() }}"
-          </p>
+          <div class="portal-search-meta">
+            <p style="color: var(--portal-text-secondary); margin-bottom: 24px;">
+              Showing {{ rangeStart() }}-{{ rangeEnd() }} of {{ totalResults() }} result(s) for "{{ lastQuery() }}"
+            </p>
+          </div>
 
           <ul class="article-list">
-            @for (article of results(); track article.id) {
+            @for (article of paginatedResults(); track article.id) {
               <li class="article-list-item">
                 <a [routerLink]="['/article', article.slug]">{{ article.title }}</a>
                 <p>{{ article.description }}</p>
@@ -47,6 +51,26 @@ import { PortalApiService, ArticleSummary } from '../../services/portal-api.serv
               </li>
             }
           </ul>
+
+          @if (totalPages() > 1) {
+            <div class="portal-search-pagination">
+              <button
+                class="portal-pagination-btn"
+                [disabled]="currentPage() <= 1"
+                (click)="goToPage(currentPage() - 1)">
+                Previous
+              </button>
+              <span class="portal-pagination-info">
+                Page {{ currentPage() }} of {{ totalPages() }}
+              </span>
+              <button
+                class="portal-pagination-btn"
+                [disabled]="currentPage() >= totalPages()"
+                (click)="goToPage(currentPage() + 1)">
+                Next
+              </button>
+            </div>
+          }
         }
       </div>
     </div>
@@ -55,9 +79,27 @@ import { PortalApiService, ArticleSummary } from '../../services/portal-api.serv
 })
 export class SearchComponent implements OnInit {
   searchQuery = '';
-  results = signal<ArticleSummary[]>([]);
+  allResults = signal<ArticleSummary[]>([]);
   hasSearched = signal(false);
   lastQuery = signal('');
+  currentPage = signal(1);
+
+  totalResults = computed(() => this.allResults().length);
+  totalPages = computed(() => Math.ceil(this.totalResults() / RESULTS_PER_PAGE));
+
+  rangeStart = computed(() => {
+    if (this.totalResults() === 0) return 0;
+    return (this.currentPage() - 1) * RESULTS_PER_PAGE + 1;
+  });
+
+  rangeEnd = computed(() =>
+    Math.min(this.currentPage() * RESULTS_PER_PAGE, this.totalResults()),
+  );
+
+  paginatedResults = computed(() => {
+    const start = (this.currentPage() - 1) * RESULTS_PER_PAGE;
+    return this.allResults().slice(start, start + RESULTS_PER_PAGE);
+  });
 
   constructor(
     private readonly apiService: PortalApiService,
@@ -77,14 +119,21 @@ export class SearchComponent implements OnInit {
   onSearch(): void {
     const query = this.searchQuery.trim();
     if (query) {
+      this.currentPage.set(1);
       this.performSearch(query);
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
     }
   }
 
   private performSearch(query: string): void {
     this.lastQuery.set(query);
     this.apiService.searchArticles(query).subscribe(results => {
-      this.results.set(results);
+      this.allResults.set(results);
       this.hasSearched.set(true);
     });
   }

@@ -40,34 +40,60 @@ export interface TocEntry {
   text: string;
 }
 
+export interface PaginatedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  perPage: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PortalApiService {
   private readonly baseUrl = '/api/v1/portal';
 
   constructor(private readonly http: HttpClient) {}
 
+  private getLocale(): string {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('portal-locale') || 'en';
+    }
+    return 'en';
+  }
+
+  private applyLocale(params: HttpParams): HttpParams {
+    return params.set('locale', this.getLocale());
+  }
+
   getCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${this.baseUrl}/categories`).pipe(
+    const params = this.applyLocale(new HttpParams());
+    return this.http.get<Category[]>(`${this.baseUrl}/categories`, { params }).pipe(
       catchError(() => of([])),
     );
   }
 
   getCategory(slug: string): Observable<Category> {
-    return this.http.get<Category>(`${this.baseUrl}/categories/${slug}`);
+    const params = this.applyLocale(new HttpParams());
+    return this.http.get<Category>(`${this.baseUrl}/categories/${slug}`, { params });
   }
 
   getCategoryArticles(slug: string): Observable<ArticleSummary[]> {
-    return this.http.get<ArticleSummary[]>(`${this.baseUrl}/categories/${slug}/articles`).pipe(
+    const params = this.applyLocale(new HttpParams());
+    return this.http.get<ArticleSummary[]>(`${this.baseUrl}/categories/${slug}/articles`, { params }).pipe(
       catchError(() => of([])),
     );
   }
 
   getArticle(slug: string): Observable<Article> {
-    return this.http.get<Article>(`${this.baseUrl}/articles/${slug}`);
+    const params = this.applyLocale(new HttpParams());
+    return this.http.get<Article>(`${this.baseUrl}/articles/${slug}`, { params });
   }
 
-  searchArticles(query: string): Observable<ArticleSummary[]> {
-    const params = new HttpParams().set('q', query);
+  searchArticles(query: string, page: number = 1, perPage: number = 10): Observable<ArticleSummary[]> {
+    let params = new HttpParams()
+      .set('q', query)
+      .set('page', page.toString())
+      .set('perPage', perPage.toString());
+    params = this.applyLocale(params);
     return this.http.get<ArticleSummary[]>(`${this.baseUrl}/articles/search`, { params }).pipe(
       catchError(() => of([])),
     );
