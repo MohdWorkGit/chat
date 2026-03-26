@@ -15,7 +15,7 @@ import { RelatedArticlesComponent } from '../../components/related-articles/rela
       @if (article(); as article) {
         <portal-breadcrumb [items]="breadcrumbItems()" />
 
-        <div style="display: grid; grid-template-columns: 1fr 240px; gap: 32px; align-items: start;">
+        <div class="article-layout">
           <article class="article-content">
             <h1>{{ article.title }}</h1>
             <div style="color: var(--portal-text-secondary); font-size: 0.875rem; margin-bottom: 24px;">
@@ -25,7 +25,7 @@ import { RelatedArticlesComponent } from '../../components/related-articles/rela
           </article>
 
           @if (tableOfContents().length > 0) {
-            <aside class="toc">
+            <aside class="toc article-toc">
               <div class="toc-title">On this page</div>
               @for (entry of tableOfContents(); track entry.id) {
                 <a

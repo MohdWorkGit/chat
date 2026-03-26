@@ -35,6 +35,10 @@ export const ConversationsActions = createActionGroup({
     'Message Received': props<{ message: Message }>(),
     'Conversation Updated': props<{ conversationId: number; updates: Record<string, unknown> }>(),
 
+    'Create Conversation': props<{ data: Partial<Conversation> }>(),
+    'Create Conversation Success': props<{ conversation: Conversation }>(),
+    'Create Conversation Failure': props<{ error: ApiError }>(),
+
     'Set Filters': props<{ filters: ConversationFilters }>(),
     'Clear Filters': emptyProps(),
   },

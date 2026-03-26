@@ -63,6 +63,25 @@ export const conversationsReducer = createReducer(
     conversationsAdapter.upsertOne(conversation, state)
   ),
 
+  on(ConversationsActions.createConversation, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+
+  on(ConversationsActions.createConversationSuccess, (state, { conversation }) =>
+    conversationsAdapter.addOne(conversation, {
+      ...state,
+      loading: false,
+    })
+  ),
+
+  on(ConversationsActions.createConversationFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
+
   on(ConversationsActions.selectConversation, (state, { id }) => ({
     ...state,
     selectedConversationId: id,

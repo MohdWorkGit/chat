@@ -75,6 +75,20 @@ export const loadMessages$ = createEffect(
   { functional: true }
 );
 
+export const createConversation$ = createEffect(
+  (actions$ = inject(Actions), conversationService = inject(ConversationService)) =>
+    actions$.pipe(
+      ofType(ConversationsActions.createConversation),
+      exhaustMap(({ data }) =>
+        conversationService.create(data).pipe(
+          map((conversation) => ConversationsActions.createConversationSuccess({ conversation })),
+          catchError((error: ApiError) => of(ConversationsActions.createConversationFailure({ error })))
+        )
+      )
+    ),
+  { functional: true }
+);
+
 export const sendMessage$ = createEffect(
   (actions$ = inject(Actions), conversationService = inject(ConversationService)) =>
     actions$.pipe(
