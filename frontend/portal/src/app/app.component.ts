@@ -1,10 +1,11 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
+import { LocaleSwitcherComponent } from './components/locale-switcher/locale-switcher.component';
 
 @Component({
   selector: 'portal-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, LocaleSwitcherComponent],
   template: `
     <header class="portal-header">
       <div class="container" style="display: flex; align-items: center; justify-content: space-between; height: 64px;">
@@ -14,6 +15,7 @@ import { RouterOutlet, RouterLink } from '@angular/router';
         <nav style="display: flex; align-items: center; gap: 24px;">
           <a routerLink="/" style="font-size: 0.875rem; color: var(--portal-text-secondary);">Home</a>
           <a routerLink="/search" style="font-size: 0.875rem; color: var(--portal-text-secondary);">Search</a>
+          <portal-locale-switcher (localeChange)="onLocaleChange($event)" />
         </nav>
       </div>
     </header>
@@ -47,4 +49,9 @@ import { RouterOutlet, RouterLink } from '@angular/router';
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {}
+export class AppComponent {
+  onLocaleChange(locale: string): void {
+    // Locale change handled - can be used to reload content in the future
+    console.log('Locale changed to:', locale);
+  }
+}

@@ -3,23 +3,17 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { PortalApiService, Article, TocEntry } from '../../services/portal-api.service';
+import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb/breadcrumb.component';
+import { RelatedArticlesComponent } from '../../components/related-articles/related-articles.component';
 
 @Component({
   selector: 'portal-article',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, BreadcrumbComponent, RelatedArticlesComponent],
   template: `
     <div class="container" style="padding-top: 16px;">
       @if (article(); as article) {
-        <nav class="breadcrumb">
-          <a routerLink="/">Home</a>
-          <span>/</span>
-          @if (article.category) {
-            <a [routerLink]="['/category', article.category.slug]">{{ article.category.name }}</a>
-            <span>/</span>
-          }
-          <span>{{ article.title }}</span>
-        </nav>
+        <portal-breadcrumb [items]="breadcrumbItems()" />
 
         <div style="display: grid; grid-template-columns: 1fr 240px; gap: 32px; align-items: start;">
           <article class="article-content">
@@ -43,6 +37,10 @@ import { PortalApiService, Article, TocEntry } from '../../services/portal-api.s
             </aside>
           }
         </div>
+
+        <portal-related-articles
+          [categorySlug]="article.category?.slug || ''"
+          [currentArticleId]="article.id" />
       } @else {
         <div style="text-align: center; padding: 64px 0;">
           <p style="color: var(--portal-text-secondary);">Loading article...</p>
@@ -57,6 +55,7 @@ export class ArticleComponent implements OnInit {
 
   article = signal<Article | null>(null);
   tableOfContents = signal<TocEntry[]>([]);
+  breadcrumbItems = signal<BreadcrumbItem[]>([]);
 
   constructor(
     private readonly apiService: PortalApiService,
@@ -76,6 +75,13 @@ export class ArticleComponent implements OnInit {
       this.titleService.setTitle(`${article.title} - Help Center`);
       this.metaService.updateTag({ name: 'description', content: article.description });
       this.tableOfContents.set(this.extractToc(article.contentHtml));
+
+      const crumbs: BreadcrumbItem[] = [{ label: 'Home', url: '/' }];
+      if (article.category) {
+        crumbs.push({ label: article.category.name, url: `/category/${article.category.slug}` });
+      }
+      crumbs.push({ label: article.title });
+      this.breadcrumbItems.set(crumbs);
     });
   }
 

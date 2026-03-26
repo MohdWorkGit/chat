@@ -3,6 +3,12 @@ import { Subject } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
 import { Message } from './widget-api.service';
 
+export interface CampaignMessage {
+  message: string;
+  senderName: string;
+  avatarUrl: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SignalrService {
   private hubConnection: signalR.HubConnection | null = null;
@@ -10,10 +16,12 @@ export class SignalrService {
   private readonly messagesSubject = new Subject<Message>();
   private readonly typingSubject = new Subject<boolean>();
   private readonly conversationResolvedSubject = new Subject<number>();
+  private readonly campaignMessageSubject = new Subject<CampaignMessage>();
 
   readonly messages$ = this.messagesSubject.asObservable();
   readonly typing$ = this.typingSubject.asObservable();
   readonly conversationResolved$ = this.conversationResolvedSubject.asObservable();
+  readonly campaignMessage$ = this.campaignMessageSubject.asObservable();
 
   initialize(websiteToken: string): void {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -61,6 +69,10 @@ export class SignalrService {
       if (data.newStatus === 'Resolved') {
         this.conversationResolvedSubject.next(data.conversationId);
       }
+    });
+
+    this.hubConnection.on('campaign.message', (data: CampaignMessage) => {
+      this.campaignMessageSubject.next(data);
     });
   }
 

@@ -3,19 +3,16 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { PortalApiService, Category, ArticleSummary } from '../../services/portal-api.service';
+import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'portal-category',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, BreadcrumbComponent],
   template: `
     <div class="container" style="padding-top: 16px;">
       @if (category(); as category) {
-        <nav class="breadcrumb">
-          <a routerLink="/">Home</a>
-          <span>/</span>
-          <span>{{ category.name }}</span>
-        </nav>
+        <portal-breadcrumb [items]="breadcrumbItems()" />
 
         <div style="max-width: 800px; margin: 0 auto; padding: 32px 0;">
           <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">{{ category.name }}</h1>
@@ -48,6 +45,7 @@ export class CategoryComponent implements OnInit {
 
   category = signal<Category | null>(null);
   articles = signal<ArticleSummary[]>([]);
+  breadcrumbItems = signal<BreadcrumbItem[]>([]);
 
   constructor(
     private readonly apiService: PortalApiService,
@@ -64,6 +62,10 @@ export class CategoryComponent implements OnInit {
     this.apiService.getCategory(slug).subscribe(category => {
       this.category.set(category);
       this.titleService.setTitle(`${category.name} - Help Center`);
+      this.breadcrumbItems.set([
+        { label: 'Home', url: '/' },
+        { label: category.name },
+      ]);
     });
 
     this.apiService.getCategoryArticles(slug).subscribe(articles => {
