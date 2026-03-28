@@ -34,6 +34,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Pgvector.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -425,8 +426,20 @@ var app = builder.Build();
         Log.Warning(ex, "Migration failed — falling back to EnsureCreated for initial setup");
         try
         {
-            db.Database.EnsureCreated();
-            Log.Information("Database schema ensured via EnsureCreated");
+            // EnsureCreated returns false if the database already exists (even with no tables).
+            // Use the relational database creator directly to create tables when the database
+            // exists but the schema is missing.
+            var dbCreator = db.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>();
+            if (!dbCreator.Exists())
+            {
+                dbCreator.Create();
+            }
+            dbCreator.CreateTables();
+            Log.Information("Database schema ensured via CreateTables");
+        }
+        catch (Exception ex2) when (ex2.Message.Contains("already exists") || ex2 is Npgsql.PostgresException { SqlState: "42P07" })
+        {
+            Log.Information("Database tables already exist — skipping creation");
         }
         catch (Exception ex2)
         {
