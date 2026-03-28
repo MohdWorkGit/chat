@@ -424,14 +424,23 @@ var app = builder.Build();
     {
         Log.Warning(ex, "Migration failed — falling back to EnsureCreated for initial setup");
 
-        // EnsureCreated returns false when the database already exists, even if the
-        // schema is missing or incomplete (e.g. from a previous failed model build).
-        // Detect that case and drop/recreate so all tables are created cleanly.
-        if (!db.Database.EnsureCreated())
+        // EnsureCreated only creates schema when it also creates the database.
+        // If the database already exists (from a previous failed attempt), it returns
+        // false and does nothing — even if no tables exist.
+        var created = db.Database.EnsureCreated();
+        if (!created)
         {
-            // Database exists — check whether the schema is actually present.
-            var hasSchema = db.Database.ExecuteSqlRaw(
-                "SELECT 1 FROM information_schema.tables WHERE table_name = 'AspNetRoles' LIMIT 1") > 0;
+            // Database exists — check if tables are actually present using the raw connection.
+            var conn = db.Database.GetDbConnection();
+            var wasOpen = conn.State == System.Data.ConnectionState.Open;
+            if (!wasOpen) await conn.OpenAsync();
+            bool hasSchema;
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'AspNetRoles')";
+                hasSchema = (bool)(await cmd.ExecuteScalarAsync())!;
+            }
+            if (!wasOpen) await conn.CloseAsync();
 
             if (!hasSchema)
             {
