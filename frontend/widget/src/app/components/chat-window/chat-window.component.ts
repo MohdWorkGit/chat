@@ -6,6 +6,9 @@ import {
   EventEmitter,
   OnInit,
   OnDestroy,
+  AfterViewChecked,
+  ViewChild,
+  ElementRef,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -48,7 +51,7 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
           [status]="agentAvailability()"
           [replyTimeMinutes]="agentReplyTime()" />
         <button
-          style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
+          class="minimize-btn"
           (click)="close.emit()"
           aria-label="Minimize chat">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -133,9 +136,142 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
       }
     </div>
   `,
+  styles: [`
+    :host {
+      display: contents;
+    }
+    .chat-window {
+      width: 380px;
+      height: 560px;
+      background: var(--widget-bg, #ffffff);
+      border-radius: var(--widget-radius, 12px);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: widget-slide-up 0.3s ease;
+    }
+    @keyframes widget-slide-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .chat-header {
+      background: linear-gradient(135deg, var(--widget-primary, #1b72e8) 0%, #1560c7 100%);
+      color: white;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background-color: #fafbfc;
+    }
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.15);
+      border-radius: 3px;
+    }
+    .chat-input-area {
+      padding: 12px 16px;
+      border-top: 1px solid var(--widget-border, #e5e7eb);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--widget-bg, #ffffff);
+      flex-shrink: 0;
+    }
+    .chat-input-area textarea {
+      flex: 1;
+      border: 1px solid var(--widget-border, #e5e7eb);
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-family: var(--widget-font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      max-height: 80px;
+      line-height: 1.4;
+      transition: border-color 0.2s;
+    }
+    .chat-input-area textarea:focus {
+      border-color: var(--widget-primary, #1b72e8);
+      box-shadow: 0 0 0 2px rgba(27, 114, 232, 0.12);
+    }
+    .send-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--widget-primary, #1b72e8);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background-color 0.2s, transform 0.15s;
+    }
+    .send-button:hover:not(:disabled) {
+      background-color: var(--widget-primary-hover, #1560c7);
+      transform: scale(1.05);
+    }
+    .send-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .input-action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--widget-text-secondary, #6b7280);
+      flex-shrink: 0;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .input-action-btn:hover {
+      background-color: rgba(0, 0, 0, 0.06);
+      color: var(--widget-text, #1f2937);
+    }
+    .input-action-btn.active {
+      color: var(--widget-primary, #1b72e8);
+      background-color: rgba(27, 114, 232, 0.1);
+    }
+    .minimize-btn {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s;
+    }
+    .minimize-btn:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChatWindowComponent implements OnInit, OnDestroy {
+export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked {
   @Input() websiteToken = '';
   @Input() locale = 'en';
   @Output() close = new EventEmitter<void>();
@@ -154,6 +290,8 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   greetingTitle = 'Hi there!';
   greetingText = 'We are here to help. Ask us anything, or share your feedback.';
 
+  @ViewChild('messageList') private messageList?: ElementRef<HTMLDivElement>;
+  private shouldScrollToBottom = false;
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -166,6 +304,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(message => {
         this.messages.update(msgs => [...msgs, message]);
+        this.shouldScrollToBottom = true;
       });
 
     this.signalrService.typing$
@@ -179,6 +318,13 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.currentView.set('csat');
       });
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.shouldScrollToBottom) {
+      this.scrollToBottom();
+      this.shouldScrollToBottom = false;
+    }
   }
 
   ngOnDestroy(): void {
@@ -218,6 +364,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
         next: (message: Message) => {
           this.messages.update(msgs => [...msgs, message]);
           this.newMessage = '';
+          this.shouldScrollToBottom = true;
         },
       });
   }
@@ -252,10 +399,17 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
     this.showEmojiPicker.set(false);
   }
 
+  private scrollToBottom(): void {
+    const el = this.messageList?.nativeElement;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }
+
   onFileSelected(file: File): void {
     if (!this.conversationId()) return;
 
-    this.apiService.uploadAttachment(this.conversationId(), file)
+    this.apiService.uploadAttachment(this.websiteToken, this.conversationId(), file)
       .subscribe({
         next: (message: Message) => {
           this.messages.update(msgs => [...msgs, message]);
