@@ -96,6 +96,41 @@ export const routes: Routes = [
             '@features/reports/overview/overview.component'
           ).then((m) => m.ReportsOverviewComponent),
       },
+      {
+        path: 'csat',
+        loadComponent: () =>
+          import(
+            '@features/reports/csat/csat-report.component'
+          ).then((m) => m.CsatReportComponent),
+      },
+      {
+        path: 'agents',
+        loadComponent: () =>
+          import(
+            '@features/reports/agents/agent-report.component'
+          ).then((m) => m.AgentReportComponent),
+      },
+      {
+        path: 'inboxes',
+        loadComponent: () =>
+          import(
+            '@features/reports/inboxes/inbox-report.component'
+          ).then((m) => m.InboxReportComponent),
+      },
+      {
+        path: 'teams',
+        loadComponent: () =>
+          import(
+            '@features/reports/teams/team-report.component'
+          ).then((m) => m.TeamReportComponent),
+      },
+      {
+        path: 'labels',
+        loadComponent: () =>
+          import(
+            '@features/reports/labels/label-report.component'
+          ).then((m) => m.LabelReportComponent),
+      },
     ],
   },
   {
@@ -265,6 +300,20 @@ export const routes: Routes = [
           import(
             '@features/settings/agents/agent-list/agent-list.component'
           ).then((m) => m.AgentListComponent),
+      },
+      {
+        path: 'webhooks',
+        loadComponent: () =>
+          import(
+            '@features/webhooks/webhook-list/webhook-list.component'
+          ).then((m) => m.WebhookListComponent),
+      },
+      {
+        path: 'custom-filters',
+        loadComponent: () =>
+          import(
+            '@features/custom-filters/filter-list/filter-list.component'
+          ).then((m) => m.FilterListComponent),
       },
       {
         path: 'custom-roles',

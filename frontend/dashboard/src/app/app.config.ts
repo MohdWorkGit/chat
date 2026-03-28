@@ -28,6 +28,10 @@ import * as cannedResponsesEffects from '@store/canned-responses/canned-response
 import * as macrosEffects from '@store/macros/macros.effects';
 import { customAttributesReducer } from '@store/custom-attributes/custom-attributes.reducer';
 import * as customAttributesEffects from '@store/custom-attributes/custom-attributes.effects';
+import { webhooksReducer } from '@store/webhooks/webhooks.reducer';
+import * as webhooksEffects from '@store/webhooks/webhooks.effects';
+import { customFiltersReducer } from '@store/custom-filters/custom-filters.reducer';
+import * as customFiltersEffects from '@store/custom-filters/custom-filters.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -47,6 +51,8 @@ export const appConfig: ApplicationConfig = {
       cannedResponses: cannedResponsesReducer,
       macros: macrosReducer,
       customAttributes: customAttributesReducer,
+      webhooks: webhooksReducer,
+      customFilters: customFiltersReducer,
     }),
     provideEffects([
       authEffects,
@@ -61,6 +67,8 @@ export const appConfig: ApplicationConfig = {
       cannedResponsesEffects,
       macrosEffects,
       customAttributesEffects,
+      webhooksEffects,
+      customFiltersEffects,
     ]),
   ]
 };

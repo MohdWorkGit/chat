@@ -40,6 +40,10 @@ export class ReportService {
     return this.api.get<ReportMetric[]>(`${this.basePath()}/teams`, filters as unknown as Record<string, string | number | boolean>);
   }
 
+  getReport(params: Record<string, string | number | boolean>): Observable<any[]> {
+    return this.api.get<any[]>(`${this.basePath()}`, params);
+  }
+
   getSummary(since: string, until: string): Observable<{
     conversationsCount: number;
     incomingMessagesCount: number;
