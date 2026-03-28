@@ -1,4 +1,5 @@
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -23,7 +24,7 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
             .IsRequired();
 
         builder.Property(m => m.Status)
-            .HasDefaultValue(0);
+            .HasDefaultValue(MessageStatus.Sent);
 
         builder.Property(m => m.Private)
             .HasDefaultValue(false);

@@ -1,4 +1,5 @@
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,10 +18,10 @@ public class ConversationConfiguration : IEntityTypeConfiguration<Conversation>
 
         builder.Property(c => c.Status)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(ConversationStatus.Open);
 
         builder.Property(c => c.Priority)
-            .HasDefaultValue(0);
+            .HasDefaultValue(ConversationPriority.None);
 
         builder.Property(c => c.Uuid)
             .HasMaxLength(255);
