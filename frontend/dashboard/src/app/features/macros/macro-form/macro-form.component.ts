@@ -111,14 +111,14 @@ const ACTION_PARAM_LABELS: Record<string, string> = {
             }
 
             <div class="space-y-3" formArrayName="actions">
-              @for (action of actionsArray.controls; track $index; let i = $index) {
-                <div class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50" [formGroupName]="i">
+              @for (action of actionsArray.controls; track $index) {
+                <div class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50" [formGroupName]="$index">
                   <!-- Reorder buttons -->
                   <div class="flex flex-col gap-1 pt-1">
                     <button
                       type="button"
-                      [disabled]="i === 0"
-                      (click)="moveAction(i, i - 1)"
+                      [disabled]="$index === 0"
+                      (click)="moveAction($index, $index - 1)"
                       class="text-gray-400 hover:text-gray-600 disabled:opacity-30"
                     >
                       <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -127,8 +127,8 @@ const ACTION_PARAM_LABELS: Record<string, string> = {
                     </button>
                     <button
                       type="button"
-                      [disabled]="i === actionsArray.length - 1"
-                      (click)="moveAction(i, i + 1)"
+                      [disabled]="$index === actionsArray.length - 1"
+                      (click)="moveAction($index, $index + 1)"
                       class="text-gray-400 hover:text-gray-600 disabled:opacity-30"
                     >
                       <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -179,7 +179,7 @@ const ACTION_PARAM_LABELS: Record<string, string> = {
                   <!-- Remove -->
                   <button
                     type="button"
-                    (click)="removeAction(i)"
+                    (click)="removeAction($index)"
                     class="mt-5 text-red-400 hover:text-red-600"
                   >
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
