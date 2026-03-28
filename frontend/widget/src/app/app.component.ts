@@ -47,7 +47,67 @@ import { SignalrService, CampaignMessage } from './services/signalr.service';
       </button>
     </div>
   `,
-  styles: [],
+  styles: [`
+    :host {
+      --widget-primary: #1b72e8;
+      --widget-primary-hover: #1560c7;
+      --widget-bg: #ffffff;
+      --widget-text: #1f2937;
+      --widget-text-secondary: #6b7280;
+      --widget-border: #e5e7eb;
+      --widget-bubble-agent: #f3f4f6;
+      --widget-bubble-customer: #1b72e8;
+      --widget-bubble-customer-text: #ffffff;
+      --widget-radius: 12px;
+      --widget-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+      --widget-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--widget-font);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--widget-text);
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    .widget-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999999;
+      font-family: var(--widget-font);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+    }
+    .widget-launcher {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: var(--widget-primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--widget-shadow);
+      transition: transform 0.2s ease, background-color 0.2s ease;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .widget-launcher:hover {
+      transform: scale(1.05);
+      background-color: var(--widget-primary-hover);
+    }
+    .widget-launcher svg {
+      width: 28px;
+      height: 28px;
+      fill: currentColor;
+    }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.ShadowDom,
 })

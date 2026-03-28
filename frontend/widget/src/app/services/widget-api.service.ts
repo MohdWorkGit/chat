@@ -86,12 +86,13 @@ export class WidgetApiService {
     );
   }
 
-  uploadAttachment(conversationId: number, file: File): Observable<Message> {
+  uploadAttachment(websiteToken: string, conversationId: number, file: File): Observable<Message> {
     const formData = new FormData();
     formData.append('file', file, file.name);
     return this.http.post<Message>(
       `${this.baseUrl}/conversations/${conversationId}/attachments`,
       formData,
+      { headers: { 'X-Website-Token': websiteToken } },
     );
   }
 
