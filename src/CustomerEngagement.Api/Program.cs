@@ -34,7 +34,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Pgvector.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -424,29 +423,24 @@ var app = builder.Build();
     catch (Exception ex)
     {
         Log.Warning(ex, "Migration failed — falling back to EnsureCreated for initial setup");
-        try
+
+        // EnsureCreated returns false when the database already exists, even if the
+        // schema is missing or incomplete (e.g. from a previous failed model build).
+        // Detect that case and drop/recreate so all tables are created cleanly.
+        if (!db.Database.EnsureCreated())
         {
-            // EnsureCreated returns false if the database already exists (even with no tables).
-            // Use the relational database creator directly to create tables when the database
-            // exists but the schema is missing.
-            var dbCreator = db.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>();
-            if (!dbCreator.Exists())
+            // Database exists — check whether the schema is actually present.
+            var hasSchema = db.Database.ExecuteSqlRaw(
+                "SELECT 1 FROM information_schema.tables WHERE table_name = 'AspNetRoles' LIMIT 1") > 0;
+
+            if (!hasSchema)
             {
-                dbCreator.Create();
+                Log.Warning("Database exists but schema is missing — recreating");
+                db.Database.EnsureDeleted();
+                db.Database.EnsureCreated();
             }
-            dbCreator.CreateTables();
-            Log.Information("Database schema ensured via CreateTables");
         }
-        catch (Exception ex2) when (ex2.Message.Contains("already exists") || ex2 is Npgsql.PostgresException { SqlState: "42P07" })
-        {
-            Log.Information("Database tables already exist — skipping creation");
-        }
-        catch (Exception ex2)
-        {
-            Log.Error(ex2, "Failed to initialize database — retrying in 5s");
-            await Task.Delay(5000);
-            db.Database.EnsureCreated();
-        }
+        Log.Information("Database schema ensured via EnsureCreated");
     }
 
     // Seed roles, default account, and admin user
