@@ -34,6 +34,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Pgvector.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -63,6 +64,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     {
         npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
         npgsql.EnableRetryOnFailure(3);
+        npgsql.UseVector();
     }));
 
 // ---------------------------------------------------------------------------

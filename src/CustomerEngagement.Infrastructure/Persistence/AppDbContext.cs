@@ -96,6 +96,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         base.OnModelCreating(builder);
 
+        builder.HasPostgresExtension("vector");
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         // Global tenant query filters for multi-tenancy
