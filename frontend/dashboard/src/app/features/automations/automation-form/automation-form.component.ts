@@ -89,8 +89,8 @@ import { AutomationsActions } from '@store/automations/automations.actions';
             }
 
             <div formArrayName="conditions">
-              @for (condition of conditions.controls; track $index; let i = $index) {
-                <div class="flex items-start gap-3 mb-3" [formGroupName]="i">
+              @for (condition of conditions.controls; track $index) {
+                <div class="flex items-start gap-3 mb-3" [formGroupName]="$index">
                   <div class="flex-1">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Field</label>
                     <input
@@ -122,7 +122,7 @@ import { AutomationsActions } from '@store/automations/automations.actions';
                   <div class="pt-5">
                     <button
                       type="button"
-                      (click)="removeCondition(i)"
+                      (click)="removeCondition($index)"
                       class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                     >
                       <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -156,8 +156,8 @@ import { AutomationsActions } from '@store/automations/automations.actions';
             }
 
             <div formArrayName="actions">
-              @for (action of actions.controls; track $index; let i = $index) {
-                <div class="flex items-start gap-3 mb-3" [formGroupName]="i">
+              @for (action of actions.controls; track $index) {
+                <div class="flex items-start gap-3 mb-3" [formGroupName]="$index">
                   <div class="flex-1">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Action Type</label>
                     <select
@@ -186,7 +186,7 @@ import { AutomationsActions } from '@store/automations/automations.actions';
                   <div class="pt-5">
                     <button
                       type="button"
-                      (click)="removeAction(i)"
+                      (click)="removeAction($index)"
                       class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                     >
                       <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

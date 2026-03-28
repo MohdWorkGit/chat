@@ -115,17 +115,17 @@ const ATTRIBUTE_TYPES = [
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">List Values</label>
               <div class="space-y-2">
-                @for (value of listValues; track $index; let i = $index) {
+                @for (value of listValues; track $index) {
                   <div class="flex items-center gap-2">
                     <input
                       [value]="value"
-                      (input)="updateListValue(i, $event)"
+                      (input)="updateListValue($index, $event)"
                       class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       placeholder="Option value"
                     />
                     <button
                       type="button"
-                      (click)="removeListValue(i)"
+                      (click)="removeListValue($index)"
                       class="text-red-400 hover:text-red-600"
                     >
                       <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
