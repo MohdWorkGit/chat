@@ -1,0 +1,22 @@
+{
+  "name": "customer-engagement-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E2E tests for the Customer Engagement platform",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
+    "test:auth": "npx playwright test tests/auth.spec.ts",
+    "test:conversations": "npx playwright test tests/conversations.spec.ts",
+    "test:contacts": "npx playwright test tests/contacts.spec.ts",
+    "test:settings": "npx playwright test tests/settings.spec.ts",
+    "test:helpcenter": "npx playwright test tests/helpcenter.spec.ts",
+    "test:widget": "npx playwright test tests/widget.spec.ts",
+    "install:browsers": "npx playwright install --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

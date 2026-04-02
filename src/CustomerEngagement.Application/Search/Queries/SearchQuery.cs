@@ -20,13 +20,16 @@ public class SearchQueryHandler : IRequestHandler<SearchQuery, SearchResultDto>
 {
     private readonly IConversationService _conversationService;
     private readonly IContactService _contactService;
+    private readonly Core.Interfaces.IRepository<Core.Entities.Message> _messageRepository;
 
     public SearchQueryHandler(
         IConversationService conversationService,
-        IContactService contactService)
+        IContactService contactService,
+        Core.Interfaces.IRepository<Core.Entities.Message> messageRepository)
     {
         _conversationService = conversationService ?? throw new ArgumentNullException(nameof(conversationService));
         _contactService = contactService ?? throw new ArgumentNullException(nameof(contactService));
+        _messageRepository = messageRepository;
     }
 
     public async Task<SearchResultDto> Handle(SearchQuery request, CancellationToken cancellationToken)
@@ -42,14 +45,29 @@ public class SearchQueryHandler : IRequestHandler<SearchQuery, SearchResultDto>
         var contactsTask = _contactService.SearchAsync(
             request.AccountId, request.Query, request.Page, request.PageSize, cancellationToken);
 
-        await Task.WhenAll(conversationsTask, contactsTask);
+        var messagesTask = _messageRepository.FindAsync(
+            m => m.AccountId == request.AccountId && m.Content != null && m.Content.Contains(request.Query),
+            cancellationToken);
+
+        await Task.WhenAll(conversationsTask, contactsTask, messagesTask);
 
         var conversations = (await conversationsTask).Items.ToList().AsReadOnly();
         var contacts = (await contactsTask).Items.ToList().AsReadOnly();
+        var messageEntities = await messagesTask;
+        var messages = messageEntities
+            .Take(request.PageSize)
+            .Select(m => new MessageDto(
+                m.Id, m.ConversationId, m.AccountId, m.SenderId,
+                m.SenderType, m.Content, m.ContentType,
+                m.MessageType.ToString(), m.Private, m.Status.ToString(),
+                m.SentAt, m.CreatedAt,
+                Array.Empty<AttachmentDto>().AsReadOnly()))
+            .ToList()
+            .AsReadOnly();
 
         return new SearchResultDto(
             conversations,
             contacts,
-            Array.Empty<MessageDto>().AsReadOnly());
+            messages);
     }
 }

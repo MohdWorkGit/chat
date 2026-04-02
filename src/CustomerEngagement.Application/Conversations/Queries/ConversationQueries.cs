@@ -69,10 +69,25 @@ public record GetParticipantsQuery(long AccountId, long ConversationId) : IReque
 
 public class GetParticipantsQueryHandler : IRequestHandler<GetParticipantsQuery, IReadOnlyList<UserSummaryDto>>
 {
-    public Task<IReadOnlyList<UserSummaryDto>> Handle(GetParticipantsQuery request, CancellationToken cancellationToken)
+    private readonly Core.Interfaces.IRepository<Core.Entities.ConversationParticipant> _participantRepository;
+
+    public GetParticipantsQueryHandler(Core.Interfaces.IRepository<Core.Entities.ConversationParticipant> participantRepository)
     {
-        // Participants would be loaded from the ConversationParticipant join table
-        IReadOnlyList<UserSummaryDto> result = Array.Empty<UserSummaryDto>();
-        return Task.FromResult(result);
+        _participantRepository = participantRepository;
+    }
+
+    public async Task<IReadOnlyList<UserSummaryDto>> Handle(GetParticipantsQuery request, CancellationToken cancellationToken)
+    {
+        var participants = await _participantRepository.FindAsync(
+            p => p.ConversationId == (int)request.ConversationId && p.AccountId == (int)request.AccountId,
+            cancellationToken);
+
+        return participants.Select(p => new UserSummaryDto(
+            p.UserId,
+            p.User?.Name ?? "",
+            p.User?.Avatar,
+            p.User?.AvailabilityStatus.ToString() ?? "Offline"))
+            .ToList()
+            .AsReadOnly();
     }
 }

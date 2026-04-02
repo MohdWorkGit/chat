@@ -68,6 +68,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<ChannelEmail> ChannelEmails => Set<ChannelEmail>();
     public DbSet<ChannelApi> ChannelApis => Set<ChannelApi>();
     public DbSet<AccountUser> AccountUsers => Set<AccountUser>();
+    public DbSet<ConversationDraft> ConversationDrafts => Set<ConversationDraft>();
     public DbSet<AssignmentPolicy> AssignmentPolicies => Set<AssignmentPolicy>();
     public DbSet<RelatedCategory> RelatedCategories => Set<RelatedCategory>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
@@ -125,6 +126,8 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             builder.Entity<Note>().HasQueryFilter(e => e.AccountId == _currentAccountId);
             builder.Entity<Mention>().HasQueryFilter(e => e.AccountId == _currentAccountId);
             builder.Entity<AuditLog>().HasQueryFilter(e => e.AccountId == _currentAccountId);
+            builder.Entity<ConversationDraft>().HasQueryFilter(e => e.AccountId == _currentAccountId);
+            builder.Entity<EmailTemplate>().HasQueryFilter(e => e.AccountId == _currentAccountId);
         }
     }
 }
