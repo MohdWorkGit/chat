@@ -328,6 +328,7 @@ builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<IPortalService, PortalService>();
 builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<IMfaService, MfaService>();
 builder.Services.AddScoped<JwtTokenService>();
 
 // Automation & workflow services

@@ -88,6 +88,14 @@ public class IdentityService : IIdentityService
             return new AuthResult(false, null, null, new[] { "Invalid email or password." });
         }
 
+        // Check if MFA is enabled
+        if (await _userManager.GetTwoFactorEnabledAsync(user))
+        {
+            _logger.LogInformation("MFA required for user {Email}", email);
+            return new AuthResult(false, null, null, new[] { "MFA_REQUIRED" },
+                new AuthUserInfo(user.Id, user.Name, user.Email ?? email, user.Avatar, "", accountId, ""));
+        }
+
         var roles = await _userManager.GetRolesAsync(user);
         var role = roles.FirstOrDefault() ?? "Agent";
 
@@ -159,5 +167,21 @@ public class IdentityService : IIdentityService
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         _logger.LogInformation("Password reset token generated for {Email}", email);
         return token;
+    }
+
+    public async Task<AuthResult> GenerateTokensForUserAsync(int userId, int accountId)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+            return new AuthResult(false, null, null, new[] { "User not found." });
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var role = roles.FirstOrDefault() ?? "Agent";
+
+        var accessToken = _jwtTokenService.GenerateAccessToken(user, accountId, role);
+        var refreshToken = _jwtTokenService.GenerateRefreshToken();
+
+        var userInfo = new AuthUserInfo(user.Id, user.Name, user.Email ?? "", user.Avatar, role, accountId, user.AvailabilityStatus.ToString());
+        return new AuthResult(true, accessToken, refreshToken, User: userInfo);
     }
 }

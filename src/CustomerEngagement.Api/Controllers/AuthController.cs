@@ -93,4 +93,62 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(new Application.Auth.Queries.GetCurrentUserQuery(userId));
         return Ok(result);
     }
+
+    // --- MFA/2FA Endpoints ---
+
+    [HttpPost("mfa/setup")]
+    [Authorize]
+    public async Task<ActionResult> SetupMfa()
+    {
+        var userId = int.Parse(User.FindFirst("uid")?.Value ?? "0");
+        var result = await _mediator.Send(new Application.Auth.Commands.SetupMfaCommand(userId));
+        if (!result.Succeeded)
+            return BadRequest(new { message = string.Join("; ", result.Errors ?? []) });
+        return Ok(new { result.SecretKey, result.QrCodeUri });
+    }
+
+    [HttpPost("mfa/enable")]
+    [Authorize]
+    public async Task<ActionResult> EnableMfa([FromBody] MfaCodeRequest request)
+    {
+        var userId = int.Parse(User.FindFirst("uid")?.Value ?? "0");
+        var result = await _mediator.Send(new Application.Auth.Commands.EnableMfaCommand(userId, request.OtpCode));
+        if (!result.Succeeded)
+            return BadRequest(new { message = string.Join("; ", result.Errors ?? []) });
+        return Ok(new { result.BackupCodes });
+    }
+
+    [HttpPost("mfa/disable")]
+    [Authorize]
+    public async Task<ActionResult> DisableMfa([FromBody] MfaCodeRequest request)
+    {
+        var userId = int.Parse(User.FindFirst("uid")?.Value ?? "0");
+        var result = await _mediator.Send(new Application.Auth.Commands.DisableMfaCommand(userId, request.OtpCode));
+        if (!result.Succeeded)
+            return BadRequest(new { message = string.Join("; ", result.Errors ?? []) });
+        return Ok(new { message = "MFA disabled successfully." });
+    }
+
+    [HttpPost("mfa/verify")]
+    [AllowAnonymous]
+    public async Task<ActionResult> VerifyMfa([FromBody] MfaVerifyRequest request)
+    {
+        var result = await _mediator.Send(
+            new Application.Auth.Commands.VerifyMfaCommand(request.UserId, request.OtpCode, request.AccountId));
+        if (!result.Succeeded)
+            return Unauthorized(new { message = string.Join("; ", result.Errors ?? []) });
+        return Ok(new { result.AccessToken, result.RefreshToken });
+    }
+
+    [HttpPost("mfa/backup-codes/regenerate")]
+    [Authorize]
+    public async Task<ActionResult> RegenerateBackupCodes()
+    {
+        var userId = int.Parse(User.FindFirst("uid")?.Value ?? "0");
+        var codes = await _mediator.Send(new Application.Auth.Commands.RegenerateBackupCodesCommand(userId));
+        return Ok(new { BackupCodes = codes });
+    }
 }
+
+public record MfaCodeRequest(string OtpCode);
+public record MfaVerifyRequest(int UserId, string OtpCode, int AccountId = 1);
