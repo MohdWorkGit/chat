@@ -414,39 +414,60 @@ var app = builder.Build();
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    // Local helper: check if the Identity schema exists in the database.
+    async Task<bool> SchemaExistsAsync()
+    {
+        var conn = db.Database.GetDbConnection();
+        var wasOpen = conn.State == System.Data.ConnectionState.Open;
+        if (!wasOpen) await conn.OpenAsync();
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'AspNetRoles')";
+            return (bool)(await cmd.ExecuteScalarAsync())!;
+        }
+        finally
+        {
+            if (!wasOpen) await conn.CloseAsync();
+        }
+    }
+
     try
     {
-        db.Database.Migrate();
-        Log.Information("Database migrations applied successfully");
+        // If the project has migrations, apply them. Otherwise Migrate() is a no-op
+        // and we must fall through to EnsureCreated below.
+        var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
+        var appliedMigrations = (await db.Database.GetAppliedMigrationsAsync()).ToList();
+        if (pendingMigrations.Count > 0 || appliedMigrations.Count > 0)
+        {
+            await db.Database.MigrateAsync();
+            Log.Information("Database migrations applied successfully ({Count} pending)", pendingMigrations.Count);
+        }
+        else
+        {
+            Log.Information("No EF Core migrations defined — will ensure schema via EnsureCreated");
+        }
     }
     catch (Exception ex)
     {
         Log.Warning(ex, "Migration failed — falling back to EnsureCreated for initial setup");
+    }
+
+    // Always verify the schema is present. Migrate() can succeed without creating
+    // any tables when no migrations are defined, and a previous failed attempt
+    // may leave the database existing but empty.
+    if (!await SchemaExistsAsync())
+    {
+        Log.Warning("Database schema missing — creating via EnsureCreated");
 
         // EnsureCreated only creates schema when it also creates the database.
-        // If the database already exists (from a previous failed attempt), it returns
-        // false and does nothing — even if no tables exist.
-        var created = db.Database.EnsureCreated();
-        if (!created)
+        // If the database already exists but is empty, delete and recreate it.
+        if (!db.Database.EnsureCreated())
         {
-            // Database exists — check if tables are actually present using the raw connection.
-            var conn = db.Database.GetDbConnection();
-            var wasOpen = conn.State == System.Data.ConnectionState.Open;
-            if (!wasOpen) await conn.OpenAsync();
-            bool hasSchema;
-            using (var cmd = conn.CreateCommand())
-            {
-                cmd.CommandText = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'AspNetRoles')";
-                hasSchema = (bool)(await cmd.ExecuteScalarAsync())!;
-            }
-            if (!wasOpen) await conn.CloseAsync();
-
-            if (!hasSchema)
-            {
-                Log.Warning("Database exists but schema is missing — recreating");
-                db.Database.EnsureDeleted();
-                db.Database.EnsureCreated();
-            }
+            Log.Warning("Database exists but schema is missing — recreating");
+            db.Database.EnsureDeleted();
+            db.Database.EnsureCreated();
         }
         Log.Information("Database schema ensured via EnsureCreated");
     }
