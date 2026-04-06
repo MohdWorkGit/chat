@@ -371,16 +371,14 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 // Enterprise – Captain AI services
 // Register DbContext so Enterprise services can resolve it from AppDbContext
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
-builder.Services.AddScoped<IAssistantChatService, AssistantChatService>();
-builder.Services.AddScoped<ICopilotService, CopilotService>();
-builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
-builder.Services.AddScoped<IToolRegistryService, ToolRegistryService>();
 builder.Services.AddHttpClient("WebhookDelivery");
 builder.Services.AddHttpClient("AvatarFetch");
-builder.Services.AddHttpClient<AssistantChatService>();
-builder.Services.AddHttpClient<CopilotService>();
-builder.Services.AddHttpClient<EmbeddingService>();
-builder.Services.AddHttpClient<ToolRegistryService>();
+// Typed clients that also bind the interface, so resolving the interface goes
+// through the HttpClientFactory-backed constructor.
+builder.Services.AddHttpClient<IAssistantChatService, AssistantChatService>();
+builder.Services.AddHttpClient<ICopilotService, CopilotService>();
+builder.Services.AddHttpClient<IEmbeddingService, EmbeddingService>();
+builder.Services.AddHttpClient<IToolRegistryService, ToolRegistryService>();
 
 // Search & other services
 builder.Services.AddScoped<IGlobalSearchService, GlobalSearchService>();
