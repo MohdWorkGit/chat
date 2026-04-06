@@ -29,6 +29,10 @@ export class SuperAdminService {
     return this.api.get<Account[]>(`${this.basePath}/accounts`);
   }
 
+  createAccount(name: string): Observable<{ id: number }> {
+    return this.api.post<{ id: number }>(`${this.basePath}/accounts`, { name });
+  }
+
   getUsers(): Observable<User[]> {
     return this.api.get<User[]>(`${this.basePath}/users`);
   }

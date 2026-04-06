@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CaptainService, CaptainDocument, CaptainAssistant } from '@core/services/captain.service';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-document-manager',
@@ -135,6 +136,7 @@ import { CaptainService, CaptainDocument, CaptainAssistant } from '@core/service
 export class DocumentManagerComponent implements OnInit {
   private captainService = inject(CaptainService);
   private route = inject(ActivatedRoute);
+  private auth = inject(AuthService);
 
   documents: CaptainDocument[] = [];
   assistant: CaptainAssistant | null = null;
@@ -142,8 +144,9 @@ export class DocumentManagerComponent implements OnInit {
   uploading = false;
   isDragging = false;
 
-  // TODO: Replace with actual account ID from auth state
-  private accountId = 1;
+  private get accountId(): number {
+    return this.auth.currentAccountId();
+  }
   private assistantId = 0;
 
   ngOnInit(): void {

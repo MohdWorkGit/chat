@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CaptainService, CaptainAssistant } from '@core/services/captain.service';
+import { AuthService } from '@core/services/auth.service';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -194,14 +195,16 @@ import { RouterLink } from '@angular/router';
 export class AssistantListComponent implements OnInit {
   private captainService = inject(CaptainService);
   private fb = inject(FormBuilder);
+  private auth = inject(AuthService);
 
   assistants: CaptainAssistant[] = [];
   loading = true;
   showModal = false;
   editingAssistant: CaptainAssistant | null = null;
 
-  // TODO: Replace with actual account ID from auth state
-  private accountId = 1;
+  private get accountId(): number {
+    return this.auth.currentAccountId();
+  }
 
   assistantForm: FormGroup = this.fb.group({
     name: ['', Validators.required],
