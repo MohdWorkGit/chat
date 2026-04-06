@@ -51,6 +51,37 @@ export interface CreateSamlRoleMappingRequest {
   userRole: string;
 }
 
+export interface AuditLog {
+  id: number;
+  accountId: number;
+  userId: number;
+  userName: string | null;
+  action: string;
+  auditableType: string;
+  auditableId: number;
+  changes: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export interface AuditLogFilter {
+  userId?: number;
+  action?: string;
+  auditableType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -106,5 +137,21 @@ export class EnterpriseService {
 
   deleteSamlRoleMapping(id: number): Observable<void> {
     return this.api.delete<void>(this.api.accountPath(`/saml/role_mappings/${id}`));
+  }
+
+  // Audit Logs
+  getAuditLogs(filter: AuditLogFilter = {}): Observable<PaginatedResult<AuditLog>> {
+    const params: Record<string, string | number | boolean> = {};
+    if (filter.userId !== undefined) params['userId'] = filter.userId;
+    if (filter.action) params['action'] = filter.action;
+    if (filter.auditableType) params['auditableType'] = filter.auditableType;
+    if (filter.dateFrom) params['dateFrom'] = filter.dateFrom;
+    if (filter.dateTo) params['dateTo'] = filter.dateTo;
+    params['page'] = filter.page ?? 1;
+    params['pageSize'] = filter.pageSize ?? 25;
+    return this.api.get<PaginatedResult<AuditLog>>(
+      this.api.accountPath('/audit_logs'),
+      params
+    );
   }
 }
