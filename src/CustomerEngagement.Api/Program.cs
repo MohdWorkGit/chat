@@ -310,7 +310,10 @@ builder.Services.AddSwaggerGen(options =>
 // MediatR
 // ---------------------------------------------------------------------------
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
+{
+    cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>();
+    cfg.RegisterServicesFromAssemblyContaining<AssistantChatService>();
+});
 
 // ---------------------------------------------------------------------------
 // Infrastructure Services
