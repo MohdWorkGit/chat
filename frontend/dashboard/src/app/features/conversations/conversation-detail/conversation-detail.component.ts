@@ -12,11 +12,12 @@ import {
 import { Conversation, Message, ConversationStatus } from '@core/models/conversation.model';
 import { MessageBubbleComponent } from '../message-bubble/message-bubble.component';
 import { ReplyBoxComponent } from '../reply-box/reply-box.component';
+import { CopilotPanelComponent } from '@app/features/captain/copilot-panel/copilot-panel.component';
 
 @Component({
   selector: 'app-conversation-detail',
   standalone: true,
-  imports: [CommonModule, MessageBubbleComponent, ReplyBoxComponent],
+  imports: [CommonModule, MessageBubbleComponent, ReplyBoxComponent, CopilotPanelComponent],
   template: `
     @if (conversation$ | async; as conversation) {
       <div class="flex h-full">
@@ -107,6 +108,18 @@ import { ReplyBoxComponent } from '../reply-box/reply-box.component';
                 </svg>
               </button>
 
+              <!-- Copilot toggle -->
+              <button
+                (click)="showCopilotPanel = !showCopilotPanel"
+                class="p-1.5 rounded transition-colors"
+                [class]="showCopilotPanel ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:text-gray-600'"
+                title="Copilot"
+              >
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                </svg>
+              </button>
+
               <!-- Contact sidebar toggle -->
               <button
                 (click)="showContactPanel = !showContactPanel"
@@ -167,6 +180,14 @@ import { ReplyBoxComponent } from '../reply-box/reply-box.component';
           <!-- Reply Box -->
           <app-reply-box (messageSent)="onMessageSent(conversation.id, $event)" />
         </div>
+
+        <!-- Copilot panel -->
+        @if (showCopilotPanel) {
+          <app-copilot-panel
+            [conversationId]="conversation.id"
+            (closed)="showCopilotPanel = false"
+          />
+        }
 
         <!-- Contact sidebar panel -->
         @if (showContactPanel && conversation.contact) {
@@ -285,6 +306,7 @@ export class ConversationDetailComponent implements OnInit, AfterViewChecked {
 
   messages$!: Observable<Message[]>;
   showContactPanel = false;
+  showCopilotPanel = false;
   isTyping = false;
   private shouldScrollToBottom = true;
 

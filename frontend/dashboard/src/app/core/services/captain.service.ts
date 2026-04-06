@@ -25,6 +25,22 @@ export interface CaptainDocument {
   createdAt: string;
 }
 
+export interface CopilotSuggestion {
+  text: string;
+  confidence: number;
+}
+
+export interface RewriteResult {
+  original: string;
+  rewritten: string;
+  tone: string;
+}
+
+export interface ConversationSummary {
+  summary: string;
+  keyPoints: string[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -74,5 +90,48 @@ export class CaptainService {
     return this.api.delete<void>(
       `${this.basePath(accountId)}/assistants/${assistantId}/documents/${docId}`
     );
+  }
+
+  // --- Copilot (agent-facing AI assistant) ---
+  private copilotPath(accountId: number): string {
+    return `/accounts/${accountId}/copilot`;
+  }
+
+  suggestReply(accountId: number, conversationId: number): Observable<CopilotSuggestion> {
+    return this.api.post<CopilotSuggestion>(`${this.copilotPath(accountId)}/suggest`, {
+      conversationId,
+    });
+  }
+
+  rewriteText(
+    accountId: number,
+    text: string,
+    tone: string = 'professional'
+  ): Observable<RewriteResult> {
+    return this.api.post<RewriteResult>(`${this.copilotPath(accountId)}/rewrite`, {
+      text,
+      tone,
+    });
+  }
+
+  summarizeConversation(
+    accountId: number,
+    conversationId: number
+  ): Observable<ConversationSummary> {
+    return this.api.post<ConversationSummary>(`${this.copilotPath(accountId)}/summarize`, {
+      conversationId,
+    });
+  }
+
+  suggestLabels(accountId: number, conversationId: number): Observable<string[]> {
+    return this.api.post<string[]>(`${this.copilotPath(accountId)}/suggest-labels`, {
+      conversationId,
+    });
+  }
+
+  suggestFollowUp(accountId: number, conversationId: number): Observable<string[]> {
+    return this.api.post<string[]>(`${this.copilotPath(accountId)}/suggest-follow-up`, {
+      conversationId,
+    });
   }
 }
