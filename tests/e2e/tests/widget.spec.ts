@@ -77,7 +77,7 @@ test.describe('Chat Widget', () => {
 
     test('should render widget config endpoint', async ({ request }) => {
       const response = await request.get(`${API_URL}/api/v1/widget/config`, {
-        headers: { 'X-Widget-Token': WIDGET_TOKEN },
+        headers: { 'X-Website-Token': WIDGET_TOKEN },
       });
       // May return 200 or 401 depending on token validity; just confirm endpoint exists
       expect([200, 401, 404].includes(response.status())).toBeTruthy();

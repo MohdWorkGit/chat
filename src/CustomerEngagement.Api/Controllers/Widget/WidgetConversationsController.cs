@@ -16,20 +16,20 @@ public class WidgetConversationsController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult> GetConversations(
-        [FromHeader(Name = "X-Widget-Token")] string widgetToken,
+        [FromHeader(Name = "X-Website-Token")] string websiteToken,
         [FromHeader(Name = "X-Contact-Identifier")] string contactIdentifier)
     {
         var result = await _mediator.Send(
-            new Application.Widget.Queries.GetWidgetConversationsQuery(widgetToken, contactIdentifier));
+            new Application.Widget.Queries.GetWidgetConversationsQuery(websiteToken, contactIdentifier));
         return Ok(result);
     }
 
     [HttpPost]
     public async Task<ActionResult> CreateConversation(
-        [FromHeader(Name = "X-Widget-Token")] string widgetToken,
+        [FromHeader(Name = "X-Website-Token")] string websiteToken,
         [FromBody] Application.Widget.Commands.CreateWidgetConversationCommand command)
     {
-        command = command with { WidgetToken = widgetToken };
+        command = command with { WidgetToken = websiteToken };
         var result = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetConversations), new { }, new { Id = result });
     }
