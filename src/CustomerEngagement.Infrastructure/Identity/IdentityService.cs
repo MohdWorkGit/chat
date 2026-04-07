@@ -1,6 +1,9 @@
 using CustomerEngagement.Application.Auth;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
+using CustomerEngagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -13,19 +16,42 @@ public class IdentityService : IIdentityService
     private readonly JwtTokenService _jwtTokenService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<IdentityService> _logger;
+    private readonly AppDbContext _dbContext;
 
     public IdentityService(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
         JwtTokenService jwtTokenService,
         IConfiguration configuration,
-        ILogger<IdentityService> logger)
+        ILogger<IdentityService> logger,
+        AppDbContext dbContext)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
         _configuration = configuration;
         _logger = logger;
+        _dbContext = dbContext;
+    }
+
+    /// <summary>
+    /// Resolves the effective role for a user within a specific account.
+    /// Prefers the account-scoped <see cref="AccountUser.Role"/> when present,
+    /// then falls back to the global ASP.NET Identity role, then "Agent".
+    /// </summary>
+    private async Task<string> ResolveAccountRoleAsync(User user, int accountId)
+    {
+        var accountUser = await _dbContext.AccountUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(au => au.UserId == user.Id && au.AccountId == accountId);
+
+        if (accountUser is not null)
+        {
+            return accountUser.Role.ToString();
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return roles.FirstOrDefault() ?? nameof(UserRole.Agent);
     }
 
     public async Task<AuthResult> RegisterAsync(string name, string email, string password, int accountId, string role = "Agent")
@@ -57,12 +83,30 @@ public class IdentityService : IIdentityService
 
         await _userManager.AddToRoleAsync(user, role);
 
-        var accessToken = _jwtTokenService.GenerateAccessToken(user, accountId, role);
+        // Ensure an AccountUser exists so the role is bound to this account.
+        var hasAccountUser = await _dbContext.AccountUsers
+            .AnyAsync(au => au.UserId == user.Id && au.AccountId == accountId);
+        if (!hasAccountUser)
+        {
+            var parsedRole = Enum.TryParse<UserRole>(role, ignoreCase: true, out var r) ? r : UserRole.Agent;
+            _dbContext.AccountUsers.Add(new AccountUser
+            {
+                AccountId = accountId,
+                UserId = user.Id,
+                Role = parsedRole,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+            await _dbContext.SaveChangesAsync();
+        }
+
+        var effectiveRole = await ResolveAccountRoleAsync(user, accountId);
+        var accessToken = _jwtTokenService.GenerateAccessToken(user, accountId, effectiveRole);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
 
         _logger.LogInformation("User {Email} registered successfully", email);
 
-        var userInfo = new AuthUserInfo(user.Id, user.Name, user.Email ?? email, user.Avatar, role, accountId, user.AvailabilityStatus.ToString());
+        var userInfo = new AuthUserInfo(user.Id, user.Name, user.Email ?? email, user.Avatar, effectiveRole, accountId, user.AvailabilityStatus.ToString());
         return new AuthResult(true, accessToken, refreshToken, User: userInfo);
     }
 
@@ -96,13 +140,12 @@ public class IdentityService : IIdentityService
                 new AuthUserInfo(user.Id, user.Name, user.Email ?? email, user.Avatar, "", accountId, ""));
         }
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault() ?? "Agent";
+        var role = await ResolveAccountRoleAsync(user, accountId);
 
         var accessToken = _jwtTokenService.GenerateAccessToken(user, accountId, role);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
 
-        _logger.LogInformation("User {Email} logged in successfully", email);
+        _logger.LogInformation("User {Email} logged in successfully with role {Role} for account {AccountId}", email, role, accountId);
 
         var userInfo = new AuthUserInfo(user.Id, user.Name, user.Email ?? email, user.Avatar, role, accountId, user.AvailabilityStatus.ToString());
         return new AuthResult(true, accessToken, refreshToken, User: userInfo);
@@ -128,8 +171,7 @@ public class IdentityService : IIdentityService
             return new AuthResult(false, null, null, new[] { "User not found." });
         }
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault() ?? "Agent";
+        var role = await ResolveAccountRoleAsync(user, accountId);
 
         var newAccessToken = _jwtTokenService.GenerateAccessToken(user, accountId, role);
         var newRefreshToken = _jwtTokenService.GenerateRefreshToken();
@@ -175,8 +217,7 @@ public class IdentityService : IIdentityService
         if (user is null)
             return new AuthResult(false, null, null, new[] { "User not found." });
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault() ?? "Agent";
+        var role = await ResolveAccountRoleAsync(user, accountId);
 
         var accessToken = _jwtTokenService.GenerateAccessToken(user, accountId, role);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
