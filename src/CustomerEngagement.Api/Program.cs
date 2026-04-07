@@ -534,6 +534,7 @@ var app = builder.Build();
 
 // Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
