@@ -329,6 +329,13 @@ export const routes: Routes = [
             '@features/settings/saml-config/saml-config.component'
           ).then((m) => m.SamlConfigComponent),
       },
+      {
+        path: 'audit-logs',
+        loadComponent: () =>
+          import(
+            '@features/settings/audit-logs/audit-logs.component'
+          ).then((m) => m.AuditLogsComponent),
+      },
     ],
   },
   {
@@ -399,6 +406,13 @@ export const routes: Routes = [
           import(
             '@features/super-admin/admin-dashboard/admin-dashboard.component'
           ).then((m) => m.AdminDashboardComponent),
+      },
+      {
+        path: 'users',
+        loadComponent: () =>
+          import(
+            '@features/super-admin/admin-users/admin-users.component'
+          ).then((m) => m.AdminUsersComponent),
       },
     ],
   },

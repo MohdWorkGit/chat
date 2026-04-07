@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CustomerEngagement.Enterprise.Captain.Controllers;
 
 [ApiController]
-[Route("api/v1/accounts/{accountId:int}/captain/assistants/{assistantId:int}/inboxes")]
+[Route("api/v1/accounts/{accountId:int}/captain/inboxes")]
 [Authorize]
 public class CaptainInboxesController : ControllerBase
 {
@@ -21,59 +21,66 @@ public class CaptainInboxesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CaptainInbox>>> GetAll(
         int accountId,
-        int assistantId,
         CancellationToken cancellationToken)
     {
-        if (!await AssistantBelongsToAccountAsync(accountId, assistantId, cancellationToken))
-        {
-            return NotFound();
-        }
-
         var connections = await _dbContext.Set<CaptainInbox>()
-            .Where(ci => ci.AssistantId == assistantId)
             .AsNoTracking()
+            .Where(ci => _dbContext.Set<CaptainAssistant>()
+                .Any(a => a.Id == ci.AssistantId && a.AccountId == accountId))
             .ToListAsync(cancellationToken);
 
         return Ok(connections);
     }
 
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<CaptainInbox>> GetById(
+        int accountId,
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var connection = await _dbContext.Set<CaptainInbox>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ci => ci.Id == id, cancellationToken);
+
+        if (connection is null) return NotFound();
+
+        var ownsAssistant = await _dbContext.Set<CaptainAssistant>()
+            .AnyAsync(a => a.Id == connection.AssistantId && a.AccountId == accountId, cancellationToken);
+
+        if (!ownsAssistant) return NotFound();
+
+        return Ok(connection);
+    }
+
     [HttpPost]
     public async Task<ActionResult<CaptainInbox>> Connect(
         int accountId,
-        int assistantId,
-        [FromBody] ConnectInboxRequest request,
+        [FromBody] ConnectCaptainInboxRequest request,
         CancellationToken cancellationToken)
     {
-        if (!await AssistantBelongsToAccountAsync(accountId, assistantId, cancellationToken))
-        {
-            return NotFound();
-        }
+        var assistant = await _dbContext.Set<CaptainAssistant>()
+            .FirstOrDefaultAsync(a => a.Id == request.AssistantId && a.AccountId == accountId, cancellationToken);
 
-        var inboxBelongs = await _dbContext.Set<Inbox>()
-            .AsNoTracking()
-            .AnyAsync(i => i.Id == request.InboxId && i.AccountId == accountId, cancellationToken);
+        if (assistant is null)
+            return NotFound(new { error = "Assistant not found in this account." });
 
-        if (!inboxBelongs)
-        {
+        var inbox = await _dbContext.Set<Inbox>()
+            .FirstOrDefaultAsync(i => i.Id == request.InboxId && i.AccountId == accountId, cancellationToken);
+
+        if (inbox is null)
             return NotFound(new { error = "Inbox not found in this account." });
-        }
 
         var existing = await _dbContext.Set<CaptainInbox>()
             .FirstOrDefaultAsync(
-                ci => ci.AssistantId == assistantId && ci.InboxId == request.InboxId,
+                ci => ci.AssistantId == request.AssistantId && ci.InboxId == request.InboxId,
                 cancellationToken);
 
         if (existing is not null)
-        {
-            existing.Active = request.Active;
-            existing.UpdatedAt = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return Ok(existing);
-        }
+            return Conflict(new { error = "This assistant is already connected to this inbox.", id = existing.Id });
 
         var connection = new CaptainInbox
         {
-            AssistantId = assistantId,
+            AssistantId = request.AssistantId,
             InboxId = request.InboxId,
             Active = request.Active,
         };
@@ -81,31 +88,25 @@ public class CaptainInboxesController : ControllerBase
         _dbContext.Set<CaptainInbox>().Add(connection);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(
-            nameof(GetAll),
-            new { accountId, assistantId },
-            connection);
+        return CreatedAtAction(nameof(GetById), new { accountId, id = connection.Id }, connection);
     }
 
-    [HttpPut("{inboxId:int}")]
-    public async Task<ActionResult> UpdateStatus(
+    [HttpPatch("{id:int}")]
+    public async Task<ActionResult> SetActive(
         int accountId,
-        int assistantId,
-        int inboxId,
-        [FromBody] UpdateInboxStatusRequest request,
+        int id,
+        [FromBody] UpdateCaptainInboxRequest request,
         CancellationToken cancellationToken)
     {
-        if (!await AssistantBelongsToAccountAsync(accountId, assistantId, cancellationToken))
-        {
-            return NotFound();
-        }
-
         var connection = await _dbContext.Set<CaptainInbox>()
-            .FirstOrDefaultAsync(
-                ci => ci.AssistantId == assistantId && ci.InboxId == inboxId,
-                cancellationToken);
+            .FirstOrDefaultAsync(ci => ci.Id == id, cancellationToken);
 
         if (connection is null) return NotFound();
+
+        var ownsAssistant = await _dbContext.Set<CaptainAssistant>()
+            .AnyAsync(a => a.Id == connection.AssistantId && a.AccountId == accountId, cancellationToken);
+
+        if (!ownsAssistant) return NotFound();
 
         connection.Active = request.Active;
         connection.UpdatedAt = DateTime.UtcNow;
@@ -115,24 +116,21 @@ public class CaptainInboxesController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{inboxId:int}")]
+    [HttpDelete("{id:int}")]
     public async Task<ActionResult> Disconnect(
         int accountId,
-        int assistantId,
-        int inboxId,
+        int id,
         CancellationToken cancellationToken)
     {
-        if (!await AssistantBelongsToAccountAsync(accountId, assistantId, cancellationToken))
-        {
-            return NotFound();
-        }
-
         var connection = await _dbContext.Set<CaptainInbox>()
-            .FirstOrDefaultAsync(
-                ci => ci.AssistantId == assistantId && ci.InboxId == inboxId,
-                cancellationToken);
+            .FirstOrDefaultAsync(ci => ci.Id == id, cancellationToken);
 
         if (connection is null) return NotFound();
+
+        var ownsAssistant = await _dbContext.Set<CaptainAssistant>()
+            .AnyAsync(a => a.Id == connection.AssistantId && a.AccountId == accountId, cancellationToken);
+
+        if (!ownsAssistant) return NotFound();
 
         _dbContext.Set<CaptainInbox>().Remove(connection);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -140,17 +138,7 @@ public class CaptainInboxesController : ControllerBase
         return NoContent();
     }
 
-    private Task<bool> AssistantBelongsToAccountAsync(
-        int accountId,
-        int assistantId,
-        CancellationToken cancellationToken)
-    {
-        return _dbContext.Set<CaptainAssistant>()
-            .AsNoTracking()
-            .AnyAsync(a => a.Id == assistantId && a.AccountId == accountId, cancellationToken);
-    }
+    public sealed record ConnectCaptainInboxRequest(int AssistantId, int InboxId, bool Active = true);
 
-    public sealed record ConnectInboxRequest(int InboxId, bool Active = true);
-
-    public sealed record UpdateInboxStatusRequest(bool Active);
+    public sealed record UpdateCaptainInboxRequest(bool Active);
 }
