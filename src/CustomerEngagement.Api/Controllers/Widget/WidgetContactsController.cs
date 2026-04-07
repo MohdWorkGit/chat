@@ -16,21 +16,21 @@ public class WidgetContactsController : ControllerBase
 
     [HttpPost]
     public async Task<ActionResult> Create(
-        [FromHeader(Name = "X-Widget-Token")] string widgetToken,
+        [FromHeader(Name = "X-Website-Token")] string websiteToken,
         [FromBody] Application.Widget.Commands.CreateWidgetContactCommand command)
     {
-        command = command with { WidgetToken = widgetToken };
+        command = command with { WidgetToken = websiteToken };
         var result = await _mediator.Send(command);
         return Ok(result);
     }
 
     [HttpPatch]
     public async Task<ActionResult> Update(
-        [FromHeader(Name = "X-Widget-Token")] string widgetToken,
+        [FromHeader(Name = "X-Website-Token")] string websiteToken,
         [FromHeader(Name = "X-Contact-Identifier")] string contactIdentifier,
         [FromBody] Application.Widget.Commands.UpdateWidgetContactCommand command)
     {
-        command = command with { WidgetToken = widgetToken, ContactIdentifier = contactIdentifier };
+        command = command with { WidgetToken = websiteToken, ContactIdentifier = contactIdentifier };
         await _mediator.Send(command);
         return Ok();
     }
