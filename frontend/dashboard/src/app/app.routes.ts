@@ -407,6 +407,13 @@ export const routes: Routes = [
             '@features/super-admin/admin-dashboard/admin-dashboard.component'
           ).then((m) => m.AdminDashboardComponent),
       },
+      {
+        path: 'users',
+        loadComponent: () =>
+          import(
+            '@features/super-admin/admin-users/admin-users.component'
+          ).then((m) => m.AdminUsersComponent),
+      },
     ],
   },
   {

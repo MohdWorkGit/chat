@@ -1,11 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { SuperAdminService, Account, AdminStats } from '@core/services/super-admin.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="p-6">
       <!-- Header -->
@@ -125,6 +127,46 @@ import { SuperAdminService, Account, AdminStats } from '@core/services/super-adm
           }
         </div>
       }
+
+      @if (showCreateModal) {
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/30" (click)="closeCreateModal()"></div>
+            <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Create Account</h3>
+              <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                  <input
+                    formControlName="name"
+                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Acme Corp"
+                  />
+                </div>
+                @if (createError) {
+                  <p class="text-xs text-red-600">{{ createError }}</p>
+                }
+                <div class="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    (click)="closeCreateModal()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    [disabled]="createForm.invalid || creating"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {{ creating ? 'Creating…' : 'Create' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -136,10 +178,19 @@ import { SuperAdminService, Account, AdminStats } from '@core/services/super-adm
 })
 export class AdminDashboardComponent implements OnInit {
   private adminService = inject(SuperAdminService);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
 
   accounts: Account[] = [];
   stats: AdminStats | null = null;
   loading = true;
+
+  showCreateModal = false;
+  creating = false;
+  createError: string | null = null;
+  createForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+  });
 
   ngOnInit(): void {
     this.loadData();
@@ -166,12 +217,34 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   createAccount(): void {
-    // TODO: Implement create account modal
-    console.log('Create account action');
+    this.createError = null;
+    this.createForm.reset({ name: '' });
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal(): void {
+    this.showCreateModal = false;
+    this.creating = false;
+  }
+
+  submitCreate(): void {
+    if (this.createForm.invalid || this.creating) return;
+    this.creating = true;
+    this.createError = null;
+    const name = this.createForm.value.name as string;
+    this.adminService.createAccount(name).subscribe({
+      next: () => {
+        this.closeCreateModal();
+        this.loadData();
+      },
+      error: (err) => {
+        this.creating = false;
+        this.createError = err?.error?.message ?? 'Failed to create account.';
+      },
+    });
   }
 
   manageUsers(): void {
-    // TODO: Implement manage users navigation
-    console.log('Manage users action');
+    this.router.navigate(['/super-admin/users']);
   }
 }
