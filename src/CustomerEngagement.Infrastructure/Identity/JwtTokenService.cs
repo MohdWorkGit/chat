@@ -45,6 +45,7 @@ public class JwtTokenService
             new("account_id", accountId.ToString()),
             new("AccountId", accountId.ToString()),
             new(ClaimTypes.Role, role),
+            new("account_role", role),
             new("Name", user.Name ?? string.Empty)
         };
 
