@@ -392,16 +392,21 @@ builder.Services.AddScoped<IContactSearchService, ContactSearchService>();
 // ---------------------------------------------------------------------------
 // Health Checks
 // ---------------------------------------------------------------------------
-var ollamaUrl = builder.Configuration["OLLAMA_URL"] ?? builder.Configuration["Ollama:Url"] ?? "http://localhost:11434";
-var rasaUrl = builder.Configuration["RASA_URL"] ?? builder.Configuration["Rasa:Url"] ?? "http://localhost:5005";
-var minioEndpoint = builder.Configuration["MINIO_ENDPOINT"] ?? builder.Configuration["Minio:Endpoint"] ?? "localhost:9000";
+var ollamaUrl = builder.Configuration["Ollama:BaseUrl"] ?? builder.Configuration["OLLAMA_URL"] ?? "http://ollama:11434";
+var rasaUrl = builder.Configuration["Rasa:BaseUrl"] ?? builder.Configuration["RASA_URL"] ?? "http://rasa:5005";
+var minioUrl = builder.Configuration["Storage:S3:Endpoint"] ?? builder.Configuration["MINIO_ENDPOINT"] ?? "http://minio:9000";
+if (!minioUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+    !minioUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+{
+    minioUrl = $"http://{minioUrl}";
+}
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString, name: "postgresql")
     .AddRedis(redisUrl, name: "redis")
-    .AddUrlGroup(new Uri($"{ollamaUrl}/api/tags"), name: "ollama", tags: new[] { "ai" })
-    .AddUrlGroup(new Uri($"{rasaUrl}/status"), name: "rasa", tags: new[] { "ai" })
-    .AddUrlGroup(new Uri($"http://{minioEndpoint}/minio/health/live"), name: "minio", tags: new[] { "storage" });
+    .AddUrlGroup(new Uri($"{ollamaUrl.TrimEnd('/')}/api/tags"), name: "ollama", tags: new[] { "ai" })
+    .AddUrlGroup(new Uri($"{rasaUrl.TrimEnd('/')}/status"), name: "rasa", tags: new[] { "ai" })
+    .AddUrlGroup(new Uri($"{minioUrl.TrimEnd('/')}/minio/health/live"), name: "minio", tags: new[] { "storage" });
 
 // ---------------------------------------------------------------------------
 // Controllers
