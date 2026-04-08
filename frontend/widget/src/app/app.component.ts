@@ -55,16 +55,19 @@ import { SignalrService, CampaignMessage } from './services/signalr.service';
       --widget-text: #1f2937;
       --widget-text-secondary: #6b7280;
       --widget-border: #e5e7eb;
-      --widget-bubble-agent: #f3f4f6;
+      --widget-bubble-agent: #ffffff;
       --widget-bubble-customer: #1b72e8;
       --widget-bubble-customer-text: #ffffff;
-      --widget-radius: 12px;
-      --widget-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
-      --widget-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --widget-radius: 16px;
+      --widget-shadow: 0 12px 40px rgba(17, 24, 39, 0.18), 0 2px 10px rgba(17, 24, 39, 0.06);
+      --widget-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       font-family: var(--widget-font);
       font-size: 14px;
       line-height: 1.5;
       color: var(--widget-text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
     }
     *, *::before, *::after {
       box-sizing: border-box;
@@ -86,26 +89,45 @@ import { SignalrService, CampaignMessage } from './services/signalr.service';
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background-color: var(--widget-primary);
-      color: white;
+      background: linear-gradient(135deg, var(--widget-primary) 0%, var(--widget-primary-hover) 100%);
+      color: #ffffff;
       border: none;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: var(--widget-shadow);
-      transition: transform 0.2s ease, background-color 0.2s ease;
+      box-shadow: 0 8px 24px rgba(27, 114, 232, 0.35), 0 2px 6px rgba(17, 24, 39, 0.08);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
       position: relative;
       flex-shrink: 0;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .widget-launcher::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.22), transparent 55%);
+      pointer-events: none;
     }
     .widget-launcher:hover {
-      transform: scale(1.05);
-      background-color: var(--widget-primary-hover);
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 12px 28px rgba(27, 114, 232, 0.42), 0 4px 10px rgba(17, 24, 39, 0.1);
+    }
+    .widget-launcher:active {
+      transform: translateY(0) scale(0.98);
     }
     .widget-launcher svg {
       width: 28px;
       height: 28px;
       fill: currentColor;
+      position: relative;
+      z-index: 1;
+      transition: transform 0.25s ease;
+    }
+    .widget-launcher:hover svg {
+      transform: scale(1.08);
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
