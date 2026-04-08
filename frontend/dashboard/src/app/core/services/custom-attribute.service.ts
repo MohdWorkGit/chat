@@ -9,7 +9,7 @@ import { CustomAttribute } from '@core/models/custom-attribute.model';
 export class CustomAttributeService {
   private readonly api = inject(ApiService);
   private basePath(): string {
-    return this.api.accountPath('/custom-attributes');
+    return this.api.accountPath('/custom_attribute_definitions');
   }
 
   getAll(): Observable<CustomAttribute[]> {
@@ -25,7 +25,7 @@ export class CustomAttributeService {
   }
 
   update(id: number, data: Partial<CustomAttribute>): Observable<CustomAttribute> {
-    return this.api.patch<CustomAttribute>(`${this.basePath()}/${id}`, data);
+    return this.api.put<CustomAttribute>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

@@ -15,7 +15,8 @@ public class WidgetConfigController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult> GetConfig([FromQuery] string websiteToken)
+    public async Task<ActionResult> GetConfig(
+        [FromHeader(Name = "X-Website-Token")] string websiteToken)
     {
         var result = await _mediator.Send(
             new Application.Widget.Queries.GetWidgetConfigQuery(websiteToken));
