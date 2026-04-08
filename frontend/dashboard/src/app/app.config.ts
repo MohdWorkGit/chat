@@ -32,12 +32,15 @@ import { webhooksReducer } from '@store/webhooks/webhooks.reducer';
 import * as webhooksEffects from '@store/webhooks/webhooks.effects';
 import { customFiltersReducer } from '@store/custom-filters/custom-filters.reducer';
 import * as customFiltersEffects from '@store/custom-filters/custom-filters.effects';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { jwtInterceptor } from '@core/interceptors/jwt.interceptor';
+import { errorInterceptor } from '@core/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([jwtInterceptor, errorInterceptor])),
     provideStore({
       auth: authReducer,
       contacts: contactsReducer,
