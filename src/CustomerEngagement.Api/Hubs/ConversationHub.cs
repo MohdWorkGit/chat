@@ -1,10 +1,14 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using AppHub = CustomerEngagement.Application.Hubs;
 
 namespace CustomerEngagement.Api.Hubs;
 
-[Authorize]
+// NOTE: This hub is intentionally not marked [Authorize] so the embeddable
+// widget (which has no user JWT, only a website token) can also subscribe
+// to conversation events. Dashboard users still authenticate implicitly —
+// the JwtBearerHandler attaches the principal to Context.User whenever a
+// valid bearer/access_token is provided, so account-scoped grouping in
+// OnConnectedAsync keeps working for logged-in agents.
 public class ConversationHub : AppHub.ConversationHub
 {
     private readonly ILogger<ConversationHub> _logger;
