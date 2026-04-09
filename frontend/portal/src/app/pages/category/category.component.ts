@@ -11,7 +11,16 @@ import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb
   imports: [CommonModule, RouterLink, BreadcrumbComponent],
   template: `
     <div class="container" style="padding-top: 16px;">
-      @if (category(); as category) {
+      @if (loading()) {
+        <div style="text-align: center; padding: 64px 0;">
+          <p style="color: var(--portal-text-secondary);">Loading category…</p>
+        </div>
+      } @else if (error()) {
+        <div style="text-align: center; padding: 64px 0;">
+          <p style="color: #b91c1c;">{{ error() }}</p>
+          <button class="portal-pagination-btn" style="margin-top: 12px;" (click)="reload()">Try again</button>
+        </div>
+      } @else if (category(); as category) {
         <portal-breadcrumb [items]="breadcrumbItems()" />
 
         <div style="max-width: 800px; margin: 0 auto; padding: 32px 0;">
@@ -24,7 +33,9 @@ import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb
             @for (article of articles(); track article.id) {
               <li class="article-list-item">
                 <a [routerLink]="['/article', article.slug]">{{ article.title }}</a>
-                <p>{{ article.description }}</p>
+                @if (article.description) {
+                  <p>{{ article.description }}</p>
+                }
               </li>
             } @empty {
               <li style="padding: 32px 0; text-align: center; color: var(--portal-text-secondary);">
@@ -32,10 +43,6 @@ import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb
               </li>
             }
           </ul>
-        </div>
-      } @else {
-        <div style="text-align: center; padding: 64px 0;">
-          <p style="color: var(--portal-text-secondary);">Loading category...</p>
         </div>
       }
     </div>
@@ -48,6 +55,8 @@ export class CategoryComponent implements OnInit {
   category = signal<Category | null>(null);
   articles = signal<ArticleSummary[]>([]);
   breadcrumbItems = signal<BreadcrumbItem[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
 
   constructor(
     private readonly apiService: PortalApiService,
@@ -60,18 +69,45 @@ export class CategoryComponent implements OnInit {
     }
   }
 
-  private loadCategory(slug: string): void {
-    this.apiService.getCategory(slug).subscribe(category => {
-      this.category.set(category);
-      this.titleService.setTitle(`${category.name} - Help Center`);
-      this.breadcrumbItems.set([
-        { label: 'Home', url: '/' },
-        { label: category.name },
-      ]);
-    });
+  reload(): void {
+    if (this.slug) {
+      this.loadCategory(this.slug);
+    }
+  }
 
-    this.apiService.getCategoryArticles(slug).subscribe(articles => {
-      this.articles.set(articles);
+  private loadCategory(slug: string): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.category.set(null);
+    this.articles.set([]);
+
+    this.apiService.getCategory(slug).subscribe({
+      next: (category) => {
+        this.category.set(category);
+        this.titleService.setTitle(`${category.name} - Help Center`);
+        this.breadcrumbItems.set([
+          { label: 'Home', url: '/' },
+          { label: category.name },
+        ]);
+
+        this.apiService.getCategoryArticles(slug).subscribe({
+          next: (articles) => {
+            this.articles.set(articles);
+            this.loading.set(false);
+          },
+          error: () => {
+            this.error.set('Failed to load articles for this category.');
+            this.loading.set(false);
+          },
+        });
+      },
+      error: (err) => {
+        const msg = (err?.message as string | undefined)?.startsWith('Category not found')
+          ? 'Category not found.'
+          : 'Failed to load category.';
+        this.error.set(msg);
+        this.loading.set(false);
+      },
     });
   }
 }

@@ -24,22 +24,42 @@ import { PortalApiService, Category } from '../../services/portal-api.service';
     </section>
 
     <section class="container">
-      <div class="category-grid">
-        @for (category of categories(); track category.id) {
-          <a [routerLink]="['/category', category.slug]" class="category-card" style="text-decoration: none; color: inherit;">
-            <h3>{{ category.name }}</h3>
-            @if (category.description) {
-              <p>{{ category.description }}</p>
-            }
-          </a>
-        }
-      </div>
+      @if (loading()) {
+        <div style="padding: 48px 0; text-align: center;">
+          <p style="color: var(--portal-text-secondary);">Loading categories…</p>
+        </div>
+      } @else if (error()) {
+        <div style="padding: 48px 0; text-align: center;">
+          <p style="color: #b91c1c;">{{ error() }}</p>
+          <button class="portal-pagination-btn" style="margin-top: 12px;" (click)="loadCategories()">Try again</button>
+        </div>
+      } @else {
+        <div class="category-grid">
+          @for (category of categories(); track category.id) {
+            <a [routerLink]="['/category', category.slug]" class="category-card" style="text-decoration: none; color: inherit;">
+              <h3>{{ category.name }}</h3>
+              @if (category.description) {
+                <p>{{ category.description }}</p>
+              }
+              <p style="margin-top: 8px; font-size: 0.8rem; color: var(--portal-primary);">
+                {{ category.articleCount }} {{ category.articleCount === 1 ? 'article' : 'articles' }}
+              </p>
+            </a>
+          } @empty {
+            <p style="padding: 24px; color: var(--portal-text-secondary);">
+              No categories are available yet.
+            </p>
+          }
+        </div>
+      }
     </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent implements OnInit {
   categories = signal<Category[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
   searchQuery = '';
 
   constructor(
@@ -48,8 +68,21 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.apiService.getCategories().subscribe(categories => {
-      this.categories.set(categories);
+    this.loadCategories();
+  }
+
+  loadCategories(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.apiService.getCategories().subscribe({
+      next: (categories) => {
+        this.categories.set(categories);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Failed to load categories.');
+        this.loading.set(false);
+      },
     });
   }
 
