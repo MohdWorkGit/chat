@@ -21,35 +21,37 @@ import { RelatedArticlesComponent } from '../../components/related-articles/rela
           <p style="color: #b91c1c;">{{ error() }}</p>
           <button class="portal-pagination-btn" style="margin-top: 12px;" (click)="reload()">Try again</button>
         </div>
-      } @else if (article(); as article) {
-        <portal-breadcrumb [items]="breadcrumbItems()" />
+      } @else {
+        @if (article(); as article) {
+          <portal-breadcrumb [items]="breadcrumbItems()" />
 
-        <div class="article-layout">
-          <article class="article-content">
-            <h1>{{ article.title }}</h1>
-            <div style="color: var(--portal-text-secondary); font-size: 0.875rem; margin-bottom: 24px;">
-              Last updated: {{ article.updatedAt | date:'mediumDate' }}
-            </div>
-            <div [innerHTML]="article.content"></div>
-          </article>
+          <div class="article-layout">
+            <article class="article-content">
+              <h1>{{ article.title }}</h1>
+              <div style="color: var(--portal-text-secondary); font-size: 0.875rem; margin-bottom: 24px;">
+                Last updated: {{ article.updatedAt | date:'mediumDate' }}
+              </div>
+              <div [innerHTML]="article.content"></div>
+            </article>
 
-          @if (tableOfContents().length > 0) {
-            <aside class="toc article-toc">
-              <div class="toc-title">On this page</div>
-              @for (entry of tableOfContents(); track entry.id) {
-                <a
-                  [href]="'#' + entry.id"
-                  [style.padding-left.px]="(entry.level - 2) * 12">
-                  {{ entry.text }}
-                </a>
-              }
-            </aside>
-          }
-        </div>
+            @if (tableOfContents().length > 0) {
+              <aside class="toc article-toc">
+                <div class="toc-title">On this page</div>
+                @for (entry of tableOfContents(); track entry.id) {
+                  <a
+                    [href]="'#' + entry.id"
+                    [style.padding-left.px]="(entry.level - 2) * 12">
+                    {{ entry.text }}
+                  </a>
+                }
+              </aside>
+            }
+          </div>
 
-        <portal-related-articles
-          [categorySlug]="article.category?.slug || ''"
-          [currentArticleId]="article.id" />
+          <portal-related-articles
+            [categorySlug]="article.category?.slug || ''"
+            [currentArticleId]="article.id" />
+        }
       }
     </div>
   `,
