@@ -40,6 +40,16 @@ public class PublicPortalsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("articles/search")]
+    public async Task<ActionResult> SearchArticles(string portalSlug,
+        [FromQuery] string q, [FromQuery] string? locale,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 25)
+    {
+        var result = await _mediator.Send(
+            new Application.Public.Queries.SearchPublicArticlesQuery(portalSlug, q, locale, page, pageSize));
+        return Ok(result);
+    }
+
     [HttpGet("articles/{articleSlug}")]
     public async Task<ActionResult> GetArticle(string portalSlug, string articleSlug)
     {

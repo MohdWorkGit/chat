@@ -1,6 +1,8 @@
 import { Component, ChangeDetectionStrategy, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { PortalApiService, ArticleSummary } from '../../services/portal-api.service';
 
 @Component({
@@ -34,12 +36,14 @@ export class RelatedArticlesComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.categorySlug) {
-      this.apiService.getCategoryArticles(this.categorySlug).subscribe(articles => {
-        const filtered = articles
-          .filter(a => a.id !== this.currentArticleId)
-          .slice(0, 3);
-        this.relatedArticles.set(filtered);
-      });
+      this.apiService.getCategoryArticles(this.categorySlug)
+        .pipe(catchError(() => of<ArticleSummary[]>([])))
+        .subscribe(articles => {
+          const filtered = articles
+            .filter(a => a.id !== this.currentArticleId)
+            .slice(0, 3);
+          this.relatedArticles.set(filtered);
+        });
     }
   }
 }

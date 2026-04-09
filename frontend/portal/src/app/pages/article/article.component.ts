@@ -12,7 +12,16 @@ import { RelatedArticlesComponent } from '../../components/related-articles/rela
   imports: [CommonModule, RouterLink, BreadcrumbComponent, RelatedArticlesComponent],
   template: `
     <div class="container" style="padding-top: 16px;">
-      @if (article(); as article) {
+      @if (loading()) {
+        <div style="text-align: center; padding: 64px 0;">
+          <p style="color: var(--portal-text-secondary);">Loading article…</p>
+        </div>
+      } @else if (error()) {
+        <div style="text-align: center; padding: 64px 0;">
+          <p style="color: #b91c1c;">{{ error() }}</p>
+          <button class="portal-pagination-btn" style="margin-top: 12px;" (click)="reload()">Try again</button>
+        </div>
+      } @else if (article(); as article) {
         <portal-breadcrumb [items]="breadcrumbItems()" />
 
         <div class="article-layout">
@@ -21,7 +30,7 @@ import { RelatedArticlesComponent } from '../../components/related-articles/rela
             <div style="color: var(--portal-text-secondary); font-size: 0.875rem; margin-bottom: 24px;">
               Last updated: {{ article.updatedAt | date:'mediumDate' }}
             </div>
-            <div [innerHTML]="article.contentHtml"></div>
+            <div [innerHTML]="article.content"></div>
           </article>
 
           @if (tableOfContents().length > 0) {
@@ -41,10 +50,6 @@ import { RelatedArticlesComponent } from '../../components/related-articles/rela
         <portal-related-articles
           [categorySlug]="article.category?.slug || ''"
           [currentArticleId]="article.id" />
-      } @else {
-        <div style="text-align: center; padding: 64px 0;">
-          <p style="color: var(--portal-text-secondary);">Loading article...</p>
-        </div>
       }
     </div>
   `,
@@ -56,6 +61,8 @@ export class ArticleComponent implements OnInit {
   article = signal<Article | null>(null);
   tableOfContents = signal<TocEntry[]>([]);
   breadcrumbItems = signal<BreadcrumbItem[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
 
   constructor(
     private readonly apiService: PortalApiService,
@@ -69,19 +76,41 @@ export class ArticleComponent implements OnInit {
     }
   }
 
-  private loadArticle(slug: string): void {
-    this.apiService.getArticle(slug).subscribe(article => {
-      this.article.set(article);
-      this.titleService.setTitle(`${article.title} - Help Center`);
-      this.metaService.updateTag({ name: 'description', content: article.description });
-      this.tableOfContents.set(this.extractToc(article.contentHtml));
+  reload(): void {
+    if (this.slug) {
+      this.loadArticle(this.slug);
+    }
+  }
 
-      const crumbs: BreadcrumbItem[] = [{ label: 'Home', url: '/' }];
-      if (article.category) {
-        crumbs.push({ label: article.category.name, url: `/category/${article.category.slug}` });
-      }
-      crumbs.push({ label: article.title });
-      this.breadcrumbItems.set(crumbs);
+  private loadArticle(slug: string): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.article.set(null);
+
+    this.apiService.getArticle(slug).subscribe({
+      next: (article) => {
+        if (!article) {
+          this.error.set('Article not found.');
+          this.loading.set(false);
+          return;
+        }
+        this.article.set(article);
+        this.titleService.setTitle(`${article.title} - Help Center`);
+        this.metaService.updateTag({ name: 'description', content: article.description ?? '' });
+        this.tableOfContents.set(this.extractToc(article.content ?? ''));
+
+        const crumbs: BreadcrumbItem[] = [{ label: 'Home', url: '/' }];
+        if (article.category) {
+          crumbs.push({ label: article.category.name, url: `/category/${article.category.slug}` });
+        }
+        crumbs.push({ label: article.title });
+        this.breadcrumbItems.set(crumbs);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Failed to load article.');
+        this.loading.set(false);
+      },
     });
   }
 

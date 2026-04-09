@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, OnInit, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { PortalApiService, ArticleSummary } from '../../services/portal-api.service';
+import { PortalApiService, ArticleSummary, PageMeta } from '../../services/portal-api.service';
 
 const RESULTS_PER_PAGE = 10;
 
@@ -24,22 +24,28 @@ const RESULTS_PER_PAGE = 10;
             aria-label="Search articles" />
         </div>
 
-        @if (hasSearched()) {
+        @if (loading()) {
+          <div style="padding: 48px 0; text-align: center;">
+            <p style="color: var(--portal-text-secondary);">Searching…</p>
+          </div>
+        } @else if (error()) {
+          <div style="padding: 48px 0; text-align: center;">
+            <p style="color: #b91c1c;">{{ error() }}</p>
+            <button class="portal-pagination-btn" style="margin-top: 12px;" (click)="onSearch()">Try again</button>
+          </div>
+        } @else if (hasSearched()) {
           <div class="portal-search-meta">
             <p style="color: var(--portal-text-secondary); margin-bottom: 24px;">
-              Showing {{ rangeStart() }}-{{ rangeEnd() }} of {{ totalResults() }} result(s) for "{{ lastQuery() }}"
+              Showing {{ rangeStart() }}-{{ rangeEnd() }} of {{ meta().totalCount }} result(s) for "{{ lastQuery() }}"
             </p>
           </div>
 
           <ul class="article-list">
-            @for (article of paginatedResults(); track article.id) {
+            @for (article of results(); track article.id) {
               <li class="article-list-item">
                 <a [routerLink]="['/article', article.slug]">{{ article.title }}</a>
-                <p>{{ article.description }}</p>
-                @if (article.categoryName) {
-                  <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; background: #f3f4f6; border-radius: 4px; font-size: 0.75rem; color: var(--portal-text-secondary);">
-                    {{ article.categoryName }}
-                  </span>
+                @if (article.description) {
+                  <p>{{ article.description }}</p>
                 }
               </li>
             } @empty {
@@ -52,21 +58,21 @@ const RESULTS_PER_PAGE = 10;
             }
           </ul>
 
-          @if (totalPages() > 1) {
+          @if (meta().totalPages > 1) {
             <div class="portal-search-pagination">
               <button
                 class="portal-pagination-btn"
-                [disabled]="currentPage() <= 1"
-                (click)="goToPage(currentPage() - 1)">
+                [disabled]="meta().page <= 1"
+                (click)="goToPage(meta().page - 1)">
                 Previous
               </button>
               <span class="portal-pagination-info">
-                Page {{ currentPage() }} of {{ totalPages() }}
+                Page {{ meta().page }} of {{ meta().totalPages }}
               </span>
               <button
                 class="portal-pagination-btn"
-                [disabled]="currentPage() >= totalPages()"
-                (click)="goToPage(currentPage() + 1)">
+                [disabled]="meta().page >= meta().totalPages"
+                (click)="goToPage(meta().page + 1)">
                 Next
               </button>
             </div>
@@ -79,62 +85,73 @@ const RESULTS_PER_PAGE = 10;
 })
 export class SearchComponent implements OnInit {
   searchQuery = '';
-  allResults = signal<ArticleSummary[]>([]);
+  results = signal<ArticleSummary[]>([]);
+  meta = signal<PageMeta>({ totalCount: 0, page: 1, pageSize: RESULTS_PER_PAGE, totalPages: 0 });
   hasSearched = signal(false);
+  loading = signal(false);
+  error = signal<string | null>(null);
   lastQuery = signal('');
-  currentPage = signal(1);
-
-  totalResults = computed(() => this.allResults().length);
-  totalPages = computed(() => Math.ceil(this.totalResults() / RESULTS_PER_PAGE));
-
-  rangeStart = computed(() => {
-    if (this.totalResults() === 0) return 0;
-    return (this.currentPage() - 1) * RESULTS_PER_PAGE + 1;
-  });
-
-  rangeEnd = computed(() =>
-    Math.min(this.currentPage() * RESULTS_PER_PAGE, this.totalResults()),
-  );
-
-  paginatedResults = computed(() => {
-    const start = (this.currentPage() - 1) * RESULTS_PER_PAGE;
-    return this.allResults().slice(start, start + RESULTS_PER_PAGE);
-  });
 
   constructor(
     private readonly apiService: PortalApiService,
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const q = params['q'];
+      const page = Number(params['page']) || 1;
       if (q) {
         this.searchQuery = q;
-        this.performSearch(q);
+        this.performSearch(q, page);
       }
     });
   }
 
   onSearch(): void {
     const query = this.searchQuery.trim();
-    if (query) {
-      this.currentPage.set(1);
-      this.performSearch(query);
-    }
+    if (!query) return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: query, page: 1 },
+      queryParamsHandling: 'merge',
+    });
   }
 
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-    }
+    if (page < 1) return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: this.lastQuery() || this.searchQuery, page },
+      queryParamsHandling: 'merge',
+    });
   }
 
-  private performSearch(query: string): void {
+  rangeStart(): number {
+    if (this.meta().totalCount === 0) return 0;
+    return (this.meta().page - 1) * this.meta().pageSize + 1;
+  }
+
+  rangeEnd(): number {
+    return Math.min(this.meta().page * this.meta().pageSize, this.meta().totalCount);
+  }
+
+  private performSearch(query: string, page: number): void {
     this.lastQuery.set(query);
-    this.apiService.searchArticles(query).subscribe(results => {
-      this.allResults.set(results);
-      this.hasSearched.set(true);
+    this.loading.set(true);
+    this.error.set(null);
+    this.apiService.searchArticles(query, page, RESULTS_PER_PAGE).subscribe({
+      next: (result) => {
+        this.results.set(result.items);
+        this.meta.set(result.meta);
+        this.hasSearched.set(true);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Something went wrong while searching. Please try again.');
+        this.loading.set(false);
+      },
     });
   }
 }

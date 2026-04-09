@@ -14,6 +14,8 @@ public record GetPublicCategoriesQuery(string PortalSlug, string? Locale) : IReq
 
 public record GetPublicArticlesQuery(string PortalSlug, string? Locale, long? CategoryId, int Page, int PageSize) : IRequest<object>;
 
+public record SearchPublicArticlesQuery(string PortalSlug, string Query, string? Locale, int Page, int PageSize) : IRequest<object>;
+
 public record GetPublicArticleQuery(string PortalSlug, string ArticleSlug) : IRequest<object>;
 
 public record GetPublicInboxQuery(string InboxIdentifier) : IRequest<object>;
@@ -85,13 +87,16 @@ public class GetPublicCategoriesQueryHandler : IRequestHandler<GetPublicCategori
 {
     private readonly IRepository<Portal> _portalRepository;
     private readonly IRepository<Category> _categoryRepository;
+    private readonly IRepository<Article> _articleRepository;
 
     public GetPublicCategoriesQueryHandler(
         IRepository<Portal> portalRepository,
-        IRepository<Category> categoryRepository)
+        IRepository<Category> categoryRepository,
+        IRepository<Article> articleRepository)
     {
         _portalRepository = portalRepository;
         _categoryRepository = categoryRepository;
+        _articleRepository = articleRepository;
     }
 
     public async Task<object> Handle(GetPublicCategoriesQuery request, CancellationToken cancellationToken)
@@ -109,6 +114,18 @@ public class GetPublicCategoriesQueryHandler : IRequestHandler<GetPublicCategori
         var categories = await _categoryRepository.FindAsync(
             c => c.PortalId == portalId && (locale == null || c.Locale == locale), cancellationToken);
 
+        // Count published articles per category in a single query.
+        var publishedArticles = await _articleRepository.FindAsync(
+            a => a.PortalId == portalId
+                 && a.Status == ArticleStatus.Published
+                 && (locale == null || a.Locale == locale)
+                 && a.CategoryId != null,
+            cancellationToken);
+
+        var countsByCategoryId = publishedArticles
+            .GroupBy(a => a.CategoryId!.Value)
+            .ToDictionary(g => g.Key, g => g.Count());
+
         return new
         {
             Data = categories.Select(c => new
@@ -119,7 +136,8 @@ public class GetPublicCategoriesQueryHandler : IRequestHandler<GetPublicCategori
                 c.Slug,
                 c.Position,
                 c.Locale,
-                c.ParentCategoryId
+                c.ParentCategoryId,
+                ArticleCount = countsByCategoryId.TryGetValue(c.Id, out var count) ? count : 0
             }).OrderBy(c => c.Position)
         };
     }
@@ -187,17 +205,87 @@ public class GetPublicArticlesQueryHandler : IRequestHandler<GetPublicArticlesQu
     }
 }
 
-public class GetPublicArticleQueryHandler : IRequestHandler<GetPublicArticleQuery, object>
+public class SearchPublicArticlesQueryHandler : IRequestHandler<SearchPublicArticlesQuery, object>
 {
     private readonly IRepository<Portal> _portalRepository;
     private readonly IRepository<Article> _articleRepository;
 
-    public GetPublicArticleQueryHandler(
+    public SearchPublicArticlesQueryHandler(
         IRepository<Portal> portalRepository,
         IRepository<Article> articleRepository)
     {
         _portalRepository = portalRepository;
         _articleRepository = articleRepository;
+    }
+
+    public async Task<object> Handle(SearchPublicArticlesQuery request, CancellationToken cancellationToken)
+    {
+        var portals = await _portalRepository.FindAsync(
+            p => p.Slug == request.PortalSlug && !p.Archived, cancellationToken);
+
+        var portal = portals.FirstOrDefault();
+        if (portal is null)
+            return new { Data = Array.Empty<object>(), Meta = new { TotalCount = 0, Page = request.Page, PageSize = request.PageSize, TotalPages = 0 } };
+
+        var portalId = portal.Id;
+        var locale = request.Locale;
+        var lowered = (request.Query ?? string.Empty).Trim().ToLower();
+
+        if (string.IsNullOrEmpty(lowered))
+            return new { Data = Array.Empty<object>(), Meta = new { TotalCount = 0, Page = request.Page, PageSize = request.PageSize, TotalPages = 0 } };
+
+        Expression<Func<Article, bool>> predicate = a =>
+            a.PortalId == portalId
+            && a.Status == ArticleStatus.Published
+            && (locale == null || a.Locale == locale)
+            && (a.Title.ToLower().Contains(lowered)
+                || (a.Description != null && a.Description.ToLower().Contains(lowered))
+                || (a.Content != null && a.Content.ToLower().Contains(lowered)));
+
+        var totalCount = await _articleRepository.CountAsync(predicate, cancellationToken);
+
+        var articles = await _articleRepository.GetPagedAsync(
+            request.Page, request.PageSize, predicate, a => a.Position, ascending: true, cancellationToken);
+
+        return new
+        {
+            Data = articles.Select(a => new
+            {
+                a.Id,
+                a.Title,
+                a.Description,
+                a.Slug,
+                a.CategoryId,
+                a.Position,
+                a.Locale,
+                a.CreatedAt,
+                a.UpdatedAt
+            }),
+            Meta = new
+            {
+                TotalCount = totalCount,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize)
+            }
+        };
+    }
+}
+
+public class GetPublicArticleQueryHandler : IRequestHandler<GetPublicArticleQuery, object>
+{
+    private readonly IRepository<Portal> _portalRepository;
+    private readonly IRepository<Article> _articleRepository;
+    private readonly IRepository<Category> _categoryRepository;
+
+    public GetPublicArticleQueryHandler(
+        IRepository<Portal> portalRepository,
+        IRepository<Article> articleRepository,
+        IRepository<Category> categoryRepository)
+    {
+        _portalRepository = portalRepository;
+        _articleRepository = articleRepository;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<object> Handle(GetPublicArticleQuery request, CancellationToken cancellationToken)
@@ -220,6 +308,16 @@ public class GetPublicArticleQueryHandler : IRequestHandler<GetPublicArticleQuer
         if (article is null)
             return null!;
 
+        object? category = null;
+        if (article.CategoryId.HasValue)
+        {
+            var cat = await _categoryRepository.GetByIdAsync(article.CategoryId.Value, cancellationToken);
+            if (cat is not null)
+            {
+                category = new { cat.Id, cat.Name, cat.Slug };
+            }
+        }
+
         return new
         {
             article.Id,
@@ -228,6 +326,7 @@ public class GetPublicArticleQueryHandler : IRequestHandler<GetPublicArticleQuer
             article.Description,
             article.Slug,
             article.CategoryId,
+            Category = category,
             article.AuthorId,
             article.Position,
             article.Locale,

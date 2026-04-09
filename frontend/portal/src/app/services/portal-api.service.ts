@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 export interface Category {
   id: number;
   name: string;
   slug: string;
-  description: string;
-  icon: string;
+  description?: string;
+  position: number;
+  locale?: string;
+  parentCategoryId?: number | null;
   articleCount: number;
 }
 
@@ -16,8 +18,8 @@ export interface ArticleSummary {
   id: number;
   title: string;
   slug: string;
-  description: string;
-  categoryName?: string;
+  description?: string;
+  categoryId?: number | null;
   updatedAt: string;
 }
 
@@ -25,10 +27,11 @@ export interface Article {
   id: number;
   title: string;
   slug: string;
-  description: string;
-  contentHtml: string;
+  description?: string;
+  content: string;
   updatedAt: string;
-  category: {
+  category?: {
+    id: number;
     name: string;
     slug: string;
   };
@@ -40,11 +43,21 @@ export interface TocEntry {
   text: string;
 }
 
-export interface PaginatedResult<T> {
-  items: T[];
-  total: number;
+export interface PageMeta {
+  totalCount: number;
   page: number;
-  perPage: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+interface PaginatedEnvelope<T> {
+  data: T[];
+  meta?: PageMeta;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  meta: PageMeta;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -78,11 +91,19 @@ export class PortalApiService {
     return params.set('locale', this.getLocale());
   }
 
+  // Backend responses are wrapped in { Data: [...], Meta?: {...} } and
+  // ASP.NET Core serializes with camelCase by default. Unwrap to plain arrays.
+  private unwrap<T>(envelope: PaginatedEnvelope<T> | T[] | null | undefined): T[] {
+    if (!envelope) return [];
+    if (Array.isArray(envelope)) return envelope;
+    return envelope.data ?? [];
+  }
+
   getCategories(): Observable<Category[]> {
     const params = this.applyLocale(new HttpParams());
-    return this.http.get<Category[]>(`${this.baseUrl}/categories`, { params }).pipe(
-      catchError(() => of([])),
-    );
+    return this.http
+      .get<PaginatedEnvelope<Category>>(`${this.baseUrl}/categories`, { params })
+      .pipe(map((response) => this.unwrap<Category>(response)));
   }
 
   // Backend has no get-by-slug endpoint for categories — fetch the list and
@@ -105,9 +126,10 @@ export class PortalApiService {
     return this.getCategory(slug).pipe(
       switchMap((category) => {
         const params = this.applyLocale(new HttpParams()).set('categoryId', String(category.id));
-        return this.http.get<ArticleSummary[]>(`${this.baseUrl}/articles`, { params });
+        return this.http
+          .get<PaginatedEnvelope<ArticleSummary>>(`${this.baseUrl}/articles`, { params })
+          .pipe(map((response) => this.unwrap<ArticleSummary>(response)));
       }),
-      catchError(() => of([])),
     );
   }
 
@@ -116,21 +138,18 @@ export class PortalApiService {
     return this.http.get<Article>(`${this.baseUrl}/articles/${slug}`, { params });
   }
 
-  // TODO: backend has no /articles/search endpoint yet. As a stopgap we fetch
-  // the article list and filter client-side. Replace with a proper backend
-  // search endpoint when available.
-  searchArticles(query: string, _page: number = 1, _perPage: number = 10): Observable<ArticleSummary[]> {
-    const params = this.applyLocale(new HttpParams());
-    return this.http.get<ArticleSummary[]>(`${this.baseUrl}/articles`, { params }).pipe(
-      map((articles) => {
-        const q = query.trim().toLowerCase();
-        if (!q) return articles;
-        return articles.filter((a) =>
-          a.title.toLowerCase().includes(q) ||
-          (a.description ?? '').toLowerCase().includes(q),
-        );
-      }),
-      catchError(() => of([])),
-    );
+  searchArticles(query: string, page: number = 1, pageSize: number = 10): Observable<PagedResult<ArticleSummary>> {
+    const params = this.applyLocale(new HttpParams())
+      .set('q', query.trim())
+      .set('page', String(page))
+      .set('pageSize', String(pageSize));
+    return this.http
+      .get<PaginatedEnvelope<ArticleSummary>>(`${this.baseUrl}/articles/search`, { params })
+      .pipe(
+        map((response) => ({
+          items: this.unwrap<ArticleSummary>(response),
+          meta: response?.meta ?? { totalCount: 0, page, pageSize, totalPages: 0 },
+        })),
+      );
   }
 }

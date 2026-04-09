@@ -7,6 +7,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { PortalApiService, Category } from '../../services/portal-api.service';
 
 export interface FolderNode {
@@ -136,16 +138,18 @@ export class FolderNavigationComponent implements OnInit {
   constructor(private readonly apiService: PortalApiService) {}
 
   ngOnInit(): void {
-    this.apiService.getCategories().subscribe(categories => {
-      const folderNodes: FolderNode[] = categories.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        slug: cat.slug,
-        articleCount: cat.articleCount,
-        expanded: cat.slug === this.activeCategorySlug,
-      }));
-      this.folders.set(folderNodes);
-    });
+    this.apiService.getCategories()
+      .pipe(catchError(() => of<Category[]>([])))
+      .subscribe(categories => {
+        const folderNodes: FolderNode[] = categories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          slug: cat.slug,
+          articleCount: cat.articleCount,
+          expanded: cat.slug === this.activeCategorySlug,
+        }));
+        this.folders.set(folderNodes);
+      });
   }
 
   toggleFolder(folder: FolderNode): void {
