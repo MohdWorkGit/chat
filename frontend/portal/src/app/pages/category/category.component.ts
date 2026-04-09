@@ -20,30 +20,32 @@ import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb
           <p style="color: #b91c1c;">{{ error() }}</p>
           <button class="portal-pagination-btn" style="margin-top: 12px;" (click)="reload()">Try again</button>
         </div>
-      } @else if (category(); as category) {
-        <portal-breadcrumb [items]="breadcrumbItems()" />
+      } @else {
+        @if (category(); as category) {
+          <portal-breadcrumb [items]="breadcrumbItems()" />
 
-        <div style="max-width: 800px; margin: 0 auto; padding: 32px 0;">
-          <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">{{ category.name }}</h1>
-          @if (category.description) {
-            <p style="color: var(--portal-text-secondary); margin-bottom: 32px;">{{ category.description }}</p>
-          }
-
-          <ul class="article-list">
-            @for (article of articles(); track article.id) {
-              <li class="article-list-item">
-                <a [routerLink]="['/article', article.slug]">{{ article.title }}</a>
-                @if (article.description) {
-                  <p>{{ article.description }}</p>
-                }
-              </li>
-            } @empty {
-              <li style="padding: 32px 0; text-align: center; color: var(--portal-text-secondary);">
-                No articles found in this category.
-              </li>
+          <div style="max-width: 800px; margin: 0 auto; padding: 32px 0;">
+            <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">{{ category.name }}</h1>
+            @if (category.description) {
+              <p style="color: var(--portal-text-secondary); margin-bottom: 32px;">{{ category.description }}</p>
             }
-          </ul>
-        </div>
+
+            <ul class="article-list">
+              @for (article of articles(); track article.id) {
+                <li class="article-list-item">
+                  <a [routerLink]="['/article', article.slug]">{{ article.title }}</a>
+                  @if (article.description) {
+                    <p>{{ article.description }}</p>
+                  }
+                </li>
+              } @empty {
+                <li style="padding: 32px 0; text-align: center; color: var(--portal-text-secondary);">
+                  No articles found in this category.
+                </li>
+              }
+            </ul>
+          </div>
+        }
       }
     </div>
   `,
