@@ -27,12 +27,10 @@ import { PortalApiService, Category } from '../../services/portal-api.service';
       <div class="category-grid">
         @for (category of categories(); track category.id) {
           <a [routerLink]="['/category', category.slug]" class="category-card" style="text-decoration: none; color: inherit;">
-            <div style="font-size: 2rem; margin-bottom: 12px;">{{ category.icon }}</div>
             <h3>{{ category.name }}</h3>
-            <p>{{ category.description }}</p>
-            <p style="margin-top: 8px; font-size: 0.8rem; color: var(--portal-primary);">
-              {{ category.articleCount }} articles
-            </p>
+            @if (category.description) {
+              <p>{{ category.description }}</p>
+            }
           </a>
         }
       </div>

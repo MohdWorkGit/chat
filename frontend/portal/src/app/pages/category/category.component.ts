@@ -16,7 +16,9 @@ import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb
 
         <div style="max-width: 800px; margin: 0 auto; padding: 32px 0;">
           <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">{{ category.name }}</h1>
-          <p style="color: var(--portal-text-secondary); margin-bottom: 32px;">{{ category.description }}</p>
+          @if (category.description) {
+            <p style="color: var(--portal-text-secondary); margin-bottom: 32px;">{{ category.description }}</p>
+          }
 
           <ul class="article-list">
             @for (article of articles(); track article.id) {

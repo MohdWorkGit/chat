@@ -35,11 +35,8 @@ const RESULTS_PER_PAGE = 10;
             @for (article of paginatedResults(); track article.id) {
               <li class="article-list-item">
                 <a [routerLink]="['/article', article.slug]">{{ article.title }}</a>
-                <p>{{ article.description }}</p>
-                @if (article.categoryName) {
-                  <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; background: #f3f4f6; border-radius: 4px; font-size: 0.75rem; color: var(--portal-text-secondary);">
-                    {{ article.categoryName }}
-                  </span>
+                @if (article.description) {
+                  <p>{{ article.description }}</p>
                 }
               </li>
             } @empty {

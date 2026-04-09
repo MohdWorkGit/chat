@@ -21,7 +21,7 @@ import { RelatedArticlesComponent } from '../../components/related-articles/rela
             <div style="color: var(--portal-text-secondary); font-size: 0.875rem; margin-bottom: 24px;">
               Last updated: {{ article.updatedAt | date:'mediumDate' }}
             </div>
-            <div [innerHTML]="article.contentHtml"></div>
+            <div [innerHTML]="article.content"></div>
           </article>
 
           @if (tableOfContents().length > 0) {
@@ -73,8 +73,8 @@ export class ArticleComponent implements OnInit {
     this.apiService.getArticle(slug).subscribe(article => {
       this.article.set(article);
       this.titleService.setTitle(`${article.title} - Help Center`);
-      this.metaService.updateTag({ name: 'description', content: article.description });
-      this.tableOfContents.set(this.extractToc(article.contentHtml));
+      this.metaService.updateTag({ name: 'description', content: article.description ?? '' });
+      this.tableOfContents.set(this.extractToc(article.content ?? ''));
 
       const crumbs: BreadcrumbItem[] = [{ label: 'Home', url: '/' }];
       if (article.category) {

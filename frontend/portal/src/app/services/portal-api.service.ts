@@ -7,17 +7,18 @@ export interface Category {
   id: number;
   name: string;
   slug: string;
-  description: string;
-  icon: string;
-  articleCount: number;
+  description?: string;
+  position: number;
+  locale?: string;
+  parentCategoryId?: number | null;
 }
 
 export interface ArticleSummary {
   id: number;
   title: string;
   slug: string;
-  description: string;
-  categoryName?: string;
+  description?: string;
+  categoryId?: number | null;
   updatedAt: string;
 }
 
@@ -25,10 +26,11 @@ export interface Article {
   id: number;
   title: string;
   slug: string;
-  description: string;
-  contentHtml: string;
+  description?: string;
+  content: string;
   updatedAt: string;
-  category: {
+  category?: {
+    id: number;
     name: string;
     slug: string;
   };
@@ -40,11 +42,14 @@ export interface TocEntry {
   text: string;
 }
 
-export interface PaginatedResult<T> {
-  items: T[];
-  total: number;
-  page: number;
-  perPage: number;
+interface PaginatedEnvelope<T> {
+  data: T[];
+  meta?: {
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -78,11 +83,22 @@ export class PortalApiService {
     return params.set('locale', this.getLocale());
   }
 
+  // Backend responses are wrapped in { Data: [...], Meta?: {...} } and
+  // ASP.NET Core serializes with camelCase by default. Unwrap to plain arrays.
+  private unwrap<T>(envelope: PaginatedEnvelope<T> | T[] | null | undefined): T[] {
+    if (!envelope) return [];
+    if (Array.isArray(envelope)) return envelope;
+    return envelope.data ?? [];
+  }
+
   getCategories(): Observable<Category[]> {
     const params = this.applyLocale(new HttpParams());
-    return this.http.get<Category[]>(`${this.baseUrl}/categories`, { params }).pipe(
-      catchError(() => of([])),
-    );
+    return this.http
+      .get<PaginatedEnvelope<Category>>(`${this.baseUrl}/categories`, { params })
+      .pipe(
+        map((response) => this.unwrap<Category>(response)),
+        catchError(() => of<Category[]>([])),
+      );
   }
 
   // Backend has no get-by-slug endpoint for categories — fetch the list and
@@ -105,9 +121,11 @@ export class PortalApiService {
     return this.getCategory(slug).pipe(
       switchMap((category) => {
         const params = this.applyLocale(new HttpParams()).set('categoryId', String(category.id));
-        return this.http.get<ArticleSummary[]>(`${this.baseUrl}/articles`, { params });
+        return this.http
+          .get<PaginatedEnvelope<ArticleSummary>>(`${this.baseUrl}/articles`, { params })
+          .pipe(map((response) => this.unwrap<ArticleSummary>(response)));
       }),
-      catchError(() => of([])),
+      catchError(() => of<ArticleSummary[]>([])),
     );
   }
 
@@ -121,16 +139,19 @@ export class PortalApiService {
   // search endpoint when available.
   searchArticles(query: string, _page: number = 1, _perPage: number = 10): Observable<ArticleSummary[]> {
     const params = this.applyLocale(new HttpParams());
-    return this.http.get<ArticleSummary[]>(`${this.baseUrl}/articles`, { params }).pipe(
-      map((articles) => {
-        const q = query.trim().toLowerCase();
-        if (!q) return articles;
-        return articles.filter((a) =>
-          a.title.toLowerCase().includes(q) ||
-          (a.description ?? '').toLowerCase().includes(q),
-        );
-      }),
-      catchError(() => of([])),
-    );
+    return this.http
+      .get<PaginatedEnvelope<ArticleSummary>>(`${this.baseUrl}/articles`, { params })
+      .pipe(
+        map((response) => this.unwrap<ArticleSummary>(response)),
+        map((articles) => {
+          const q = query.trim().toLowerCase();
+          if (!q) return articles;
+          return articles.filter((a) =>
+            a.title.toLowerCase().includes(q) ||
+            (a.description ?? '').toLowerCase().includes(q),
+          );
+        }),
+        catchError(() => of<ArticleSummary[]>([])),
+      );
   }
 }

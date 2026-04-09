@@ -13,7 +13,6 @@ export interface FolderNode {
   id: number;
   name: string;
   slug: string;
-  articleCount: number;
   expanded: boolean;
 }
 
@@ -41,7 +40,6 @@ export interface FolderNode {
                 <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
               </svg>
               <span class="folder-nav-name">{{ folder.name }}</span>
-              <span class="folder-nav-count">{{ folder.articleCount }}</span>
             </a>
           </li>
         }
@@ -115,16 +113,6 @@ export interface FolderNode {
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .folder-nav-count {
-      flex-shrink: 0;
-      font-size: 0.75rem;
-      color: var(--portal-text-secondary, #6b7280);
-      background-color: var(--portal-bg, #f9fafb);
-      padding: 2px 8px;
-      border-radius: 10px;
-      min-width: 24px;
-      text-align: center;
-    }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -141,7 +129,6 @@ export class FolderNavigationComponent implements OnInit {
         id: cat.id,
         name: cat.name,
         slug: cat.slug,
-        articleCount: cat.articleCount,
         expanded: cat.slug === this.activeCategorySlug,
       }));
       this.folders.set(folderNodes);

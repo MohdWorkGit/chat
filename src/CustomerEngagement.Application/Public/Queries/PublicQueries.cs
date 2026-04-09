@@ -191,13 +191,16 @@ public class GetPublicArticleQueryHandler : IRequestHandler<GetPublicArticleQuer
 {
     private readonly IRepository<Portal> _portalRepository;
     private readonly IRepository<Article> _articleRepository;
+    private readonly IRepository<Category> _categoryRepository;
 
     public GetPublicArticleQueryHandler(
         IRepository<Portal> portalRepository,
-        IRepository<Article> articleRepository)
+        IRepository<Article> articleRepository,
+        IRepository<Category> categoryRepository)
     {
         _portalRepository = portalRepository;
         _articleRepository = articleRepository;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<object> Handle(GetPublicArticleQuery request, CancellationToken cancellationToken)
@@ -220,6 +223,16 @@ public class GetPublicArticleQueryHandler : IRequestHandler<GetPublicArticleQuer
         if (article is null)
             return null!;
 
+        object? category = null;
+        if (article.CategoryId.HasValue)
+        {
+            var cat = await _categoryRepository.GetByIdAsync(article.CategoryId.Value, cancellationToken);
+            if (cat is not null)
+            {
+                category = new { cat.Id, cat.Name, cat.Slug };
+            }
+        }
+
         return new
         {
             article.Id,
@@ -228,6 +241,7 @@ public class GetPublicArticleQueryHandler : IRequestHandler<GetPublicArticleQuer
             article.Description,
             article.Slug,
             article.CategoryId,
+            Category = category,
             article.AuthorId,
             article.Position,
             article.Locale,
