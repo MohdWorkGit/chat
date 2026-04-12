@@ -146,195 +146,197 @@ export const routes: Routes = [
           import(
             '@features/settings/settings-layout/settings-layout.component'
           ).then((m) => m.SettingsLayoutComponent),
-      },
-      {
-        path: 'inboxes',
-        loadComponent: () =>
-          import(
-            '@features/inboxes/inbox-list/inbox-list.component'
-          ).then((m) => m.InboxListComponent),
-      },
-      {
-        path: 'inboxes/new',
-        loadComponent: () =>
-          import(
-            '@features/inboxes/inbox-create/inbox-create.component'
-          ).then((m) => m.InboxCreateComponent),
-      },
-      {
-        path: 'inboxes/:id',
-        loadComponent: () =>
-          import(
-            '@features/inboxes/inbox-detail/inbox-detail.component'
-          ).then((m) => m.InboxDetailComponent),
-      },
-      {
-        path: 'inboxes/:id/working-hours',
-        loadComponent: () =>
-          import(
-            '@features/settings/working-hours/working-hours.component'
-          ).then((m) => m.WorkingHoursComponent),
-      },
-      {
-        path: 'teams',
-        loadComponent: () =>
-          import(
-            '@features/teams/team-list/team-list.component'
-          ).then((m) => m.TeamListComponent),
-      },
-      {
-        path: 'teams/:id',
-        loadComponent: () =>
-          import(
-            '@features/teams/team-detail/team-detail.component'
-          ).then((m) => m.TeamDetailComponent),
-      },
-      {
-        path: 'labels',
-        loadComponent: () =>
-          import(
-            '@features/labels/label-list/label-list.component'
-          ).then((m) => m.LabelListComponent),
-      },
-      {
-        path: 'automations',
-        loadComponent: () =>
-          import(
-            '@features/automations/automation-list/automation-list.component'
-          ).then((m) => m.AutomationListComponent),
-      },
-      {
-        path: 'automations/new',
-        loadComponent: () =>
-          import(
-            '@features/automations/automation-form/automation-form.component'
-          ).then((m) => m.AutomationFormComponent),
-      },
-      {
-        path: 'campaigns',
-        loadComponent: () =>
-          import(
-            '@features/campaigns/campaign-list/campaign-list.component'
-          ).then((m) => m.CampaignListComponent),
-      },
-      {
-        path: 'canned-responses',
-        loadComponent: () =>
-          import(
-            '@features/canned-responses/canned-response-list/canned-response-list.component'
-          ).then((m) => m.CannedResponseListComponent),
-      },
-      {
-        path: 'canned-responses/new',
-        loadComponent: () =>
-          import(
-            '@features/canned-responses/canned-response-form/canned-response-form.component'
-          ).then((m) => m.CannedResponseFormComponent),
-      },
-      {
-        path: 'macros',
-        loadComponent: () =>
-          import(
-            '@features/macros/macro-list/macro-list.component'
-          ).then((m) => m.MacroListComponent),
-      },
-      {
-        path: 'macros/new',
-        loadComponent: () =>
-          import(
-            '@features/macros/macro-form/macro-form.component'
-          ).then((m) => m.MacroFormComponent),
-      },
-      {
-        path: 'macros/:id',
-        loadComponent: () =>
-          import(
-            '@features/macros/macro-form/macro-form.component'
-          ).then((m) => m.MacroFormComponent),
-      },
-      {
-        path: 'custom-attributes',
-        loadComponent: () =>
-          import(
-            '@features/settings/custom-attributes/custom-attributes-list.component'
-          ).then((m) => m.CustomAttributesListComponent),
-      },
-      {
-        path: 'custom-attributes/new',
-        loadComponent: () =>
-          import(
-            '@features/settings/custom-attributes/custom-attribute-form.component'
-          ).then((m) => m.CustomAttributeFormComponent),
-      },
-      {
-        path: 'custom-attributes/:id',
-        loadComponent: () =>
-          import(
-            '@features/settings/custom-attributes/custom-attribute-form.component'
-          ).then((m) => m.CustomAttributeFormComponent),
-      },
-      {
-        path: 'profile',
-        loadComponent: () =>
-          import(
-            '@features/settings/profile-settings/profile-settings.component'
-          ).then((m) => m.ProfileSettingsComponent),
-      },
-      {
-        path: 'account',
-        loadComponent: () =>
-          import(
-            '@features/settings/account-settings/account-settings.component'
-          ).then((m) => m.AccountSettingsComponent),
-      },
-      {
-        path: 'notifications',
-        loadComponent: () =>
-          import(
-            '@features/settings/notification-preferences/notification-preferences.component'
-          ).then((m) => m.NotificationPreferencesComponent),
-      },
-      {
-        path: 'agents',
-        loadComponent: () =>
-          import(
-            '@features/settings/agents/agent-list/agent-list.component'
-          ).then((m) => m.AgentListComponent),
-      },
-      {
-        path: 'webhooks',
-        loadComponent: () =>
-          import(
-            '@features/webhooks/webhook-list/webhook-list.component'
-          ).then((m) => m.WebhookListComponent),
-      },
-      {
-        path: 'custom-filters',
-        loadComponent: () =>
-          import(
-            '@features/custom-filters/filter-list/filter-list.component'
-          ).then((m) => m.FilterListComponent),
-      },
-      {
-        path: 'custom-roles',
-        loadComponent: () =>
-          import(
-            '@features/settings/custom-roles/custom-roles.component'
-          ).then((m) => m.CustomRolesComponent),
-      },
-      {
-        path: 'saml',
-        loadComponent: () =>
-          import(
-            '@features/settings/saml-config/saml-config.component'
-          ).then((m) => m.SamlConfigComponent),
-      },
-      {
-        path: 'audit-logs',
-        loadComponent: () =>
-          import(
-            '@features/settings/audit-logs/audit-logs.component'
-          ).then((m) => m.AuditLogsComponent),
+        children: [
+          {
+            path: 'inboxes',
+            loadComponent: () =>
+              import(
+                '@features/inboxes/inbox-list/inbox-list.component'
+              ).then((m) => m.InboxListComponent),
+          },
+          {
+            path: 'inboxes/new',
+            loadComponent: () =>
+              import(
+                '@features/inboxes/inbox-create/inbox-create.component'
+              ).then((m) => m.InboxCreateComponent),
+          },
+          {
+            path: 'inboxes/:id',
+            loadComponent: () =>
+              import(
+                '@features/inboxes/inbox-detail/inbox-detail.component'
+              ).then((m) => m.InboxDetailComponent),
+          },
+          {
+            path: 'inboxes/:id/working-hours',
+            loadComponent: () =>
+              import(
+                '@features/settings/working-hours/working-hours.component'
+              ).then((m) => m.WorkingHoursComponent),
+          },
+          {
+            path: 'teams',
+            loadComponent: () =>
+              import(
+                '@features/teams/team-list/team-list.component'
+              ).then((m) => m.TeamListComponent),
+          },
+          {
+            path: 'teams/:id',
+            loadComponent: () =>
+              import(
+                '@features/teams/team-detail/team-detail.component'
+              ).then((m) => m.TeamDetailComponent),
+          },
+          {
+            path: 'labels',
+            loadComponent: () =>
+              import(
+                '@features/labels/label-list/label-list.component'
+              ).then((m) => m.LabelListComponent),
+          },
+          {
+            path: 'automations',
+            loadComponent: () =>
+              import(
+                '@features/automations/automation-list/automation-list.component'
+              ).then((m) => m.AutomationListComponent),
+          },
+          {
+            path: 'automations/new',
+            loadComponent: () =>
+              import(
+                '@features/automations/automation-form/automation-form.component'
+              ).then((m) => m.AutomationFormComponent),
+          },
+          {
+            path: 'campaigns',
+            loadComponent: () =>
+              import(
+                '@features/campaigns/campaign-list/campaign-list.component'
+              ).then((m) => m.CampaignListComponent),
+          },
+          {
+            path: 'canned-responses',
+            loadComponent: () =>
+              import(
+                '@features/canned-responses/canned-response-list/canned-response-list.component'
+              ).then((m) => m.CannedResponseListComponent),
+          },
+          {
+            path: 'canned-responses/new',
+            loadComponent: () =>
+              import(
+                '@features/canned-responses/canned-response-form/canned-response-form.component'
+              ).then((m) => m.CannedResponseFormComponent),
+          },
+          {
+            path: 'macros',
+            loadComponent: () =>
+              import(
+                '@features/macros/macro-list/macro-list.component'
+              ).then((m) => m.MacroListComponent),
+          },
+          {
+            path: 'macros/new',
+            loadComponent: () =>
+              import(
+                '@features/macros/macro-form/macro-form.component'
+              ).then((m) => m.MacroFormComponent),
+          },
+          {
+            path: 'macros/:id',
+            loadComponent: () =>
+              import(
+                '@features/macros/macro-form/macro-form.component'
+              ).then((m) => m.MacroFormComponent),
+          },
+          {
+            path: 'custom-attributes',
+            loadComponent: () =>
+              import(
+                '@features/settings/custom-attributes/custom-attributes-list.component'
+              ).then((m) => m.CustomAttributesListComponent),
+          },
+          {
+            path: 'custom-attributes/new',
+            loadComponent: () =>
+              import(
+                '@features/settings/custom-attributes/custom-attribute-form.component'
+              ).then((m) => m.CustomAttributeFormComponent),
+          },
+          {
+            path: 'custom-attributes/:id',
+            loadComponent: () =>
+              import(
+                '@features/settings/custom-attributes/custom-attribute-form.component'
+              ).then((m) => m.CustomAttributeFormComponent),
+          },
+          {
+            path: 'profile',
+            loadComponent: () =>
+              import(
+                '@features/settings/profile-settings/profile-settings.component'
+              ).then((m) => m.ProfileSettingsComponent),
+          },
+          {
+            path: 'account',
+            loadComponent: () =>
+              import(
+                '@features/settings/account-settings/account-settings.component'
+              ).then((m) => m.AccountSettingsComponent),
+          },
+          {
+            path: 'notifications',
+            loadComponent: () =>
+              import(
+                '@features/settings/notification-preferences/notification-preferences.component'
+              ).then((m) => m.NotificationPreferencesComponent),
+          },
+          {
+            path: 'agents',
+            loadComponent: () =>
+              import(
+                '@features/settings/agents/agent-list/agent-list.component'
+              ).then((m) => m.AgentListComponent),
+          },
+          {
+            path: 'webhooks',
+            loadComponent: () =>
+              import(
+                '@features/webhooks/webhook-list/webhook-list.component'
+              ).then((m) => m.WebhookListComponent),
+          },
+          {
+            path: 'custom-filters',
+            loadComponent: () =>
+              import(
+                '@features/custom-filters/filter-list/filter-list.component'
+              ).then((m) => m.FilterListComponent),
+          },
+          {
+            path: 'custom-roles',
+            loadComponent: () =>
+              import(
+                '@features/settings/custom-roles/custom-roles.component'
+              ).then((m) => m.CustomRolesComponent),
+          },
+          {
+            path: 'saml',
+            loadComponent: () =>
+              import(
+                '@features/settings/saml-config/saml-config.component'
+              ).then((m) => m.SamlConfigComponent),
+          },
+          {
+            path: 'audit-logs',
+            loadComponent: () =>
+              import(
+                '@features/settings/audit-logs/audit-logs.component'
+              ).then((m) => m.AuditLogsComponent),
+          },
+        ],
       },
     ],
   },
