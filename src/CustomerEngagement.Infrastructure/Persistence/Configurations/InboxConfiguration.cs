@@ -17,11 +17,9 @@ public class InboxConfiguration : IEntityTypeConfiguration<Inbox>
             .HasMaxLength(255);
 
         builder.Property(i => i.ChannelType)
-            .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(i => i.ChannelId)
-            .IsRequired();
+        builder.Property(i => i.ChannelId);
 
         builder.Property(i => i.GreetingEnabled)
             .HasDefaultValue(false);
