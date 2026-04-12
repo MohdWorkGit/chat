@@ -99,13 +99,12 @@ export class LabelReportComponent implements OnInit {
   }
 
   loadReport(): void {
-    this.loading = true;
-    const params: Record<string, string> = { type: 'label' };
     const { since, until } = this.filterForm.value;
-    if (since) params['since'] = since;
-    if (until) params['until'] = until;
+    if (!since || !until) return;
 
-    this.reportService.getReport(params).subscribe({
+    this.loading = true;
+
+    this.reportService.getLabelMetrics(since, until).subscribe({
       next: (data) => {
         this.reportData = data;
         this.loading = false;

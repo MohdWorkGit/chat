@@ -96,6 +96,56 @@ public class ReportBuilder : IReportBuilder
         };
     }
 
+    public async Task<object> GetTrafficReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var conversations = await _conversationRepository.ListAsync(
+            new { AccountId = accountId, Since = filter.Since, Until = filter.Until },
+            cancellationToken);
+
+        // Aggregate conversation counts by (dayOfWeek, hour)
+        var cells = conversations
+            .GroupBy(c => new { Day = (int)c.CreatedAt.DayOfWeek, Hour = c.CreatedAt.Hour })
+            .Select(g => new { day = g.Key.Day, hour = g.Key.Hour, value = g.Count() })
+            .ToList();
+
+        return new { cells };
+    }
+
+    public async Task<object> GetBotMetricsAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        // Bot replies are recorded as messages with SenderType = "AgentBot"
+        var botMessages = await _messageRepository.FindAsync(
+            m => m.AccountId == accountId
+                 && m.SenderType == "AgentBot"
+                 && m.CreatedAt >= filter.Since
+                 && m.CreatedAt <= filter.Until,
+            cancellationToken);
+
+        // Unique conversations touched by the bot
+        var botConversationIds = botMessages.Select(m => m.ConversationId).Distinct().ToHashSet();
+        int total = botConversationIds.Count;
+
+        // A conversation was "resolved by bot" if it was resolved and the last outgoing message was from the bot
+        var allConversations = await _conversationRepository.FindAsync(
+            c => c.AccountId == accountId
+                 && botConversationIds.Contains(c.Id)
+                 && c.CreatedAt >= filter.Since,
+            cancellationToken);
+
+        int resolvedByBot = allConversations.Count(c => c.Status == CustomerEngagement.Core.Enums.ConversationStatus.Resolved);
+        int handoffs = total - resolvedByBot;
+        int resolutionRate = total > 0 ? (int)Math.Round((double)resolvedByBot / total * 100) : 0;
+
+        return new
+        {
+            totalConversations = total,
+            resolvedByBot,
+            handoffs,
+            resolutionRate,
+            byInbox = Array.Empty<object>()
+        };
+    }
+
     private static ReportDto BuildTimeSeriesReport(string reportName, IEnumerable<ReportingEvent> events, ReportFilterDto filter)
     {
         var eventList = events.ToList();

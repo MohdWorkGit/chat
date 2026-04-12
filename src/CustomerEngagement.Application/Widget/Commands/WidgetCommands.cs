@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Enums;
@@ -17,6 +18,19 @@ public record CreateWidgetConversationCommand(
     Dictionary<string, string>? CustomFields = null) : IRequest<object>;
 
 public record SendWidgetMessageCommand(string WidgetToken = "", long ConversationId = 0, string? Content = null) : IRequest<object>;
+
+public record SubmitWidgetCsatCommand(
+    string WidgetToken = "",
+    long ConversationId = 0,
+    int Rating = 0,
+    string? Feedback = null) : IRequest<object>;
+
+public record UploadWidgetAttachmentCommand(
+    string WidgetToken = "",
+    long ConversationId = 0,
+    string FileName = "",
+    string ContentType = "",
+    byte[] FileBytes = default!) : IRequest<object>;
 
 // ---------------------------------------------------------------------------
 // Command Handlers
@@ -245,6 +259,142 @@ public class SendWidgetMessageCommandHandler : IRequestHandler<SendWidgetMessage
         conversation.UpdatedAt = DateTime.UtcNow;
         _conversationRepository.Update(conversation);
 
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new
+        {
+            message.Id,
+            message.ConversationId,
+            message.Content,
+            message.SenderType,
+            message.ContentType,
+            message.CreatedAt
+        };
+    }
+}
+
+public class SubmitWidgetCsatCommandHandler : IRequestHandler<SubmitWidgetCsatCommand, object>
+{
+    private readonly IRepository<ChannelWebWidget> _widgetRepository;
+    private readonly IRepository<Conversation> _conversationRepository;
+    private readonly IRepository<CsatSurveyResponse> _csatRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public SubmitWidgetCsatCommandHandler(
+        IRepository<ChannelWebWidget> widgetRepository,
+        IRepository<Conversation> conversationRepository,
+        IRepository<CsatSurveyResponse> csatRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _widgetRepository = widgetRepository;
+        _conversationRepository = conversationRepository;
+        _csatRepository = csatRepository;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<object> Handle(SubmitWidgetCsatCommand request, CancellationToken cancellationToken)
+    {
+        var widget = (await _widgetRepository.FindAsync(
+            w => w.WebsiteToken == request.WidgetToken, cancellationToken)).FirstOrDefault()
+            ?? throw new InvalidOperationException("Invalid widget token.");
+
+        var conversation = await _conversationRepository.GetByIdAsync((int)request.ConversationId, cancellationToken)
+            ?? throw new InvalidOperationException("Conversation not found.");
+
+        var response = new CsatSurveyResponse
+        {
+            AccountId = widget.AccountId,
+            ConversationId = conversation.Id,
+            ContactId = conversation.ContactId,
+            Rating = request.Rating,
+            FeedbackText = request.Feedback,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await _csatRepository.AddAsync(response, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new { response.Id, response.Rating, response.FeedbackText };
+    }
+}
+
+public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidgetAttachmentCommand, object>
+{
+    private readonly IRepository<ChannelWebWidget> _widgetRepository;
+    private readonly IRepository<Conversation> _conversationRepository;
+    private readonly IRepository<Message> _messageRepository;
+    private readonly IRepository<Attachment> _attachmentRepository;
+    private readonly IStorageService _storageService;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UploadWidgetAttachmentCommandHandler(
+        IRepository<ChannelWebWidget> widgetRepository,
+        IRepository<Conversation> conversationRepository,
+        IRepository<Message> messageRepository,
+        IRepository<Attachment> attachmentRepository,
+        IStorageService storageService,
+        IUnitOfWork unitOfWork)
+    {
+        _widgetRepository = widgetRepository;
+        _conversationRepository = conversationRepository;
+        _messageRepository = messageRepository;
+        _attachmentRepository = attachmentRepository;
+        _storageService = storageService;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<object> Handle(UploadWidgetAttachmentCommand request, CancellationToken cancellationToken)
+    {
+        var widget = (await _widgetRepository.FindAsync(
+            w => w.WebsiteToken == request.WidgetToken, cancellationToken)).FirstOrDefault()
+            ?? throw new InvalidOperationException("Invalid widget token.");
+
+        var conversation = await _conversationRepository.GetByIdAsync((int)request.ConversationId, cancellationToken)
+            ?? throw new InvalidOperationException("Conversation not found.");
+
+        var key = $"attachments/{widget.AccountId}/{Guid.NewGuid()}/{request.FileName}";
+        using var stream = new MemoryStream(request.FileBytes);
+        await _storageService.UploadFileAsync(key, stream, request.ContentType, cancellationToken);
+
+        var message = new Message
+        {
+            ConversationId = conversation.Id,
+            AccountId = widget.AccountId,
+            ContactId = conversation.ContactId,
+            Content = request.FileName,
+            ContentType = "attachment",
+            SenderType = "customer",
+            MessageType = MessageType.Incoming,
+            Status = MessageStatus.Sent,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await _messageRepository.AddAsync(message, cancellationToken);
+
+        var extension = Path.GetExtension(request.FileName).TrimStart('.');
+        var attachment = new Attachment
+        {
+            AccountId = widget.AccountId,
+            ExternalUrl = key,
+            FallbackTitle = request.FileName,
+            Extension = extension,
+            FileType = AttachmentType.File,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await _attachmentRepository.AddAsync(attachment, cancellationToken);
+
+        conversation.LastActivityAt = DateTime.UtcNow;
+        conversation.UpdatedAt = DateTime.UtcNow;
+        _conversationRepository.Update(conversation);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        attachment.MessageId = message.Id;
+        _attachmentRepository.Update(attachment);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new

@@ -70,4 +70,22 @@ public class ReportsController : ControllerBase
             new Application.Reports.Queries.GetSummaryReportQuery(accountId, since, until));
         return Ok(result);
     }
+
+    [HttpGet("traffic")]
+    public async Task<ActionResult> TrafficReport(long accountId,
+        [FromQuery] DateTime since, [FromQuery] DateTime until)
+    {
+        var result = await _mediator.Send(
+            new Application.Reports.Queries.GetTrafficReportQuery(accountId, since, until));
+        return Ok(result);
+    }
+
+    [HttpGet("bot-metrics")]
+    public async Task<ActionResult> BotMetrics(long accountId,
+        [FromQuery] DateTime since, [FromQuery] DateTime until)
+    {
+        var result = await _mediator.Send(
+            new Application.Reports.Queries.GetBotMetricsQuery(accountId, since, until));
+        return Ok(result);
+    }
 }

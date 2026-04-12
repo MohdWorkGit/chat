@@ -12,4 +12,6 @@ public interface IIdentityService
     Task<(bool Succeeded, IEnumerable<string>? Errors)> ResetPasswordAsync(string email, string token, string newPassword);
     Task<string?> GeneratePasswordResetTokenAsync(string email);
     Task<AuthResult> GenerateTokensForUserAsync(int userId, int accountId);
+    Task RevokeTokenAsync(long userId);
+    Task<bool> ConfirmEmailAsync(string email, string token);
 }

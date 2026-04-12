@@ -16,6 +16,10 @@ public record GetLabelReportQuery(long AccountId, DateTime Since, DateTime Until
 
 public record GetSummaryReportQuery(long AccountId, DateTime Since, DateTime Until) : IRequest<object>;
 
+public record GetTrafficReportQuery(long AccountId, DateTime Since, DateTime Until) : IRequest<object>;
+
+public record GetBotMetricsQuery(long AccountId, DateTime Since, DateTime Until) : IRequest<object>;
+
 public class GetConversationReportQueryHandler : IRequestHandler<GetConversationReportQuery, object>
 {
     private readonly IReportBuilder _reportBuilder;
@@ -140,5 +144,47 @@ public class GetSummaryReportQueryHandler : IRequestHandler<GetSummaryReportQuer
         };
 
         return await _reportBuilder.GetSummaryAsync((int)request.AccountId, filter, cancellationToken);
+    }
+}
+
+public class GetTrafficReportQueryHandler : IRequestHandler<GetTrafficReportQuery, object>
+{
+    private readonly IReportBuilder _reportBuilder;
+
+    public GetTrafficReportQueryHandler(IReportBuilder reportBuilder)
+    {
+        _reportBuilder = reportBuilder;
+    }
+
+    public async Task<object> Handle(GetTrafficReportQuery request, CancellationToken cancellationToken)
+    {
+        var filter = new ReportFilterDto
+        {
+            Since = request.Since,
+            Until = request.Until
+        };
+
+        return await _reportBuilder.GetTrafficReportAsync((int)request.AccountId, filter, cancellationToken);
+    }
+}
+
+public class GetBotMetricsQueryHandler : IRequestHandler<GetBotMetricsQuery, object>
+{
+    private readonly IReportBuilder _reportBuilder;
+
+    public GetBotMetricsQueryHandler(IReportBuilder reportBuilder)
+    {
+        _reportBuilder = reportBuilder;
+    }
+
+    public async Task<object> Handle(GetBotMetricsQuery request, CancellationToken cancellationToken)
+    {
+        var filter = new ReportFilterDto
+        {
+            Since = request.Since,
+            Until = request.Until
+        };
+
+        return await _reportBuilder.GetBotMetricsAsync((int)request.AccountId, filter, cancellationToken);
     }
 }

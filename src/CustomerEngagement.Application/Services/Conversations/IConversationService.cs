@@ -27,6 +27,12 @@ public interface IConversationService
 
     Task MuteAsync(long conversationId, CancellationToken cancellationToken = default);
 
+    Task UnmuteAsync(long conversationId, CancellationToken cancellationToken = default);
+
+    Task AddParticipantAsync(long conversationId, long userId, int accountId, CancellationToken cancellationToken = default);
+
+    Task RemoveParticipantAsync(long conversationId, long userId, int accountId, CancellationToken cancellationToken = default);
+
     Task SnoozeAsync(long conversationId, DateTime snoozeUntil, CancellationToken cancellationToken = default);
 
     Task ResolveAsync(long conversationId, CancellationToken cancellationToken = default);

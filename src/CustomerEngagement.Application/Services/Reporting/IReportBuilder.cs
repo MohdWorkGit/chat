@@ -15,4 +15,8 @@ public interface IReportBuilder
     Task<ReportDto> GetLabelReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default);
 
     Task<ReportSummaryDto> GetSummaryAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default);
+
+    Task<object> GetTrafficReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default);
+
+    Task<object> GetBotMetricsAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default);
 }
