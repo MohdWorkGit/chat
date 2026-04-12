@@ -59,7 +59,7 @@ import { ApiService } from '@core/services/api.service';
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Body
-              <span class="ml-1 text-xs text-gray-400 font-normal">Use &#123;&#123;variable&#125;&#125; for dynamic values</span>
+              <span class="ml-1 text-xs text-gray-400 font-normal">Use {{'{{variable}}'}} for dynamic values</span>
             </label>
             <textarea
               formControlName="body"

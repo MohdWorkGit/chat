@@ -87,30 +87,32 @@ interface Scenario {
         <div class="flex justify-center py-10">
           <div class="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
         </div>
-      } @else if ((scenarios$ | async); as scenarios) {
-        @if (scenarios.length === 0 && !showForm) {
-          <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p class="text-sm text-gray-500">No scenarios yet. Create one to define conversation flows.</p>
-          </div>
-        } @else {
-          <div class="space-y-3">
-            @for (s of scenarios; track s.id) {
-              <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="flex items-start justify-between gap-4">
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900">{{ s.title }}</p>
-                    @if (s.description) {
-                      <p class="text-xs text-gray-500 mt-0.5">{{ s.description }}</p>
-                    }
-                  </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <button (click)="editScenario(s)" class="text-sm text-blue-600 hover:text-blue-700">Edit</button>
-                    <button (click)="deleteScenario(s.id)" class="text-sm text-red-600 hover:text-red-700">Delete</button>
+      } @else {
+        @if (scenarios$ | async; as scenarios) {
+          @if (scenarios.length === 0 && !showForm) {
+            <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
+              <p class="text-sm text-gray-500">No scenarios yet. Create one to define conversation flows.</p>
+            </div>
+          } @else {
+            <div class="space-y-3">
+              @for (s of scenarios; track s.id) {
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-900">{{ s.title }}</p>
+                      @if (s.description) {
+                        <p class="text-xs text-gray-500 mt-0.5">{{ s.description }}</p>
+                      }
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <button (click)="editScenario(s)" class="text-sm text-blue-600 hover:text-blue-700">Edit</button>
+                      <button (click)="deleteScenario(s.id)" class="text-sm text-red-600 hover:text-red-700">Delete</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            }
-          </div>
+              }
+            </div>
+          }
         }
       }
     </div>
