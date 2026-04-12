@@ -31,6 +31,6 @@ public class WidgetMessagesController : ControllerBase
     {
         command = command with { WidgetToken = websiteToken, ConversationId = conversationId };
         var result = await _mediator.Send(command);
-        return Ok(new { Id = result });
+        return Ok(result);
     }
 }
