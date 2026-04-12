@@ -20,10 +20,6 @@ export class ReportService {
     return this.api.accountPath('/reports');
   }
 
-  getOverview(filters: ReportFilters): Observable<Report> {
-    return this.api.get<Report>(`${this.basePath()}/overview`, filters as unknown as Record<string, string | number | boolean>);
-  }
-
   getConversationMetrics(filters: ReportFilters): Observable<ReportMetric[]> {
     return this.api.get<ReportMetric[]>(`${this.basePath()}/conversations`, filters as unknown as Record<string, string | number | boolean>);
   }
@@ -38,6 +34,18 @@ export class ReportService {
 
   getTeamMetrics(filters: ReportFilters): Observable<ReportMetric[]> {
     return this.api.get<ReportMetric[]>(`${this.basePath()}/teams`, filters as unknown as Record<string, string | number | boolean>);
+  }
+
+  getLabelMetrics(since: string, until: string): Observable<any[]> {
+    return this.api.get<any[]>(`${this.basePath()}/labels`, { since, until });
+  }
+
+  getTrafficReport(since: string, until: string): Observable<any> {
+    return this.api.get<any>(`${this.basePath()}/traffic`, { since, until });
+  }
+
+  getBotMetrics(since: string, until: string): Observable<any> {
+    return this.api.get<any>(`${this.basePath()}/bot-metrics`, { since, until });
   }
 
   getReport(params: Record<string, string | number | boolean>): Observable<any[]> {

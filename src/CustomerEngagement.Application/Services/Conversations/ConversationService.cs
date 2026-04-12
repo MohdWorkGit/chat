@@ -9,15 +9,18 @@ namespace CustomerEngagement.Application.Services.Conversations;
 public class ConversationService : IConversationService
 {
     private readonly IRepository<Conversation> _conversationRepository;
+    private readonly IRepository<ConversationParticipant> _participantRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMediator _mediator;
 
     public ConversationService(
         IRepository<Conversation> conversationRepository,
+        IRepository<ConversationParticipant> participantRepository,
         IUnitOfWork unitOfWork,
         IMediator mediator)
     {
         _conversationRepository = conversationRepository ?? throw new ArgumentNullException(nameof(conversationRepository));
+        _participantRepository = participantRepository ?? throw new ArgumentNullException(nameof(participantRepository));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
@@ -134,6 +137,49 @@ public class ConversationService : IConversationService
         conversation.UpdatedAt = DateTime.UtcNow;
 
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UnmuteAsync(long conversationId, CancellationToken cancellationToken = default)
+    {
+        var conversation = await _conversationRepository.GetByIdAsync((int)conversationId, cancellationToken)
+            ?? throw new InvalidOperationException($"Conversation {conversationId} not found.");
+
+        conversation.Muted = false;
+        conversation.UpdatedAt = DateTime.UtcNow;
+
+        await _conversationRepository.UpdateAsync(conversation, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddParticipantAsync(long conversationId, long userId, int accountId, CancellationToken cancellationToken = default)
+    {
+        var alreadyParticipant = await _participantRepository.AnyAsync(
+            p => p.ConversationId == (int)conversationId && p.UserId == (int)userId,
+            cancellationToken);
+
+        if (alreadyParticipant) return;
+
+        var participant = new ConversationParticipant
+        {
+            ConversationId = (int)conversationId,
+            UserId = (int)userId,
+            AccountId = accountId
+        };
+
+        await _participantRepository.AddAsync(participant, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveParticipantAsync(long conversationId, long userId, int accountId, CancellationToken cancellationToken = default)
+    {
+        var participant = await _participantRepository.FindOneAsync(
+            p => p.ConversationId == (int)conversationId && p.UserId == (int)userId && p.AccountId == accountId,
+            cancellationToken);
+
+        if (participant is null) return;
+
+        await _participantRepository.DeleteAsync(participant, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 

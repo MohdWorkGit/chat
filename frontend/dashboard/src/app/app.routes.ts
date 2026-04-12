@@ -23,6 +23,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'auth/confirm-email',
+    loadComponent: () =>
+      import('@features/auth/confirm-email/confirm-email.component').then(
+        (m) => m.ConfirmEmailComponent
+      ),
+  },
+  {
     path: 'conversations',
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
@@ -130,6 +137,20 @@ export const routes: Routes = [
           import(
             '@features/reports/labels/label-report.component'
           ).then((m) => m.LabelReportComponent),
+      },
+      {
+        path: 'traffic',
+        loadComponent: () =>
+          import(
+            '@features/reports/traffic/traffic-report.component'
+          ).then((m) => m.TrafficReportComponent),
+      },
+      {
+        path: 'bot-metrics',
+        loadComponent: () =>
+          import(
+            '@features/reports/bot-metrics/bot-metrics-report.component'
+          ).then((m) => m.BotMetricsReportComponent),
       },
     ],
   },
@@ -336,6 +357,27 @@ export const routes: Routes = [
                 '@features/settings/audit-logs/audit-logs.component'
               ).then((m) => m.AuditLogsComponent),
           },
+          {
+            path: 'email-templates',
+            loadComponent: () =>
+              import(
+                '@features/settings/email-templates/email-template-list.component'
+              ).then((m) => m.EmailTemplateListComponent),
+          },
+          {
+            path: 'email-templates/new',
+            loadComponent: () =>
+              import(
+                '@features/settings/email-templates/email-template-form.component'
+              ).then((m) => m.EmailTemplateFormComponent),
+          },
+          {
+            path: 'email-templates/:id',
+            loadComponent: () =>
+              import(
+                '@features/settings/email-templates/email-template-form.component'
+              ).then((m) => m.EmailTemplateFormComponent),
+          },
         ],
       },
     ],
@@ -370,6 +412,20 @@ export const routes: Routes = [
             '@features/helpcenter/article-list/article-list.component'
           ).then((m) => m.ArticleListComponent),
       },
+      {
+        path: 'new',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/article-form/article-form.component'
+          ).then((m) => m.ArticleFormComponent),
+      },
+      {
+        path: ':id',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/article-form/article-form.component'
+          ).then((m) => m.ArticleFormComponent),
+      },
     ],
   },
   {
@@ -392,6 +448,20 @@ export const routes: Routes = [
           import(
             '@features/captain/document-manager/document-manager.component'
           ).then((m) => m.DocumentManagerComponent),
+      },
+      {
+        path: ':id/scenarios',
+        loadComponent: () =>
+          import(
+            '@features/captain/scenarios/captain-scenarios.component'
+          ).then((m) => m.CaptainScenariosComponent),
+      },
+      {
+        path: ':id/tools',
+        loadComponent: () =>
+          import(
+            '@features/captain/custom-tools/captain-custom-tools.component'
+          ).then((m) => m.CaptainCustomToolsComponent),
       },
     ],
   },

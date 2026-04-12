@@ -134,8 +134,7 @@ public class UnmuteConversationCommandHandler : IRequestHandler<UnmuteConversati
 
     public async Task Handle(UnmuteConversationCommand request, CancellationToken cancellationToken)
     {
-        // Unmute would be implemented similarly to Mute
-        await Task.CompletedTask;
+        await _conversationService.UnmuteAsync(request.ConversationId, cancellationToken);
     }
 }
 
@@ -201,12 +200,34 @@ public record AddParticipantCommand(long AccountId, long ConversationId, long Us
 
 public class AddParticipantCommandHandler : IRequestHandler<AddParticipantCommand>
 {
-    public Task Handle(AddParticipantCommand request, CancellationToken cancellationToken) => Task.CompletedTask;
+    private readonly IConversationService _conversationService;
+
+    public AddParticipantCommandHandler(IConversationService conversationService)
+    {
+        _conversationService = conversationService;
+    }
+
+    public async Task Handle(AddParticipantCommand request, CancellationToken cancellationToken)
+    {
+        await _conversationService.AddParticipantAsync(
+            request.ConversationId, request.UserId, (int)request.AccountId, cancellationToken);
+    }
 }
 
 public record RemoveParticipantCommand(long AccountId, long ConversationId, long UserId) : IRequest;
 
 public class RemoveParticipantCommandHandler : IRequestHandler<RemoveParticipantCommand>
 {
-    public Task Handle(RemoveParticipantCommand request, CancellationToken cancellationToken) => Task.CompletedTask;
+    private readonly IConversationService _conversationService;
+
+    public RemoveParticipantCommandHandler(IConversationService conversationService)
+    {
+        _conversationService = conversationService;
+    }
+
+    public async Task Handle(RemoveParticipantCommand request, CancellationToken cancellationToken)
+    {
+        await _conversationService.RemoveParticipantAsync(
+            request.ConversationId, request.UserId, (int)request.AccountId, cancellationToken);
+    }
 }

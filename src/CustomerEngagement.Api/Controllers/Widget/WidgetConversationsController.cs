@@ -33,4 +33,20 @@ public class WidgetConversationsController : ControllerBase
         var result = await _mediator.Send(command);
         return Ok(result);
     }
+
+    [HttpPost("{conversationId:long}/csat")]
+    public async Task<ActionResult> SubmitCsat(
+        long conversationId,
+        [FromHeader(Name = "X-Website-Token")] string websiteToken,
+        [FromBody] CsatRequest body)
+    {
+        var result = await _mediator.Send(new Application.Widget.Commands.SubmitWidgetCsatCommand(
+            WidgetToken: websiteToken,
+            ConversationId: conversationId,
+            Rating: body.Rating,
+            Feedback: body.Feedback));
+        return Ok(result);
+    }
+
+    public record CsatRequest(int Rating, string? Feedback);
 }

@@ -45,9 +45,16 @@ public record LogoutCommand(long UserId, string? Token) : IRequest;
 
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand>
 {
-    public Task Handle(LogoutCommand request, CancellationToken cancellationToken)
+    private readonly IIdentityService _identityService;
+
+    public LogoutCommandHandler(IIdentityService identityService)
     {
-        return Task.CompletedTask;
+        _identityService = identityService;
+    }
+
+    public async Task Handle(LogoutCommand request, CancellationToken cancellationToken)
+    {
+        await _identityService.RevokeTokenAsync(request.UserId);
     }
 }
 
@@ -109,8 +116,17 @@ public record ConfirmEmailCommand(string Email, string Token) : IRequest;
 
 public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand>
 {
-    public Task Handle(ConfirmEmailCommand request, CancellationToken cancellationToken)
+    private readonly IIdentityService _identityService;
+
+    public ConfirmEmailCommandHandler(IIdentityService identityService)
     {
-        return Task.CompletedTask;
+        _identityService = identityService;
+    }
+
+    public async Task Handle(ConfirmEmailCommand request, CancellationToken cancellationToken)
+    {
+        var confirmed = await _identityService.ConfirmEmailAsync(request.Email, request.Token);
+        if (!confirmed)
+            throw new InvalidOperationException("Email confirmation failed. The token may be invalid or expired.");
     }
 }

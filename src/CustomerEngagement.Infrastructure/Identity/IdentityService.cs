@@ -225,4 +225,36 @@ public class IdentityService : IIdentityService
         var userInfo = new AuthUserInfo(user.Id, user.Name, user.Email ?? "", user.Avatar, role, accountId, user.AvailabilityStatus.ToString());
         return new AuthResult(true, accessToken, refreshToken, User: userInfo);
     }
+
+    public async Task RevokeTokenAsync(long userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is not null)
+        {
+            // Rotating the security stamp invalidates all active sessions for this user.
+            // Any subsequent token refresh will fail because the stamp no longer matches.
+            await _userManager.UpdateSecurityStampAsync(user);
+            _logger.LogInformation("Security stamp rotated for user {UserId} on logout", userId);
+        }
+    }
+
+    public async Task<bool> ConfirmEmailAsync(string email, string token)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            _logger.LogWarning("Email confirmation failed: user {Email} not found", email);
+            return false;
+        }
+
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        if (result.Succeeded)
+        {
+            _logger.LogInformation("Email confirmed for {Email}", email);
+            return true;
+        }
+
+        _logger.LogWarning("Email confirmation failed for {Email}: {Errors}", email, string.Join(", ", result.Errors.Select(e => e.Description)));
+        return false;
+    }
 }
