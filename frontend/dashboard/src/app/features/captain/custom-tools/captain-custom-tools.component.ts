@@ -93,31 +93,33 @@ interface CustomTool {
         <div class="flex justify-center py-10">
           <div class="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
         </div>
-      } @else if ((tools$ | async); as tools) {
-        @if (tools.length === 0 && !showForm) {
-          <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p class="text-sm text-gray-500">No tools registered. Add external APIs for the assistant to call.</p>
-          </div>
-        } @else {
-          <div class="space-y-3">
-            @for (tool of tools; track tool.id) {
-              <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="flex items-start justify-between gap-4">
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 font-mono">{{ tool.name }}</p>
-                    @if (tool.description) {
-                      <p class="text-xs text-gray-500 mt-0.5">{{ tool.description }}</p>
-                    }
-                    <p class="text-xs text-gray-400 mt-1 truncate">{{ tool.endpointUrl }}</p>
-                  </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <button (click)="editTool(tool)" class="text-sm text-blue-600 hover:text-blue-700">Edit</button>
-                    <button (click)="deleteTool(tool.id)" class="text-sm text-red-600 hover:text-red-700">Delete</button>
+      } @else {
+        @if (tools$ | async; as tools) {
+          @if (tools.length === 0 && !showForm) {
+            <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
+              <p class="text-sm text-gray-500">No tools registered. Add external APIs for the assistant to call.</p>
+            </div>
+          } @else {
+            <div class="space-y-3">
+              @for (tool of tools; track tool.id) {
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-900 font-mono">{{ tool.name }}</p>
+                      @if (tool.description) {
+                        <p class="text-xs text-gray-500 mt-0.5">{{ tool.description }}</p>
+                      }
+                      <p class="text-xs text-gray-400 mt-1 truncate">{{ tool.endpointUrl }}</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <button (click)="editTool(tool)" class="text-sm text-blue-600 hover:text-blue-700">Edit</button>
+                      <button (click)="deleteTool(tool.id)" class="text-sm text-red-600 hover:text-red-700">Delete</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            }
-          </div>
+              }
+            </div>
+          }
         }
       }
     </div>
