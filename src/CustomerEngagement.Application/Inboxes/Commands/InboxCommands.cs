@@ -4,7 +4,7 @@ using MediatR;
 
 namespace CustomerEngagement.Application.Inboxes.Commands;
 
-public record CreateInboxCommand(long AccountId = 0, string Name = "", string? ChannelType = null) : IRequest<long>;
+public record CreateInboxCommand(long AccountId = 0, string Name = "", string? ChannelType = null, int? ChannelId = null) : IRequest<long>;
 
 public class CreateInboxCommandHandler : IRequestHandler<CreateInboxCommand, long>
 {
@@ -24,6 +24,7 @@ public class CreateInboxCommandHandler : IRequestHandler<CreateInboxCommand, lon
             AccountId = (int)request.AccountId,
             Name = request.Name,
             ChannelType = request.ChannelType,
+            ChannelId = request.ChannelId ?? 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
