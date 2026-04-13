@@ -93,6 +93,14 @@ public class InboxesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{inboxId:long}/widget_config")]
+    public async Task<ActionResult> GetWidgetConfig(long accountId, long inboxId)
+    {
+        var result = await _mediator.Send(
+            new Application.Inboxes.Queries.GetInboxWidgetConfigQuery(accountId, inboxId));
+        return Ok(result);
+    }
+
     [HttpPut("{inboxId:long}/working_hours")]
     [Authorize(Policy = "Administrator")]
     public async Task<ActionResult> UpdateWorkingHours(long accountId, long inboxId,

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Inbox, InboxMember } from '@core/models/inbox.model';
+import { Inbox, InboxMember, WidgetConfig } from '@core/models/inbox.model';
 
 @Injectable({
   providedIn: 'root',
@@ -42,5 +42,9 @@ export class InboxService {
 
   removeMember(inboxId: number, userId: number): Observable<void> {
     return this.api.delete<void>(`${this.basePath()}/${inboxId}/members/${userId}`);
+  }
+
+  getWidgetConfig(inboxId: number): Observable<WidgetConfig> {
+    return this.api.get<WidgetConfig>(`${this.basePath()}/${inboxId}/widget_config`);
   }
 }
