@@ -25,7 +25,7 @@ export class CampaignService {
   }
 
   update(id: number, data: Partial<Campaign>): Observable<Campaign> {
-    return this.api.patch<Campaign>(`${this.basePath()}/${id}`, data);
+    return this.api.put<Campaign>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

@@ -25,7 +25,7 @@ export class LabelService {
   }
 
   update(id: number, data: Partial<Label>): Observable<Label> {
-    return this.api.patch<Label>(`${this.basePath()}/${id}`, data);
+    return this.api.put<Label>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

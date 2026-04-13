@@ -42,7 +42,7 @@ export class SuperAdminService {
   }
 
   updateConfig(key: string, value: string): Observable<void> {
-    return this.api.patch<void>(`${this.basePath}/config`, { key, value });
+    return this.api.put<void>(`${this.basePath}/config`, { key, value });
   }
 
   getStats(): Observable<AdminStats> {

@@ -25,7 +25,7 @@ export class TeamService {
   }
 
   update(id: number, data: Partial<Team>): Observable<Team> {
-    return this.api.patch<Team>(`${this.basePath()}/${id}`, data);
+    return this.api.put<Team>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

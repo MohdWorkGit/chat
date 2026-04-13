@@ -36,7 +36,7 @@ export class ContactService {
   }
 
   update(id: number, data: Partial<Contact>): Observable<Contact> {
-    return this.api.patch<Contact>(`${this.basePath()}/${id}`, data);
+    return this.api.put<Contact>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

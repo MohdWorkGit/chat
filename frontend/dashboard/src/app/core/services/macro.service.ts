@@ -25,7 +25,7 @@ export class MacroService {
   }
 
   update(id: number, data: Partial<Macro>): Observable<Macro> {
-    return this.api.patch<Macro>(`${this.basePath()}/${id}`, data);
+    return this.api.put<Macro>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

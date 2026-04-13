@@ -18,11 +18,11 @@ export class NotificationService {
   }
 
   markAsRead(id: number): Observable<Notification> {
-    return this.api.patch<Notification>(`${this.basePath()}/${id}/read`, {});
+    return this.api.post<Notification>(`${this.basePath()}/${id}/read`, {});
   }
 
   markAllAsRead(): Observable<void> {
-    return this.api.post<void>(`${this.basePath()}/read-all`);
+    return this.api.post<void>(`${this.basePath()}/read_all`);
   }
 
   snooze(id: number, snoozedUntil: string): Observable<Notification> {

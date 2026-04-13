@@ -25,7 +25,7 @@ export class CannedResponseService {
   }
 
   update(id: number, data: Partial<CannedResponse>): Observable<CannedResponse> {
-    return this.api.patch<CannedResponse>(`${this.basePath()}/${id}`, data);
+    return this.api.put<CannedResponse>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
