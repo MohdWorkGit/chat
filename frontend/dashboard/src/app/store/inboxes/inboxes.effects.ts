@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, exhaustMap, map, of, switchMap, concatMap } from 'rxjs';
+import { catchError, exhaustMap, map, of, switchMap, concatMap, tap } from 'rxjs';
 import { InboxService } from '@core/services/inbox.service';
 import { InboxesActions } from './inboxes.actions';
 import { ApiError } from '@core/models/common.model';
@@ -73,6 +74,15 @@ export const deleteInbox$ = createEffect(
       )
     ),
   { functional: true }
+);
+
+export const deleteInboxSuccess$ = createEffect(
+  (actions$ = inject(Actions), router = inject(Router)) =>
+    actions$.pipe(
+      ofType(InboxesActions.deleteInboxSuccess),
+      tap(() => router.navigate(['/settings/inboxes']))
+    ),
+  { functional: true, dispatch: false }
 );
 
 export const addMember$ = createEffect(
