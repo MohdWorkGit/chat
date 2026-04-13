@@ -4,9 +4,9 @@ using MediatR;
 
 namespace CustomerEngagement.Application.Messages.Queries;
 
-public record GetMessagesQuery(long AccountId, long ConversationId, int Page, int PageSize) : IRequest<PaginatedResultDto<MessageDto>>;
+public record GetMessagesQuery(long AccountId, long ConversationId, int Page, int PageSize) : IRequest<MessageListDto>;
 
-public class GetMessagesQueryHandler : IRequestHandler<GetMessagesQuery, PaginatedResultDto<MessageDto>>
+public class GetMessagesQueryHandler : IRequestHandler<GetMessagesQuery, MessageListDto>
 {
     private readonly IMessageService _messageService;
 
@@ -15,9 +15,15 @@ public class GetMessagesQueryHandler : IRequestHandler<GetMessagesQuery, Paginat
         _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
     }
 
-    public async Task<PaginatedResultDto<MessageDto>> Handle(GetMessagesQuery request, CancellationToken cancellationToken)
+    public async Task<MessageListDto> Handle(GetMessagesQuery request, CancellationToken cancellationToken)
     {
-        return await _messageService.GetByConversationAsync(
+        var result = await _messageService.GetByConversationAsync(
             request.ConversationId, request.Page, request.PageSize, cancellationToken);
+
+        var totalPages = result.TotalCount > 0
+            ? (int)Math.Ceiling((double)result.TotalCount / request.PageSize) : 0;
+        var meta = new MetaDto(result.TotalCount, request.Page, request.PageSize, totalPages);
+
+        return new MessageListDto(result.Items.ToList().AsReadOnly(), meta);
     }
 }

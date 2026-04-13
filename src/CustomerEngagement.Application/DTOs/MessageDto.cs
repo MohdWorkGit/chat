@@ -23,6 +23,8 @@ public class UpdateMessageRequest
     public string Content { get; set; } = string.Empty;
 }
 
+public record MessageListDto(IReadOnlyList<MessageDto> Data, MetaDto Meta);
+
 public class AttachmentRequest
 {
     public string FileName { get; set; } = string.Empty;
