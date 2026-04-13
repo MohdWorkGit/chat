@@ -1,6 +1,6 @@
 namespace CustomerEngagement.Application.DTOs;
 
-public record MetaDto(int TotalCount, int Page, int PageSize, int TotalPages);
+public record MetaDto(int TotalCount, int CurrentPage, int PageSize, int TotalPages);
 
 public record AttachmentDto(
     int Id, string FileType, string? ExternalUrl, string? Extension, string? FallbackTitle);
