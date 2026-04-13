@@ -42,15 +42,15 @@ export class ConversationService {
   }
 
   updateStatus(id: number, status: string): Observable<Conversation> {
-    return this.api.patch<Conversation>(`${this.basePath()}/${id}/status`, { status });
+    return this.api.patch<Conversation>(`${this.basePath()}/${id}`, { status });
   }
 
   assign(id: number, assigneeId: number): Observable<Conversation> {
-    return this.api.patch<Conversation>(`${this.basePath()}/${id}/assign`, { assigneeId });
+    return this.api.post<Conversation>(`${this.basePath()}/${id}/assignments`, { assigneeId });
   }
 
   assignTeam(id: number, teamId: number): Observable<Conversation> {
-    return this.api.patch<Conversation>(`${this.basePath()}/${id}/assign`, { teamId });
+    return this.api.post<Conversation>(`${this.basePath()}/${id}/assignments`, { teamId });
   }
 
   addLabel(id: number, label: string): Observable<Conversation> {

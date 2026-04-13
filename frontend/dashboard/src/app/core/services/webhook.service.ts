@@ -25,7 +25,7 @@ export class WebhookService {
   }
 
   update(id: number, data: Partial<Webhook>): Observable<Webhook> {
-    return this.api.patch<Webhook>(`${this.basePath()}/${id}`, data);
+    return this.api.put<Webhook>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

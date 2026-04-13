@@ -25,7 +25,7 @@ export class AutomationService {
   }
 
   update(id: number, data: Partial<AutomationRule>): Observable<AutomationRule> {
-    return this.api.patch<AutomationRule>(`${this.basePath()}/${id}`, data);
+    return this.api.put<AutomationRule>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

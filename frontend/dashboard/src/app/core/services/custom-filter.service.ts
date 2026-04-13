@@ -21,7 +21,7 @@ export class CustomFilterService {
   }
 
   update(id: number, data: Partial<CustomFilter>): Observable<CustomFilter> {
-    return this.api.patch<CustomFilter>(`${this.basePath()}/${id}`, data);
+    return this.api.put<CustomFilter>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

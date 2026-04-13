@@ -102,7 +102,7 @@ export class EnterpriseService {
   }
 
   updateCustomRole(id: number, data: UpdateCustomRoleRequest): Observable<CustomRole> {
-    return this.api.put<CustomRole>(this.api.accountPath(`/custom_roles/${id}`), data);
+    return this.api.patch<CustomRole>(this.api.accountPath(`/custom_roles/${id}`), data);
   }
 
   deleteCustomRole(id: number): Observable<void> {

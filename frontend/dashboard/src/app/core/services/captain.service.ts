@@ -64,7 +64,7 @@ export class CaptainService {
   }
 
   updateAssistant(accountId: number, id: number, data: Partial<CaptainAssistant>): Observable<CaptainAssistant> {
-    return this.api.patch<CaptainAssistant>(`${this.basePath(accountId)}/assistants/${id}`, data);
+    return this.api.put<CaptainAssistant>(`${this.basePath(accountId)}/assistants/${id}`, data);
   }
 
   deleteAssistant(accountId: number, id: number): Observable<void> {
