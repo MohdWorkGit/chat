@@ -10,6 +10,21 @@
     Set the website-token attribute to a valid token from your ChannelWebWidget table.
     You can find it in the dashboard under Settings > Inboxes > Web Widget > Configuration.
   -->
-  <customer-engagement-widget website-token="dev-test-token"></customer-engagement-widget>
+  <customer-engagement-widget website-token="S019harsaOuazI1tO75dzE4A3AMl"></customer-engagement-widget>
+
+  <script>
+  (function(d, t) {
+    var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+    g.src = "https://chat.3dsky.co/widget/widget.js";
+    g.defer = true;
+    g.async = true;
+    s.parentNode.insertBefore(g, s);
+    g.onload = function() {
+      window.customerEngagementSettings = {
+        websiteToken: "S019harsaOuazI1tO75dzE4A3AMl"
+      };
+    };
+  })(document, "script");
+</script>
 </body>
 </html>
