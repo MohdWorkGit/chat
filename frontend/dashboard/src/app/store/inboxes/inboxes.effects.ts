@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, exhaustMap, map, of, switchMap } from 'rxjs';
+import { catchError, exhaustMap, map, of, switchMap, concatMap } from 'rxjs';
 import { InboxService } from '@core/services/inbox.service';
 import { InboxesActions } from './inboxes.actions';
 import { ApiError } from '@core/models/common.model';
@@ -69,6 +69,42 @@ export const deleteInbox$ = createEffect(
         inboxService.delete(id).pipe(
           map(() => InboxesActions.deleteInboxSuccess({ id })),
           catchError((error: ApiError) => of(InboxesActions.deleteInboxFailure({ error })))
+        )
+      )
+    ),
+  { functional: true }
+);
+
+export const addMember$ = createEffect(
+  (actions$ = inject(Actions), inboxService = inject(InboxService)) =>
+    actions$.pipe(
+      ofType(InboxesActions.addMember),
+      concatMap(({ inboxId, userId }) =>
+        inboxService.addMember(inboxId, userId).pipe(
+          concatMap(() =>
+            inboxService.getById(inboxId).pipe(
+              map((inbox) => InboxesActions.addMemberSuccess({ inbox }))
+            )
+          ),
+          catchError((error: ApiError) => of(InboxesActions.addMemberFailure({ error })))
+        )
+      )
+    ),
+  { functional: true }
+);
+
+export const removeMember$ = createEffect(
+  (actions$ = inject(Actions), inboxService = inject(InboxService)) =>
+    actions$.pipe(
+      ofType(InboxesActions.removeMember),
+      concatMap(({ inboxId, memberId }) =>
+        inboxService.removeMember(inboxId, memberId).pipe(
+          concatMap(() =>
+            inboxService.getById(inboxId).pipe(
+              map((inbox) => InboxesActions.removeMemberSuccess({ inbox }))
+            )
+          ),
+          catchError((error: ApiError) => of(InboxesActions.removeMemberFailure({ error })))
         )
       )
     ),

@@ -44,7 +44,10 @@ export const inboxesReducer = createReducer(
   })),
 
   on(InboxesActions.loadInboxSuccess, (state, { inbox }) =>
-    inboxesAdapter.upsertOne(inbox, state)
+    inboxesAdapter.upsertOne(inbox, {
+      ...state,
+      selectedInboxId: inbox.id,
+    })
   ),
 
   on(InboxesActions.createInboxSuccess, (state, { inbox }) =>
@@ -62,6 +65,24 @@ export const inboxesReducer = createReducer(
   on(InboxesActions.selectInbox, (state, { id }) => ({
     ...state,
     selectedInboxId: id,
+  })),
+
+  on(InboxesActions.addMemberSuccess, (state, { inbox }) =>
+    inboxesAdapter.updateOne({ id: inbox.id, changes: inbox }, state)
+  ),
+
+  on(InboxesActions.addMemberFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+
+  on(InboxesActions.removeMemberSuccess, (state, { inbox }) =>
+    inboxesAdapter.updateOne({ id: inbox.id, changes: inbox }, state)
+  ),
+
+  on(InboxesActions.removeMemberFailure, (state, { error }) => ({
+    ...state,
+    error,
   })),
 
   on(InboxesActions.clearError, (state) => ({
