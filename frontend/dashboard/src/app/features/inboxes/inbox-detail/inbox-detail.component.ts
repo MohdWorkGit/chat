@@ -5,6 +5,8 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Store } from '@ngrx/store';
 import { InboxesActions } from '@store/inboxes/inboxes.actions';
 import { selectSelectedInbox, selectInboxesLoading } from '@store/inboxes/inboxes.selectors';
+import { InboxService } from '@core/services/inbox.service';
+import { WidgetConfig } from '@core/models/inbox.model';
 
 @Component({
   selector: 'app-inbox-detail',
@@ -134,6 +136,46 @@ import { selectSelectedInbox, selectInboxesLoading } from '@store/inboxes/inboxe
                 }
               </div>
 
+              <!-- Widget Configuration Section -->
+              @if (widgetConfig) {
+                <div class="border-t border-gray-200 pt-6">
+                  <h3 class="text-sm font-semibold text-gray-900 mb-4">Configuration</h3>
+
+                  <div class="space-y-4">
+                    <!-- Website Token -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Website Token</label>
+                      <div class="flex items-center gap-2">
+                        <code class="flex-1 block rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-mono text-gray-800 select-all">{{ widgetConfig.websiteToken }}</code>
+                        <button
+                          type="button"
+                          (click)="copyToClipboard(widgetConfig.websiteToken)"
+                          class="shrink-0 px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          {{ tokenCopied ? 'Copied!' : 'Copy' }}
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Embed Code -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Embed Code</label>
+                      <p class="text-xs text-gray-400 mb-2">Copy and paste this code into your website's HTML before the closing &lt;/body&gt; tag</p>
+                      <div class="relative">
+                        <pre class="block rounded-lg border border-gray-300 bg-gray-50 px-3 py-3 text-xs font-mono text-gray-800 overflow-x-auto whitespace-pre-wrap break-all select-all">{{ getEmbedCode(widgetConfig.websiteToken) }}</pre>
+                        <button
+                          type="button"
+                          (click)="copyToClipboard(getEmbedCode(widgetConfig.websiteToken))"
+                          class="absolute top-2 right-2 px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                        >
+                          {{ snippetCopied ? 'Copied!' : 'Copy' }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
               <!-- Actions -->
               <div class="flex items-center justify-between pt-6 border-t border-gray-200">
                 <button
@@ -169,9 +211,14 @@ export class InboxDetailComponent implements OnInit {
 
   private store = inject(Store);
   private fb = inject(FormBuilder);
+  private inboxService = inject(InboxService);
 
   inbox$ = this.store.select(selectSelectedInbox);
   loading$ = this.store.select(selectInboxesLoading);
+
+  widgetConfig: WidgetConfig | null = null;
+  tokenCopied = false;
+  snippetCopied = false;
 
   inboxForm: FormGroup = this.fb.group({
     name: ['', Validators.required],
@@ -191,6 +238,10 @@ export class InboxDetailComponent implements OnInit {
           enableAutoAssignment: inbox.enableAutoAssignment,
           csatSurveyEnabled: inbox.csatSurveyEnabled,
         });
+
+        if (inbox.channelType === 'web_widget') {
+          this.loadWidgetConfig();
+        }
       }
     });
   }
@@ -216,5 +267,29 @@ export class InboxDetailComponent implements OnInit {
     this.store.dispatch(
       InboxesActions.removeMember({ inboxId: Number(this.id), memberId })
     );
+  }
+
+  private loadWidgetConfig(): void {
+    if (this.widgetConfig) return;
+    this.inboxService.getWidgetConfig(Number(this.id)).subscribe({
+      next: (config) => (this.widgetConfig = config),
+      error: () => (this.widgetConfig = null),
+    });
+  }
+
+  getEmbedCode(token: string): string {
+    return `<script>\n  (function(d, t) {\n    var g = d.createElement(t), s = d.getElementsByTagName(t)[0];\n    g.src = "${window.location.origin}/widget/widget.js";\n    g.defer = true;\n    g.async = true;\n    s.parentNode.insertBefore(g, s);\n    g.onload = function() {\n      window.customerEngagementSettings = {\n        websiteToken: "${token}"\n      };\n    };\n  })(document, "script");\n</script>`;
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      if (text.includes('<script>')) {
+        this.snippetCopied = true;
+        setTimeout(() => (this.snippetCopied = false), 2000);
+      } else {
+        this.tokenCopied = true;
+        setTimeout(() => (this.tokenCopied = false), 2000);
+      }
+    });
   }
 }

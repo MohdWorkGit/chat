@@ -1,4 +1,5 @@
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -11,6 +12,8 @@ public record GetInboxByIdQuery(long AccountId, long Id) : IRequest<object>;
 public record GetInboxMembersQuery(long AccountId, long InboxId) : IRequest<object>;
 
 public record GetWorkingHoursQuery(long AccountId, long InboxId) : IRequest<object>;
+
+public record GetInboxWidgetConfigQuery(long AccountId, long InboxId) : IRequest<object>;
 
 public class GetInboxesQueryHandler : IRequestHandler<GetInboxesQuery, object>
 {
@@ -124,5 +127,53 @@ public class GetWorkingHoursQueryHandler : IRequestHandler<GetWorkingHoursQuery,
             h.ClosedAllDay,
             h.OpenAllDay
         }).ToList();
+    }
+}
+
+public class GetInboxWidgetConfigQueryHandler : IRequestHandler<GetInboxWidgetConfigQuery, object>
+{
+    private readonly IRepository<Inbox> _inboxRepository;
+    private readonly IRepository<ChannelWebWidget> _widgetRepository;
+
+    public GetInboxWidgetConfigQueryHandler(
+        IRepository<Inbox> inboxRepository,
+        IRepository<ChannelWebWidget> widgetRepository)
+    {
+        _inboxRepository = inboxRepository ?? throw new ArgumentNullException(nameof(inboxRepository));
+        _widgetRepository = widgetRepository ?? throw new ArgumentNullException(nameof(widgetRepository));
+    }
+
+    public async Task<object> Handle(GetInboxWidgetConfigQuery request, CancellationToken cancellationToken)
+    {
+        var inboxes = await _inboxRepository.FindAsync(
+            i => i.AccountId == (int)request.AccountId && i.Id == (int)request.InboxId,
+            cancellationToken);
+
+        var inbox = inboxes.FirstOrDefault();
+        if (inbox is null)
+            return new { Error = "Inbox not found" };
+
+        var widgets = await _widgetRepository.FindAsync(
+            w => w.InboxId == (int)request.InboxId && w.AccountId == (int)request.AccountId,
+            cancellationToken);
+
+        var widget = widgets.FirstOrDefault();
+        if (widget is null)
+            return new { Error = "No web widget configuration found for this inbox" };
+
+        return new
+        {
+            widget.Id,
+            widget.InboxId,
+            widget.AccountId,
+            widget.WebsiteToken,
+            widget.WebsiteUrl,
+            widget.WelcomeTitle,
+            widget.WelcomeTagline,
+            widget.WidgetColor,
+            widget.IsEnabled,
+            widget.PreChatFormEnabled,
+            widget.CreatedAt
+        };
     }
 }

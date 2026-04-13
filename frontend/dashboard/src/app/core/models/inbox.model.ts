@@ -16,6 +16,20 @@ export interface InboxMember {
   userAvatar?: string;
 }
 
+export interface WidgetConfig {
+  id: number;
+  inboxId: number;
+  accountId: number;
+  websiteToken: string;
+  websiteUrl?: string;
+  welcomeTitle?: string;
+  welcomeTagline?: string;
+  widgetColor?: string;
+  isEnabled: boolean;
+  preChatFormEnabled: boolean;
+  createdAt: string;
+}
+
 export interface Inbox {
   id: number;
   accountId: number;
