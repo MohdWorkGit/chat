@@ -72,6 +72,7 @@ public class CreateWidgetContactCommandHandler : IRequestHandler<CreateWidgetCon
         };
 
         await _contactRepository.AddAsync(contact, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var sourceId = Guid.NewGuid().ToString();
         var contactInbox = new ContactInbox
@@ -173,6 +174,7 @@ public class CreateWidgetConversationCommandHandler : IRequestHandler<CreateWidg
         };
 
         await _contactRepository.AddAsync(contact, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var contactInbox = new ContactInbox
         {

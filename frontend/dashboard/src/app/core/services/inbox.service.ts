@@ -25,7 +25,7 @@ export class InboxService {
   }
 
   update(id: number, data: Partial<Inbox>): Observable<Inbox> {
-    return this.api.patch<Inbox>(`${this.basePath()}/${id}`, data);
+    return this.api.put<Inbox>(`${this.basePath()}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
