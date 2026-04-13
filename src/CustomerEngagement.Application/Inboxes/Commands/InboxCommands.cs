@@ -1,3 +1,5 @@
+using CustomerEngagement.Application.DTOs;
+using CustomerEngagement.Application.Services.Channels;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
@@ -10,11 +12,16 @@ public class CreateInboxCommandHandler : IRequestHandler<CreateInboxCommand, lon
 {
     private readonly IRepository<Inbox> _inboxRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IWebWidgetService _webWidgetService;
 
-    public CreateInboxCommandHandler(IRepository<Inbox> inboxRepository, IUnitOfWork unitOfWork)
+    public CreateInboxCommandHandler(
+        IRepository<Inbox> inboxRepository,
+        IUnitOfWork unitOfWork,
+        IWebWidgetService webWidgetService)
     {
         _inboxRepository = inboxRepository ?? throw new ArgumentNullException(nameof(inboxRepository));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _webWidgetService = webWidgetService ?? throw new ArgumentNullException(nameof(webWidgetService));
     }
 
     public async Task<long> Handle(CreateInboxCommand request, CancellationToken cancellationToken)
@@ -31,6 +38,14 @@ public class CreateInboxCommandHandler : IRequestHandler<CreateInboxCommand, lon
 
         await _inboxRepository.AddAsync(inbox, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (request.ChannelType == "web_widget")
+        {
+            await _webWidgetService.CreateWidgetAsync(
+                (int)request.AccountId,
+                new CreateWebWidgetRequest { InboxId = inbox.Id },
+                cancellationToken);
+        }
 
         return inbox.Id;
     }

@@ -1,3 +1,5 @@
+using CustomerEngagement.Application.DTOs;
+using CustomerEngagement.Application.Services.Channels;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Interfaces;
@@ -134,13 +136,16 @@ public class GetInboxWidgetConfigQueryHandler : IRequestHandler<GetInboxWidgetCo
 {
     private readonly IRepository<Inbox> _inboxRepository;
     private readonly IRepository<ChannelWebWidget> _widgetRepository;
+    private readonly IWebWidgetService _webWidgetService;
 
     public GetInboxWidgetConfigQueryHandler(
         IRepository<Inbox> inboxRepository,
-        IRepository<ChannelWebWidget> widgetRepository)
+        IRepository<ChannelWebWidget> widgetRepository,
+        IWebWidgetService webWidgetService)
     {
         _inboxRepository = inboxRepository ?? throw new ArgumentNullException(nameof(inboxRepository));
         _widgetRepository = widgetRepository ?? throw new ArgumentNullException(nameof(widgetRepository));
+        _webWidgetService = webWidgetService ?? throw new ArgumentNullException(nameof(webWidgetService));
     }
 
     public async Task<object> Handle(GetInboxWidgetConfigQuery request, CancellationToken cancellationToken)
@@ -158,6 +163,31 @@ public class GetInboxWidgetConfigQueryHandler : IRequestHandler<GetInboxWidgetCo
             cancellationToken);
 
         var widget = widgets.FirstOrDefault();
+
+        // Auto-create widget for existing web_widget inboxes that are missing the record
+        if (widget is null && inbox.ChannelType == "web_widget")
+        {
+            var dto = await _webWidgetService.CreateWidgetAsync(
+                (int)request.AccountId,
+                new CreateWebWidgetRequest { InboxId = (int)request.InboxId },
+                cancellationToken);
+
+            return new
+            {
+                dto.Id,
+                InboxId = (int)request.InboxId,
+                dto.AccountId,
+                WebsiteToken = dto.Token,
+                dto.WebsiteUrl,
+                dto.WelcomeTitle,
+                dto.WelcomeTagline,
+                dto.WidgetColor,
+                dto.IsEnabled,
+                PreChatFormEnabled = false,
+                dto.CreatedAt
+            };
+        }
+
         if (widget is null)
             return new { Error = "No web widget configuration found for this inbox" };
 
