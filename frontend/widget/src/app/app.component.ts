@@ -5,6 +5,7 @@ import { ChatWindowComponent } from './components/chat-window/chat-window.compon
 import { UnreadBadgeComponent } from './components/unread-badge/unread-badge.component';
 import { CampaignBannerComponent } from './components/campaign-banner/campaign-banner.component';
 import { SignalrService, CampaignMessage } from './services/signalr.service';
+import { WidgetApiService } from './services/widget-api.service';
 
 @Component({
   selector: 'cew-root',
@@ -21,6 +22,7 @@ import { SignalrService, CampaignMessage } from './services/signalr.service';
         [hidden]="!isChatOpen"
         [websiteToken]="websiteToken"
         [locale]="locale"
+        [apiBaseUrl]="apiBaseUrl"
         (close)="toggleChat()" />
 
       @if (!isChatOpen && campaignMessage()) {
@@ -140,6 +142,14 @@ import { SignalrService, CampaignMessage } from './services/signalr.service';
 export class AppComponent implements OnInit, OnDestroy {
   @Input() websiteToken = '';
   @Input() locale = 'en';
+  /**
+   * Absolute URL of the backend API (e.g. "https://api.example.com").
+   * When the widget is embedded on a different origin than the API, the
+   * host page must pass this via the `api-base-url` attribute so the
+   * widget can reach the API and SignalR hub. Defaults to the current
+   * page origin so same-origin deployments keep working.
+   */
+  @Input() apiBaseUrl = '';
 
   isChatOpen = false;
   unreadCount = signal(0);
@@ -147,11 +157,17 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
 
-  constructor(private readonly signalrService: SignalrService) {}
+  constructor(
+    private readonly signalrService: SignalrService,
+    private readonly apiService: WidgetApiService,
+  ) {}
 
   ngOnInit(): void {
+    const origin = this.apiBaseUrl?.trim() || '';
+    this.apiService.setApiOrigin(origin);
+
     if (this.websiteToken) {
-      this.signalrService.initialize(this.websiteToken);
+      this.signalrService.initialize(this.websiteToken, origin);
     }
 
     this.signalrService.messages$

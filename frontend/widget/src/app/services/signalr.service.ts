@@ -25,13 +25,19 @@ export class SignalrService {
   readonly conversationResolved$ = this.conversationResolvedSubject.asObservable();
   readonly campaignMessage$ = this.campaignMessageSubject.asObservable();
 
-  initialize(_websiteToken: string): void {
+  initialize(_websiteToken: string, apiOrigin = ''): void {
     // The widget has no user JWT — the backend ConversationHub allows
     // anonymous connections and relies on per-conversation group joins.
     // We deliberately do NOT pass the website token here because the
     // JwtBearerHandler would otherwise reject it as an invalid token.
+    //
+    // When the widget is embedded on a different origin than the API,
+    // `apiOrigin` must be an absolute URL (e.g. https://api.example.com)
+    // so the SignalR negotiate request reaches the backend and not the
+    // CDN hosting the widget bundle.
+    const hubUrl = `${(apiOrigin || '').replace(/\/+$/, '')}/hubs/conversation`;
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/conversation', {
+      .withUrl(hubUrl, {
         transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
