@@ -37,6 +37,22 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    # Forward SignalR traffic (negotiate POST + WebSocket upgrade) to the
+    # backend. Without this block the request falls through to `location /`
+    # which only serves the static SPA and responds 405 to POST.
+    location /hubs/ {
+        proxy_pass http://api:8080/hubs/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
     # Cache static assets aggressively
     location ~* \.(js|css|woff2?|ttf|eot|svg|png|jpg|ico)$ {
         add_header Access-Control-Allow-Origin *;
