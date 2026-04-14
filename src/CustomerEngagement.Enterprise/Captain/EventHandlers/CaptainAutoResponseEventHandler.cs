@@ -46,36 +46,40 @@ public sealed class CaptainAutoResponseEventHandler : INotificationHandler<Messa
 
     public async Task Handle(MessageCreatedEvent notification, CancellationToken cancellationToken)
     {
-        var message = await _messageRepository.GetByIdAsync(notification.MessageId, cancellationToken);
-        if (message is null)
-            return;
-
-        // Only auto-respond to incoming customer messages
-        if (message.MessageType != MessageType.Incoming || message.Private)
-            return;
-
-        if (string.IsNullOrWhiteSpace(message.Content))
-            return;
-
-        var conversation = await _conversationRepository.GetByIdAsync(notification.ConversationId, cancellationToken);
-        if (conversation is null)
-            return;
-
-        // Look up an active Captain assistant connected to this inbox
-        var captainInboxes = await _captainInboxRepository.FindAsync(
-            ci => ci.InboxId == conversation.InboxId && ci.Active,
-            cancellationToken);
-
-        var captainInbox = captainInboxes.FirstOrDefault();
-        if (captainInbox is null)
-            return;
-
-        _logger.LogInformation(
-            "Captain assistant {AssistantId} auto-responding to message {MessageId} on conversation {ConversationId}",
-            captainInbox.AssistantId, message.Id, conversation.Id);
-
+        // Captain is an optional enterprise feature. A failure here (e.g. tables
+        // missing because the module isn't provisioned, AI service unavailable,
+        // transient DB error) must never break the caller's message-send flow,
+        // so wrap the entire handler in a catch-all and log.
         try
         {
+            var message = await _messageRepository.GetByIdAsync(notification.MessageId, cancellationToken);
+            if (message is null)
+                return;
+
+            // Only auto-respond to incoming customer messages
+            if (message.MessageType != MessageType.Incoming || message.Private)
+                return;
+
+            if (string.IsNullOrWhiteSpace(message.Content))
+                return;
+
+            var conversation = await _conversationRepository.GetByIdAsync(notification.ConversationId, cancellationToken);
+            if (conversation is null)
+                return;
+
+            // Look up an active Captain assistant connected to this inbox
+            var captainInboxes = await _captainInboxRepository.FindAsync(
+                ci => ci.InboxId == conversation.InboxId && ci.Active,
+                cancellationToken);
+
+            var captainInbox = captainInboxes.FirstOrDefault();
+            if (captainInbox is null)
+                return;
+
+            _logger.LogInformation(
+                "Captain assistant {AssistantId} auto-responding to message {MessageId} on conversation {ConversationId}",
+                captainInbox.AssistantId, message.Id, conversation.Id);
+
             // Build the prior conversation context (most recent N messages, oldest-first)
             var history = await _messageRepository.FindAsync(
                 m => m.ConversationId == conversation.Id
@@ -152,7 +156,7 @@ public sealed class CaptainAutoResponseEventHandler : INotificationHandler<Messa
         {
             _logger.LogError(ex,
                 "Captain auto-response failed for message {MessageId} on conversation {ConversationId}",
-                message.Id, conversation.Id);
+                notification.MessageId, notification.ConversationId);
         }
     }
 }
