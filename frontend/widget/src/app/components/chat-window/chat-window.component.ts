@@ -364,7 +364,13 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     this.signalrService.messages$
       .pipe(takeUntil(this.destroy$))
       .subscribe(message => {
-        this.messages.update(msgs => [...msgs, message]);
+        // Dedupe by id: the SignalR broadcast echoes back every message,
+        // including ones the widget itself just POSTed (and optimistically
+        // appended to the list). Without this guard those messages would
+        // render twice.
+        this.messages.update(msgs =>
+          msgs.some(m => m.id === message.id) ? msgs : [...msgs, message],
+        );
         this.shouldScrollToBottom = true;
       });
 
@@ -483,7 +489,9 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     this.apiService.sendMessage(this.websiteToken, this.conversationId(), content)
       .subscribe({
         next: (message: Message) => {
-          this.messages.update(msgs => [...msgs, message]);
+          this.messages.update(msgs =>
+            msgs.some(m => m.id === message.id) ? msgs : [...msgs, message],
+          );
           this.newMessage = '';
           this.shouldScrollToBottom = true;
         },
@@ -534,7 +542,9 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     this.apiService.uploadAttachment(this.websiteToken, this.conversationId(), file)
       .subscribe({
         next: (message: Message) => {
-          this.messages.update(msgs => [...msgs, message]);
+          this.messages.update(msgs =>
+            msgs.some(m => m.id === message.id) ? msgs : [...msgs, message],
+          );
           this.showFileUpload.set(false);
         },
       });

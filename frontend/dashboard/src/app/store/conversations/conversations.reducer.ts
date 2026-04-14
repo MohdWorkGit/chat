@@ -114,21 +114,38 @@ export const conversationsReducer = createReducer(
     messagesLoading: false,
   })),
 
-  on(ConversationsActions.sendMessageSuccess, (state, { message }) => ({
-    ...state,
-    messages: {
-      ...state.messages,
-      [message.conversationId]: [...(state.messages[message.conversationId] || []), message],
-    },
-  })),
+  on(ConversationsActions.sendMessageSuccess, (state, { message }) => {
+    const existing = state.messages[message.conversationId] || [];
+    // Guard against a duplicate append when the real-time `message.created`
+    // event for this same message has already reached the store.
+    if (existing.some((m) => m.id === message.id)) {
+      return state;
+    }
+    return {
+      ...state,
+      messages: {
+        ...state.messages,
+        [message.conversationId]: [...existing, message],
+      },
+    };
+  }),
 
-  on(ConversationsActions.messageReceived, (state, { message }) => ({
-    ...state,
-    messages: {
-      ...state.messages,
-      [message.conversationId]: [...(state.messages[message.conversationId] || []), message],
-    },
-  })),
+  on(ConversationsActions.messageReceived, (state, { message }) => {
+    const existing = state.messages[message.conversationId] || [];
+    // The broadcast is sent to both the account group and the conversation
+    // group, so the same message can arrive twice. Dedupe by id so the
+    // conversation view does not render duplicates.
+    if (existing.some((m) => m.id === message.id)) {
+      return state;
+    }
+    return {
+      ...state,
+      messages: {
+        ...state.messages,
+        [message.conversationId]: [...existing, message],
+      },
+    };
+  }),
 
   on(ConversationsActions.setFilters, (state, { filters }) => ({
     ...state,
