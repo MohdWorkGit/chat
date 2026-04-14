@@ -11,6 +11,7 @@ import {
   selectSelectedConversationId,
 } from '@app/store/conversations/conversations.selectors';
 import { Conversation, Message, ConversationStatus } from '@core/models/conversation.model';
+import { SignalRService } from '@core/services/signalr.service';
 import { MessageBubbleComponent } from '../message-bubble/message-bubble.component';
 import { ReplyBoxComponent } from '../reply-box/reply-box.component';
 import { CopilotPanelComponent } from '@app/features/captain/copilot-panel/copilot-panel.component';
@@ -302,7 +303,9 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
 
   private store = inject(Store);
   private route = inject(ActivatedRoute);
+  private signalrService = inject(SignalRService);
   private destroy$ = new Subject<void>();
+  private joinedConversationId: number | null = null;
 
   conversation$: Observable<Conversation | null> = this.store.select(selectSelectedConversation);
   messagesLoading$ = this.store.select(selectMessagesLoading);
@@ -327,7 +330,18 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
       const idStr = params.get('id');
       const id = idStr ? Number(idStr) : null;
       this.store.dispatch(ConversationsActions.selectConversation({ id }));
+      // Swap conversation SignalR group memberships so real-time
+      // `message.created` events for the currently-open conversation always
+      // reach the view, even for conversations the agent isn't a member of.
+      if (this.joinedConversationId !== null && this.joinedConversationId !== id) {
+        this.signalrService.leaveConversation(this.joinedConversationId);
+        this.joinedConversationId = null;
+      }
       if (id !== null && !Number.isNaN(id)) {
+        if (this.joinedConversationId !== id) {
+          this.signalrService.joinConversation(id);
+          this.joinedConversationId = id;
+        }
         this.store.dispatch(ConversationsActions.loadMessages({ conversationId: id }));
       }
     });
@@ -356,6 +370,10 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
   }
 
   ngOnDestroy(): void {
+    if (this.joinedConversationId !== null) {
+      this.signalrService.leaveConversation(this.joinedConversationId);
+      this.joinedConversationId = null;
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }

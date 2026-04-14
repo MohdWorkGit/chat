@@ -23,6 +23,14 @@ export interface PresenceEvent {
 export class SignalRService implements OnDestroy {
   private readonly authService = inject(AuthService);
   private connection: signalR.HubConnection | null = null;
+  // Tracks conversation groups the client wants to be in. `pendingJoins`
+  // holds IDs that were requested before the connection was ready (or while
+  // it was reconnecting); `joinedConversations` holds IDs the server has
+  // already been asked to add us to. On (re)connect we replay both sets
+  // because SignalR drops group memberships on reconnect.
+  private readonly joinedConversations = new Set<number>();
+  private readonly pendingJoins = new Set<number>();
+  private pendingAccountId: number | null = null;
 
   private readonly messageCreatedSubject = new Subject<Message>();
   private readonly conversationCreatedSubject = new Subject<Record<string, unknown>>();
@@ -64,6 +72,16 @@ export class SignalRService implements OnDestroy {
 
     this.connection.onreconnected(() => {
       this.connectionStateSubject.next(signalR.HubConnectionState.Connected);
+      // SignalR loses all group memberships across a reconnect, so re-join
+      // the account group and every conversation we had joined before.
+      if (this.pendingAccountId !== null) {
+        this.connection?.invoke('JoinAccountGroup', this.pendingAccountId).catch(() => { /* ignore */ });
+      }
+      for (const id of this.joinedConversations) {
+        this.connection?.invoke('JoinConversation', id).catch(() => {
+          this.pendingJoins.add(id);
+        });
+      }
     });
 
     this.connection.onclose(() => {
@@ -73,6 +91,11 @@ export class SignalRService implements OnDestroy {
     try {
       await this.connection.start();
       this.connectionStateSubject.next(signalR.HubConnectionState.Connected);
+      // Flush any joins requested before the connection finished coming up.
+      for (const id of this.pendingJoins) {
+        this.connection?.invoke('JoinConversation', id).catch(() => { /* will retry on reconnect */ });
+      }
+      this.pendingJoins.clear();
     } catch (error) {
       console.error('SignalR connection error:', error);
       this.connectionStateSubject.next(signalR.HubConnectionState.Disconnected);
@@ -80,14 +103,40 @@ export class SignalRService implements OnDestroy {
   }
 
   async joinAccountGroup(accountId: number): Promise<void> {
+    this.pendingAccountId = accountId;
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       await this.connection.invoke('JoinAccountGroup', accountId);
     }
   }
 
   async leaveAccountGroup(accountId: number): Promise<void> {
+    if (this.pendingAccountId === accountId) {
+      this.pendingAccountId = null;
+    }
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       await this.connection.invoke('LeaveAccountGroup', accountId);
+    }
+  }
+
+  async joinConversation(conversationId: number): Promise<void> {
+    this.joinedConversations.add(conversationId);
+    if (this.connection?.state === signalR.HubConnectionState.Connected) {
+      try {
+        await this.connection.invoke('JoinConversation', conversationId);
+      } catch {
+        this.pendingJoins.add(conversationId);
+      }
+    } else {
+      // Queue the join so it fires once the connection is established.
+      this.pendingJoins.add(conversationId);
+    }
+  }
+
+  async leaveConversation(conversationId: number): Promise<void> {
+    this.joinedConversations.delete(conversationId);
+    this.pendingJoins.delete(conversationId);
+    if (this.connection?.state === signalR.HubConnectionState.Connected) {
+      await this.connection.invoke('LeaveConversation', conversationId);
     }
   }
 
@@ -104,6 +153,9 @@ export class SignalRService implements OnDestroy {
   }
 
   async disconnect(): Promise<void> {
+    this.joinedConversations.clear();
+    this.pendingJoins.clear();
+    this.pendingAccountId = null;
     if (this.connection) {
       await this.connection.stop();
       this.connection = null;
