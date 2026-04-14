@@ -352,6 +352,8 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
   ) {}
 
   ngOnInit(): void {
+    this.restoreConversation();
+
     this.signalrService.messages$
       .pipe(takeUntil(this.destroy$))
       .subscribe(message => {
@@ -369,6 +371,65 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.currentView.set('csat');
+        this.persistConversation();
+      });
+  }
+
+  private get storageKey(): string {
+    return `cew-widget-conversation:${this.websiteToken || 'default'}`;
+  }
+
+  private persistConversation(): void {
+    try {
+      const id = this.conversationId();
+      if (!id) {
+        localStorage.removeItem(this.storageKey);
+        return;
+      }
+      localStorage.setItem(
+        this.storageKey,
+        JSON.stringify({ conversationId: id, view: this.currentView() }),
+      );
+    } catch {
+      // localStorage may be unavailable (private mode, quota). Non-fatal.
+    }
+  }
+
+  private clearPersistedConversation(): void {
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch {
+      // no-op
+    }
+  }
+
+  private restoreConversation(): void {
+    let saved: { conversationId: number; view: ChatView } | null = null;
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      if (raw) saved = JSON.parse(raw);
+    } catch {
+      saved = null;
+    }
+    if (!saved?.conversationId) return;
+
+    this.conversationId.set(saved.conversationId);
+    this.currentView.set(saved.view || 'conversation');
+    this.signalrService.joinConversation(saved.conversationId);
+
+    this.apiService.getMessages(this.websiteToken, saved.conversationId)
+      .subscribe({
+        next: (msgs: Message[]) => {
+          this.messages.set(msgs);
+          this.shouldScrollToBottom = true;
+        },
+        error: () => {
+          // Saved conversation is no longer accessible — reset.
+          this.clearPersistedConversation();
+          this.conversationId.set(0);
+          this.messages.set([]);
+          this.currentView.set('greeting');
+        },
       });
   }
 
@@ -398,6 +459,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
         this.conversationId.set(conversation.id);
         this.signalrService.joinConversation(conversation.id);
         this.currentView.set('conversation');
+        this.persistConversation();
       },
     });
   }
@@ -428,6 +490,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
           this.currentView.set('greeting');
           this.messages.set([]);
           this.conversationId.set(0);
+          this.clearPersistedConversation();
         },
       });
   }
