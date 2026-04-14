@@ -6,6 +6,27 @@ namespace CustomerEngagement.Application.Notifications.Queries;
 
 public record GetNotificationsQuery(long AccountId, int Page, int PageSize) : IRequest<object>;
 
+public record GetUnreadNotificationCountQuery(long AccountId) : IRequest<object>;
+
+public class GetUnreadNotificationCountQueryHandler : IRequestHandler<GetUnreadNotificationCountQuery, object>
+{
+    private readonly IRepository<Notification> _notificationRepository;
+
+    public GetUnreadNotificationCountQueryHandler(IRepository<Notification> notificationRepository)
+    {
+        _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
+    }
+
+    public async Task<object> Handle(GetUnreadNotificationCountQuery request, CancellationToken cancellationToken)
+    {
+        var count = await _notificationRepository.CountAsync(
+            n => n.AccountId == (int)request.AccountId && n.ReadAt == null,
+            cancellationToken);
+
+        return new { Count = count };
+    }
+}
+
 public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuery, object>
 {
     private readonly IRepository<Notification> _notificationRepository;

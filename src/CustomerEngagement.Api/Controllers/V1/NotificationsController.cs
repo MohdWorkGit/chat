@@ -25,6 +25,14 @@ public class NotificationsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("unread-count")]
+    public async Task<ActionResult> GetUnreadCount(long accountId)
+    {
+        var result = await _mediator.Send(
+            new Application.Notifications.Queries.GetUnreadNotificationCountQuery(accountId));
+        return Ok(result);
+    }
+
     [HttpPost("{notificationId:long}/read")]
     public async Task<ActionResult> MarkRead(long accountId, long notificationId)
     {
