@@ -56,4 +56,55 @@ public class NotificationsController : ControllerBase
             new Application.Notifications.Commands.DeleteNotificationCommand(accountId, notificationId));
         return NoContent();
     }
+
+    [HttpPatch("{notificationId:long}/snooze")]
+    public async Task<ActionResult> Snooze(long accountId, long notificationId,
+        [FromBody] SnoozeNotificationRequest request)
+    {
+        var result = await _mediator.Send(
+            new Application.Notifications.Commands.SnoozeNotificationCommand(
+                accountId, notificationId, request.SnoozedUntil));
+        return Ok(result);
+    }
+
+    [HttpGet("settings")]
+    public async Task<ActionResult> GetSettings(long accountId)
+    {
+        var userId = long.Parse(User.FindFirst("uid")?.Value ?? "0");
+        var result = await _mediator.Send(
+            new Application.Notifications.Queries.GetNotificationSettingsQuery(accountId, userId));
+        return Ok(result);
+    }
+
+    [HttpPatch("settings")]
+    public async Task<ActionResult> UpdateSettings(long accountId,
+        [FromBody] UpdateNotificationSettingsRequest request)
+    {
+        var userId = long.Parse(User.FindFirst("uid")?.Value ?? "0");
+        var result = await _mediator.Send(
+            new Application.Notifications.Commands.UpdateNotificationSettingsCommand(
+                accountId,
+                userId,
+                request.EmailConversationCreation,
+                request.EmailConversationAssignment,
+                request.EmailNewMessage,
+                request.EmailMention,
+                request.PushConversationCreation,
+                request.PushConversationAssignment,
+                request.PushNewMessage,
+                request.PushMention));
+        return Ok(result);
+    }
+
+    public record SnoozeNotificationRequest(DateTime SnoozedUntil);
+
+    public record UpdateNotificationSettingsRequest(
+        bool? EmailConversationCreation,
+        bool? EmailConversationAssignment,
+        bool? EmailNewMessage,
+        bool? EmailMention,
+        bool? PushConversationCreation,
+        bool? PushConversationAssignment,
+        bool? PushNewMessage,
+        bool? PushMention);
 }
