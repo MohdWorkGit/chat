@@ -44,9 +44,10 @@ public class NotificationsController : ControllerBase
     [HttpPost("read_all")]
     public async Task<ActionResult> MarkAllRead(long accountId)
     {
-        await _mediator.Send(
-            new Application.Notifications.Commands.MarkAllNotificationsReadCommand(accountId));
-        return Ok();
+        var userId = long.Parse(User.FindFirst("uid")?.Value ?? "0");
+        var result = await _mediator.Send(
+            new Application.Notifications.Commands.MarkAllNotificationsReadCommand(accountId, userId));
+        return Ok(result);
     }
 
     [HttpDelete("{notificationId:long}")]

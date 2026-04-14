@@ -6,9 +6,120 @@ namespace CustomerEngagement.Application.Notifications.Commands;
 
 public record MarkNotificationReadCommand(long AccountId, long NotificationId) : IRequest<object>;
 
-public record MarkAllNotificationsReadCommand(long AccountId) : IRequest<object>;
+public class MarkNotificationReadCommandHandler : IRequestHandler<MarkNotificationReadCommand, object>
+{
+    private readonly IRepository<Notification> _notificationRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public MarkNotificationReadCommandHandler(
+        IRepository<Notification> notificationRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+    }
+
+    public async Task<object> Handle(MarkNotificationReadCommand request, CancellationToken cancellationToken)
+    {
+        var notification = await _notificationRepository.GetByIdAsync((int)request.NotificationId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Notification with ID {request.NotificationId} not found.");
+
+        if (notification.AccountId != (int)request.AccountId)
+        {
+            throw new KeyNotFoundException($"Notification with ID {request.NotificationId} not found.");
+        }
+
+        if (!notification.IsRead)
+        {
+            notification.MarkRead();
+            _notificationRepository.Update(notification);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return new
+        {
+            notification.Id,
+            notification.AccountId,
+            notification.UserId,
+            notification.NotificationType,
+            notification.ReadAt,
+            notification.UpdatedAt
+        };
+    }
+}
+
+public record MarkAllNotificationsReadCommand(long AccountId, long UserId) : IRequest<object>;
+
+public class MarkAllNotificationsReadCommandHandler : IRequestHandler<MarkAllNotificationsReadCommand, object>
+{
+    private readonly IRepository<Notification> _notificationRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public MarkAllNotificationsReadCommandHandler(
+        IRepository<Notification> notificationRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+    }
+
+    public async Task<object> Handle(MarkAllNotificationsReadCommand request, CancellationToken cancellationToken)
+    {
+        var accountId = (int)request.AccountId;
+        var userId = (int)request.UserId;
+
+        var unread = await _notificationRepository.FindAsync(
+            n => n.AccountId == accountId && n.UserId == userId && n.ReadAt == null,
+            cancellationToken);
+
+        var count = 0;
+        foreach (var notification in unread)
+        {
+            notification.MarkRead();
+            _notificationRepository.Update(notification);
+            count++;
+        }
+
+        if (count > 0)
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return new { Count = count };
+    }
+}
 
 public record DeleteNotificationCommand(long AccountId, long NotificationId) : IRequest<object>;
+
+public class DeleteNotificationCommandHandler : IRequestHandler<DeleteNotificationCommand, object>
+{
+    private readonly IRepository<Notification> _notificationRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public DeleteNotificationCommandHandler(
+        IRepository<Notification> notificationRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+    }
+
+    public async Task<object> Handle(DeleteNotificationCommand request, CancellationToken cancellationToken)
+    {
+        var notification = await _notificationRepository.GetByIdAsync((int)request.NotificationId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Notification with ID {request.NotificationId} not found.");
+
+        if (notification.AccountId != (int)request.AccountId)
+        {
+            throw new KeyNotFoundException($"Notification with ID {request.NotificationId} not found.");
+        }
+
+        _notificationRepository.Remove(notification);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new { Deleted = true };
+    }
+}
 
 public record SnoozeNotificationCommand(long AccountId, long NotificationId, DateTime SnoozedUntil) : IRequest<object>;
 
