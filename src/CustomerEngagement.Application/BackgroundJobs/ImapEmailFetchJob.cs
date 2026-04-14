@@ -1,7 +1,9 @@
 using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
+using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
+using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace CustomerEngagement.Application.BackgroundJobs;
@@ -14,6 +16,7 @@ public class ImapEmailFetchJob
     private readonly IRepository<Message> _messageRepository;
     private readonly IRepository<Contact> _contactRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMediator _mediator;
     private readonly ILogger<ImapEmailFetchJob> _logger;
 
     public ImapEmailFetchJob(
@@ -23,6 +26,7 @@ public class ImapEmailFetchJob
         IRepository<Message> messageRepository,
         IRepository<Contact> contactRepository,
         IUnitOfWork unitOfWork,
+        IMediator mediator,
         ILogger<ImapEmailFetchJob> logger)
     {
         _imapEmailReceiver = imapEmailReceiver ?? throw new ArgumentNullException(nameof(imapEmailReceiver));
@@ -31,6 +35,7 @@ public class ImapEmailFetchJob
         _messageRepository = messageRepository ?? throw new ArgumentNullException(nameof(messageRepository));
         _contactRepository = contactRepository ?? throw new ArgumentNullException(nameof(contactRepository));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -160,6 +165,14 @@ public class ImapEmailFetchJob
         // Update conversation timestamp
         conversation.UpdatedAt = DateTime.UtcNow;
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Publish MessageCreatedEvent so BroadcastEventHandler pushes the
+        // inbound email to agents via SignalR. Without this the email is
+        // persisted but the dashboard only sees it on the next reload.
+        await _mediator.Publish(
+            new MessageCreatedEvent(message.Id, conversation.Id, inbox.AccountId),
+            cancellationToken);
 
         _logger.LogInformation(
             "Created message for conversation {ConversationId} from email {MessageId}",

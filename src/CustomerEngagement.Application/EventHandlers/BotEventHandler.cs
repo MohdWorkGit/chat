@@ -16,6 +16,7 @@ public sealed class BotEventHandler : INotificationHandler<MessageCreatedEvent>
     private readonly IRepository<AgentBotInbox> _agentBotInboxRepository;
     private readonly IRepository<AgentBot> _agentBotRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMediator _mediator;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<BotEventHandler> _logger;
 
@@ -25,6 +26,7 @@ public sealed class BotEventHandler : INotificationHandler<MessageCreatedEvent>
         IRepository<AgentBotInbox> agentBotInboxRepository,
         IRepository<AgentBot> agentBotRepository,
         IUnitOfWork unitOfWork,
+        IMediator mediator,
         IHttpClientFactory httpClientFactory,
         ILogger<BotEventHandler> logger)
     {
@@ -33,6 +35,7 @@ public sealed class BotEventHandler : INotificationHandler<MessageCreatedEvent>
         _agentBotInboxRepository = agentBotInboxRepository;
         _agentBotRepository = agentBotRepository;
         _unitOfWork = unitOfWork;
+        _mediator = mediator;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
@@ -121,6 +124,16 @@ public sealed class BotEventHandler : INotificationHandler<MessageCreatedEvent>
 
             await _messageRepository.AddAsync(replyMessage, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Publish MessageCreatedEvent so BroadcastEventHandler pushes the
+            // bot reply to the widget/dashboard in real-time. Without this the
+            // reply is persisted silently and the conversation view never
+            // updates until a manual refresh. The Incoming-only filter at the
+            // top of this handler prevents infinite recursion on the
+            // Outgoing reply we just created.
+            await _mediator.Publish(
+                new MessageCreatedEvent(replyMessage.Id, conversation.Id, conversation.AccountId),
+                cancellationToken);
 
             _logger.LogInformation("Bot {BotName} replied to message {MessageId} with message {ReplyMessageId}",
                 agentBot.Name, notification.MessageId, replyMessage.Id);

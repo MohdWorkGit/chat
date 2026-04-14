@@ -14,6 +14,7 @@ public sealed class CsatEventHandler : INotificationHandler<ConversationStatusCh
     private readonly IRepository<Message> _messageRepository;
     private readonly IRepository<CsatSurveyResponse> _csatRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMediator _mediator;
     private readonly ILogger<CsatEventHandler> _logger;
 
     public CsatEventHandler(
@@ -22,6 +23,7 @@ public sealed class CsatEventHandler : INotificationHandler<ConversationStatusCh
         IRepository<Message> messageRepository,
         IRepository<CsatSurveyResponse> csatRepository,
         IUnitOfWork unitOfWork,
+        IMediator mediator,
         ILogger<CsatEventHandler> logger)
     {
         _conversationRepository = conversationRepository;
@@ -29,6 +31,7 @@ public sealed class CsatEventHandler : INotificationHandler<ConversationStatusCh
         _messageRepository = messageRepository;
         _csatRepository = csatRepository;
         _unitOfWork = unitOfWork;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -79,6 +82,12 @@ public sealed class CsatEventHandler : INotificationHandler<ConversationStatusCh
 
         await _csatRepository.AddAsync(csatResponse, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Broadcast the survey message so the widget renders it immediately
+        // on resolution instead of only after the next page load.
+        await _mediator.Publish(
+            new MessageCreatedEvent(surveyMessage.Id, conversation.Id, conversation.AccountId),
+            cancellationToken);
 
         _logger.LogInformation("CSAT survey created: Message {MessageId}, CsatSurveyResponse {CsatId}",
             surveyMessage.Id, csatResponse.Id);

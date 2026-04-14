@@ -24,6 +24,7 @@ public sealed class CaptainAutoResponseEventHandler : INotificationHandler<Messa
     private readonly IRepository<CaptainInbox> _captainInboxRepository;
     private readonly IAssistantChatService _assistantChatService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMediator _mediator;
     private readonly ILogger<CaptainAutoResponseEventHandler> _logger;
 
     public CaptainAutoResponseEventHandler(
@@ -33,6 +34,7 @@ public sealed class CaptainAutoResponseEventHandler : INotificationHandler<Messa
         IRepository<CaptainInbox> captainInboxRepository,
         IAssistantChatService assistantChatService,
         IUnitOfWork unitOfWork,
+        IMediator mediator,
         ILogger<CaptainAutoResponseEventHandler> logger)
     {
         _messageRepository = messageRepository;
@@ -41,6 +43,7 @@ public sealed class CaptainAutoResponseEventHandler : INotificationHandler<Messa
         _captainInboxRepository = captainInboxRepository;
         _assistantChatService = assistantChatService;
         _unitOfWork = unitOfWork;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -147,6 +150,16 @@ public sealed class CaptainAutoResponseEventHandler : INotificationHandler<Messa
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Broadcast the AI reply so the widget and dashboard render it in
+            // real-time. Without this the reply is written to the DB but the
+            // SignalR broadcast is skipped, so the conversation view stays
+            // frozen until a manual refresh. The Incoming-only filter at the
+            // top of this handler prevents infinite recursion on the
+            // Outgoing reply we just created.
+            await _mediator.Publish(
+                new MessageCreatedEvent(replyMessage.Id, conversation.Id, conversation.AccountId),
+                cancellationToken);
 
             _logger.LogInformation(
                 "Captain assistant {AssistantId} replied to message {MessageId} with new message {ReplyMessageId}",
