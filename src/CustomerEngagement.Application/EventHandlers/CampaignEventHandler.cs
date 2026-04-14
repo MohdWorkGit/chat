@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Events;
@@ -138,11 +139,15 @@ public sealed class CampaignEventHandler : INotificationHandler<ContactCreatedEv
 
         if (conversation is null)
         {
+            var displayId = await ConversationDisplayIdGenerator.GetNextDisplayIdAsync(
+                _conversationRepository, campaign.AccountId, cancellationToken);
+
             conversation = new Conversation
             {
                 AccountId = campaign.AccountId,
                 InboxId = campaign.InboxId,
                 ContactId = contact.Id,
+                DisplayId = displayId,
                 Status = ConversationStatus.Open,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

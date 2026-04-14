@@ -1,4 +1,5 @@
 using CustomerEngagement.Application.BackgroundJobs;
+using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Enums;
@@ -187,12 +188,17 @@ public class CreateWidgetConversationCommandHandler : IRequestHandler<CreateWidg
 
         await _contactInboxRepository.AddAsync(contactInbox, cancellationToken);
 
-        // Create the conversation
+        // Create the conversation. DisplayId is account-scoped and must be
+        // unique per (AccountId, DisplayId); generate the next value.
+        var displayId = await ConversationDisplayIdGenerator.GetNextDisplayIdAsync(
+            _conversationRepository, widget.AccountId, cancellationToken);
+
         var conversation = new Conversation
         {
             AccountId = widget.AccountId,
             InboxId = widget.InboxId,
             ContactId = contact.Id,
+            DisplayId = displayId,
             Status = ConversationStatus.Open,
             Uuid = Guid.NewGuid().ToString(),
             CreatedAt = DateTime.UtcNow,

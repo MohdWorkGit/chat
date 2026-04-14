@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
@@ -124,11 +125,15 @@ public class ImapEmailFetchJob
 
         if (conversation is null)
         {
+            var displayId = await ConversationDisplayIdGenerator.GetNextDisplayIdAsync(
+                _conversationRepository, inbox.AccountId, cancellationToken);
+
             conversation = new Conversation
             {
                 AccountId = inbox.AccountId,
                 InboxId = inbox.Id,
                 ContactId = contact.Id,
+                DisplayId = displayId,
                 Status = ConversationStatus.Open,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
