@@ -37,9 +37,24 @@ export interface WidgetConfig {
 
 @Injectable({ providedIn: 'root' })
 export class WidgetApiService {
-  private readonly baseUrl = '/api/v1/widget';
+  private apiOrigin = '';
 
   constructor(private readonly http: HttpClient) {}
+
+  /**
+   * Configures the origin (scheme + host[:port]) of the backend API.
+   * When the widget is embedded on a different domain than the API,
+   * the host page must provide this via the `api-base-url` attribute so
+   * requests can reach the API instead of the CDN / static host.
+   */
+  setApiOrigin(origin: string): void {
+    // Strip trailing slashes to avoid "//api/v1/..." when concatenated.
+    this.apiOrigin = (origin || '').replace(/\/+$/, '');
+  }
+
+  private get baseUrl(): string {
+    return `${this.apiOrigin}/api/v1/widget`;
+  }
 
   createConversation(websiteToken: string, data: CreateConversationRequest): Observable<Conversation> {
     return this.http.post<Conversation>(

@@ -326,6 +326,13 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
 export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked {
   @Input() websiteToken = '';
   @Input() locale = 'en';
+  /**
+   * Forwarded from the host page so the widget can reach a cross-origin
+   * API. Configuration of the shared services is handled in AppComponent;
+   * this component just accepts the input so the binding in the template
+   * is valid.
+   */
+  @Input() apiBaseUrl = '';
   @Output() close = new EventEmitter<void>();
 
   currentView = signal<ChatView>('greeting');

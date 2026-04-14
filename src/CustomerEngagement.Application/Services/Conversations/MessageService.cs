@@ -1,6 +1,7 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
+using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -109,7 +110,7 @@ public class MessageService : IMessageService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _mediator.Publish(
-            new MessageCreatedEvent(message.Id, conversationId, conversation.AccountId),
+            new MessageCreatedEvent(message.Id, (int)conversationId, conversation.AccountId),
             cancellationToken);
 
         return MapToDto(message);
@@ -154,13 +155,11 @@ public class MessageService : IMessageService
             message.SenderType,
             message.Content,
             message.ContentType,
-            message.MessageType.ToString(),
+            message.MessageType.ToString().ToLowerInvariant(),
             message.Private,
-            message.Status.ToString(),
+            message.Status.ToString().ToLowerInvariant(),
             message.SentAt,
             message.CreatedAt,
             attachments);
     }
 }
-
-public record MessageCreatedEvent(long MessageId, long ConversationId, int AccountId) : INotification;

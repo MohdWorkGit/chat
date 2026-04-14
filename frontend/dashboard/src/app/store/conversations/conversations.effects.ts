@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, exhaustMap, map, of, switchMap } from 'rxjs';
 import { ConversationService } from '@core/services/conversation.service';
+import { SignalRService } from '@core/services/signalr.service';
 import { ConversationsActions } from './conversations.actions';
 import { ApiError } from '@core/models/common.model';
 
@@ -99,6 +100,16 @@ export const sendMessage$ = createEffect(
           catchError((error: ApiError) => of(ConversationsActions.sendMessageFailure({ error })))
         )
       )
+    ),
+  { functional: true }
+);
+
+// Listen for real-time `message.created` events from SignalR and push them
+// into the store so the conversation view updates without a manual refresh.
+export const messageReceivedFromSignalR$ = createEffect(
+  (signalrService = inject(SignalRService)) =>
+    signalrService.messageCreated$.pipe(
+      map((message) => ConversationsActions.messageReceived({ message }))
     ),
   { functional: true }
 );

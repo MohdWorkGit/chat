@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.Hubs;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
@@ -73,10 +74,14 @@ public sealed class BroadcastEventHandler :
             message.ConversationId,
             message.AccountId,
             message.Content,
-            message.MessageType,
+            ContentType = message.ContentType ?? "text",
+            MessageType = message.MessageType.ToString().ToLowerInvariant(),
             message.SenderId,
-            message.SenderType,
-            message.CreatedAt
+            SenderType = NormalizeSenderType(message.SenderType, message.MessageType),
+            message.Private,
+            Attachments = Array.Empty<object>(),
+            message.CreatedAt,
+            message.UpdatedAt
         };
 
         await Task.WhenAll(
@@ -84,6 +89,17 @@ public sealed class BroadcastEventHandler :
                 .SendAsync("message.created", payload, cancellationToken),
             _hubContext.Clients.Group($"conversation_{notification.ConversationId}")
                 .SendAsync("message.created", payload, cancellationToken));
+    }
+
+    private static string NormalizeSenderType(string? senderType, MessageType messageType)
+    {
+        // The widget renders bubbles based on senderType ('agent' | 'customer').
+        // If the backend did not set it explicitly, derive it from messageType:
+        // outgoing messages come from agents, incoming from customers.
+        if (!string.IsNullOrEmpty(senderType))
+            return senderType.ToLowerInvariant();
+
+        return messageType == MessageType.Outgoing ? "agent" : "customer";
     }
 
     public async Task Handle(ConversationStatusChangedEvent notification, CancellationToken cancellationToken)
