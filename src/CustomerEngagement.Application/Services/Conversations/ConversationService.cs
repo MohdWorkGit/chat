@@ -65,6 +65,9 @@ public class ConversationService : IConversationService
         CreateConversationRequest request,
         CancellationToken cancellationToken = default)
     {
+        var displayId = await ConversationDisplayIdGenerator.GetNextDisplayIdAsync(
+            _conversationRepository, accountId, cancellationToken);
+
         var conversation = new Conversation
         {
             AccountId = accountId,
@@ -72,6 +75,7 @@ public class ConversationService : IConversationService
             ContactId = request.ContactId,
             AssigneeId = request.AssigneeId,
             TeamId = request.TeamId,
+            DisplayId = displayId,
             Status = request.Status,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
