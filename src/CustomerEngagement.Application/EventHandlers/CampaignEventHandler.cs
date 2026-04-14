@@ -172,6 +172,13 @@ public sealed class CampaignEventHandler : INotificationHandler<ContactCreatedEv
         await _messageRepository.AddAsync(message, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Publish MessageCreatedEvent so BroadcastEventHandler pushes the
+        // campaign message to the widget/dashboard over SignalR. Otherwise
+        // the conversation view only picks it up on the next page load.
+        await _mediator.Publish(
+            new MessageCreatedEvent(message.Id, conversation.Id, campaign.AccountId),
+            cancellationToken);
+
         _logger.LogInformation("Campaign {CampaignId} message delivered to Contact {ContactId} in Conversation {ConversationId}",
             campaign.Id, contact.Id, conversation.Id);
     }

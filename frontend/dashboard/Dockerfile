@@ -41,6 +41,13 @@ server {
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # SignalR WebSocket connections are long-lived. nginx's default 60s
+        # read/send timeout would otherwise drop the socket and real-time
+        # updates would silently stop until the client reconnects.
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
     }
 }
 EOF
