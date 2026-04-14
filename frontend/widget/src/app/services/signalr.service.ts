@@ -12,6 +12,8 @@ export interface CampaignMessage {
 @Injectable({ providedIn: 'root' })
 export class SignalrService {
   private hubConnection: signalR.HubConnection | null = null;
+  private readonly joinedConversations = new Set<number>();
+  private readonly pendingJoins = new Set<number>();
 
   private readonly messagesSubject = new Subject<Message>();
   private readonly typingSubject = new Subject<boolean>();
@@ -37,16 +39,33 @@ export class SignalrService {
       .build();
 
     this.registerHandlers();
+    // After an automatic reconnect SignalR loses all group memberships,
+    // so re-join every conversation we had joined before.
+    this.hubConnection.onreconnected(() => {
+      for (const id of this.joinedConversations) {
+        this.hubConnection?.invoke('JoinConversation', id).catch(() => {
+          this.pendingJoins.add(id);
+        });
+      }
+    });
     this.startConnection();
   }
 
   joinConversation(conversationId: number): void {
+    this.joinedConversations.add(conversationId);
     if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
-      this.hubConnection.invoke('JoinConversation', conversationId);
+      this.hubConnection.invoke('JoinConversation', conversationId).catch(() => {
+        this.pendingJoins.add(conversationId);
+      });
+    } else {
+      // Queue the join so it fires once the connection is established.
+      this.pendingJoins.add(conversationId);
     }
   }
 
   leaveConversation(conversationId: number): void {
+    this.joinedConversations.delete(conversationId);
+    this.pendingJoins.delete(conversationId);
     if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
       this.hubConnection.invoke('LeaveConversation', conversationId);
     }
@@ -55,6 +74,8 @@ export class SignalrService {
   disconnect(): void {
     this.hubConnection?.stop();
     this.hubConnection = null;
+    this.joinedConversations.clear();
+    this.pendingJoins.clear();
   }
 
   private registerHandlers(): void {
@@ -80,7 +101,16 @@ export class SignalrService {
   }
 
   private startConnection(): void {
-    this.hubConnection?.start().catch(err => {
+    this.hubConnection?.start().then(() => {
+      // Flush any conversation joins requested before the connection
+      // finished coming up.
+      for (const id of this.pendingJoins) {
+        this.hubConnection?.invoke('JoinConversation', id).catch(() => {
+          /* will retry on reconnect */
+        });
+      }
+      this.pendingJoins.clear();
+    }).catch(err => {
       console.error('SignalR widget connection error:', err);
       setTimeout(() => this.startConnection(), 5000);
     });

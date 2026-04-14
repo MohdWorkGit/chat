@@ -3,6 +3,7 @@ using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Enums;
+using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -225,17 +226,20 @@ public class SendWidgetMessageCommandHandler : IRequestHandler<SendWidgetMessage
     private readonly IRepository<Conversation> _conversationRepository;
     private readonly IRepository<Message> _messageRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMediator _mediator;
 
     public SendWidgetMessageCommandHandler(
         IRepository<ChannelWebWidget> widgetRepository,
         IRepository<Conversation> conversationRepository,
         IRepository<Message> messageRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IMediator mediator)
     {
         _widgetRepository = widgetRepository;
         _conversationRepository = conversationRepository;
         _messageRepository = messageRepository;
         _unitOfWork = unitOfWork;
+        _mediator = mediator;
     }
 
     public async Task<object> Handle(SendWidgetMessageCommand request, CancellationToken cancellationToken)
@@ -268,6 +272,10 @@ public class SendWidgetMessageCommandHandler : IRequestHandler<SendWidgetMessage
         _conversationRepository.Update(conversation);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _mediator.Publish(
+            new MessageCreatedEvent(message.Id, conversation.Id, widget.AccountId),
+            cancellationToken);
 
         return new
         {
@@ -335,6 +343,7 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
     private readonly IRepository<Attachment> _attachmentRepository;
     private readonly IStorageService _storageService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMediator _mediator;
 
     public UploadWidgetAttachmentCommandHandler(
         IRepository<ChannelWebWidget> widgetRepository,
@@ -342,7 +351,8 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
         IRepository<Message> messageRepository,
         IRepository<Attachment> attachmentRepository,
         IStorageService storageService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IMediator mediator)
     {
         _widgetRepository = widgetRepository;
         _conversationRepository = conversationRepository;
@@ -350,6 +360,7 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
         _attachmentRepository = attachmentRepository;
         _storageService = storageService;
         _unitOfWork = unitOfWork;
+        _mediator = mediator;
     }
 
     public async Task<object> Handle(UploadWidgetAttachmentCommand request, CancellationToken cancellationToken)
@@ -404,6 +415,10 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
         attachment.MessageId = message.Id;
         _attachmentRepository.Update(attachment);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _mediator.Publish(
+            new MessageCreatedEvent(message.Id, conversation.Id, widget.AccountId),
+            cancellationToken);
 
         return new
         {
