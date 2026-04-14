@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, combineLatest, map } from 'rxjs';
+import { Observable, Subject, combineLatest, map, of, switchMap, takeUntil } from 'rxjs';
 import { ConversationsActions } from '@app/store/conversations/conversations.actions';
 import {
   selectSelectedConversation,
@@ -296,10 +297,12 @@ import { CopilotPanelComponent } from '@app/features/captain/copilot-panel/copil
     }
   `],
 })
-export class ConversationDetailComponent implements OnInit, AfterViewChecked {
+export class ConversationDetailComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
   private store = inject(Store);
+  private route = inject(ActivatedRoute);
+  private destroy$ = new Subject<void>();
 
   conversation$: Observable<Conversation | null> = this.store.select(selectSelectedConversation);
   messagesLoading$ = this.store.select(selectMessagesLoading);
@@ -318,21 +321,43 @@ export class ConversationDetailComponent implements OnInit, AfterViewChecked {
   ];
 
   ngOnInit(): void {
-    this.messages$ = combineLatest([
-      this.store.select(selectSelectedConversationId),
-      this.store.select(selectSelectedConversation),
-    ]).pipe(
-      map(([id, conversation]) => {
-        if (!id) return [];
-        // Try to get from messages state, fallback to conversation.messages
-        return conversation?.messages || [];
+    // Sync route :id param into the store so selecting a conversation in the
+    // list (which navigates here) actually loads its messages.
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const idStr = params.get('id');
+      const id = idStr ? Number(idStr) : null;
+      this.store.dispatch(ConversationsActions.selectConversation({ id }));
+      if (id !== null && !Number.isNaN(id)) {
+        this.store.dispatch(ConversationsActions.loadMessages({ conversationId: id }));
+      }
+    });
+
+    // Read messages from the dedicated messages slice populated by
+    // loadMessagesSuccess; fall back to any messages embedded on the
+    // conversation entity for conversations loaded before that slice is hydrated.
+    this.messages$ = this.store.select(selectSelectedConversationId).pipe(
+      switchMap((id) => {
+        if (!id) return of<Message[]>([]);
+        return combineLatest([
+          this.store.select(selectConversationMessages(id)),
+          this.store.select(selectSelectedConversation),
+        ]).pipe(
+          map(([stateMessages, conversation]) =>
+            stateMessages.length ? stateMessages : conversation?.messages ?? [],
+          ),
+        );
       }),
     );
 
     // Subscribe to re-enable auto-scroll on new messages
-    this.messages$.subscribe(() => {
+    this.messages$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.shouldScrollToBottom = true;
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngAfterViewChecked(): void {
