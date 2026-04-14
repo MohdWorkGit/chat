@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { ConversationsActions } from '@app/store/conversations/conversations.actions';
 import {
@@ -197,6 +198,7 @@ import { ConversationStatus, ConversationPriority, Conversation } from '@core/mo
 })
 export class ConversationListComponent implements OnInit {
   private store = inject(Store);
+  private router = inject(Router);
 
   conversations$ = this.store.select(selectAllConversations);
   loading$ = this.store.select(selectConversationsLoading);
@@ -252,8 +254,7 @@ export class ConversationListComponent implements OnInit {
   }
 
   selectConversation(id: number): void {
-    this.store.dispatch(ConversationsActions.selectConversation({ id }));
-    this.store.dispatch(ConversationsActions.loadMessages({ conversationId: id }));
+    this.router.navigate(['/conversations', id]);
   }
 
   goToPage(page: number): void {

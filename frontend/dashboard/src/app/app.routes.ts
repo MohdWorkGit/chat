@@ -37,13 +37,6 @@ export const routes: Routes = [
       ),
     children: [
       {
-        path: '',
-        loadComponent: () =>
-          import(
-            '@features/conversations/conversation-list/conversation-list.component'
-          ).then((m) => m.ConversationListComponent),
-      },
-      {
         path: 'new',
         loadComponent: () =>
           import(
@@ -51,11 +44,27 @@ export const routes: Routes = [
           ).then((m) => m.ConversationCreateComponent),
       },
       {
-        path: ':id',
+        path: '',
         loadComponent: () =>
           import(
-            '@features/conversations/conversation-detail/conversation-detail.component'
-          ).then((m) => m.ConversationDetailComponent),
+            '@features/conversations/conversations-page/conversations-page.component'
+          ).then((m) => m.ConversationsPageComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import(
+                '@features/conversations/conversation-detail/conversation-detail.component'
+              ).then((m) => m.ConversationDetailComponent),
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import(
+                '@features/conversations/conversation-detail/conversation-detail.component'
+              ).then((m) => m.ConversationDetailComponent),
+          },
+        ],
       },
     ],
   },
