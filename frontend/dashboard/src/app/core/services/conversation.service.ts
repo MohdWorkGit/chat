@@ -73,8 +73,9 @@ export class ConversationService {
       this.api.accountPath(`/conversations/${conversationId}/messages`),
       {
         content,
-        private: isPrivate,
-        messageType: 'outgoing',
+        isPrivate,
+        // Backend MessageType enum: 0=Incoming, 1=Outgoing, 2=Activity, 3=Template
+        messageType: 1,
       }
     );
   }

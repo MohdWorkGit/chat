@@ -49,7 +49,9 @@ public class ConversationsController : ControllerBase
     {
         command = command with { AccountId = accountId, Id = conversationId };
         await _mediator.Send(command);
-        return NoContent();
+        var updated = await _mediator.Send(
+            new Application.Conversations.Queries.GetConversationByIdQuery(accountId, conversationId));
+        return Ok(updated);
     }
 
     [HttpPost("{conversationId:long}/resolve")]

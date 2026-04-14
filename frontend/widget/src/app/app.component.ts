@@ -12,12 +12,16 @@ import { SignalrService, CampaignMessage } from './services/signalr.service';
   imports: [CommonModule, ChatWindowComponent, UnreadBadgeComponent, CampaignBannerComponent],
   template: `
     <div class="widget-container">
-      @if (isChatOpen) {
-        <cew-chat-window
-          [websiteToken]="websiteToken"
-          [locale]="locale"
-          (close)="toggleChat()" />
-      }
+      <!--
+        Keep the chat window mounted even when minimized so that the active
+        conversation (id, messages, view state) is preserved. Toggling via
+        [hidden] prevents Angular from destroying the component on minimize.
+      -->
+      <cew-chat-window
+        [hidden]="!isChatOpen"
+        [websiteToken]="websiteToken"
+        [locale]="locale"
+        (close)="toggleChat()" />
 
       @if (!isChatOpen && campaignMessage()) {
         <cew-campaign-banner

@@ -81,9 +81,6 @@ export class WidgetApiService {
     );
   }
 
-  // TODO: backend has no POST /widget/conversations/{id}/attachments endpoint
-  // yet. Same strategy as submitCsat — fire the request and silently ignore
-  // failures until the backend catches up.
   uploadAttachment(websiteToken: string, conversationId: number, file: File): Observable<Message> {
     const formData = new FormData();
     formData.append('file', file, file.name);
@@ -91,11 +88,6 @@ export class WidgetApiService {
       `${this.baseUrl}/conversations/${conversationId}/attachments`,
       formData,
       { headers: { 'X-Website-Token': websiteToken } },
-    ).pipe(
-      catchError((err) => {
-        console.warn('Widget attachment upload failed (endpoint not implemented?):', err);
-        return EMPTY;
-      }),
     );
   }
 
