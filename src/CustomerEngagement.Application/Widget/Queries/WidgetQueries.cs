@@ -132,13 +132,15 @@ public class GetWidgetMessagesQueryHandler : IRequestHandler<GetWidgetMessagesQu
 
         var conversationId = (int)request.ConversationId;
 
+        // Private messages are internal agent notes and must never be exposed
+        // to the widget client (embedded on an end-user's browser).
         var messages = await _messageRepository.GetPagedAsync(
             request.Page, request.PageSize,
-            m => m.ConversationId == conversationId,
+            m => m.ConversationId == conversationId && !m.Private,
             m => m.CreatedAt, ascending: true, cancellationToken);
 
         var totalCount = await _messageRepository.CountAsync(
-            m => m.ConversationId == conversationId, cancellationToken);
+            m => m.ConversationId == conversationId && !m.Private, cancellationToken);
 
         return new
         {
@@ -148,7 +150,6 @@ public class GetWidgetMessagesQueryHandler : IRequestHandler<GetWidgetMessagesQu
                 m.Content,
                 m.ContentType,
                 m.MessageType,
-                m.Private,
                 m.SenderType,
                 m.CreatedAt
             }),
