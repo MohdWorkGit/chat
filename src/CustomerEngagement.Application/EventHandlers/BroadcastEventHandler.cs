@@ -84,11 +84,23 @@ public sealed class BroadcastEventHandler :
             message.UpdatedAt
         };
 
-        await Task.WhenAll(
-            _hubContext.Clients.Group($"account_{notification.AccountId}")
-                .SendAsync("message.created", payload, cancellationToken),
-            _hubContext.Clients.Group($"conversation_{notification.ConversationId}")
-                .SendAsync("message.created", payload, cancellationToken));
+        // Private messages are internal agent notes. The embedded widget joins
+        // the `conversation_{id}` group, so broadcasting private messages there
+        // would leak them to end users. Dashboard clients also join the
+        // `account_{accountId}` group, which is agent-authenticated and safe.
+        if (message.Private)
+        {
+            await _hubContext.Clients.Group($"account_{notification.AccountId}")
+                .SendAsync("message.created", payload, cancellationToken);
+        }
+        else
+        {
+            await Task.WhenAll(
+                _hubContext.Clients.Group($"account_{notification.AccountId}")
+                    .SendAsync("message.created", payload, cancellationToken),
+                _hubContext.Clients.Group($"conversation_{notification.ConversationId}")
+                    .SendAsync("message.created", payload, cancellationToken));
+        }
     }
 
     private static string NormalizeSenderType(string? senderType, MessageType messageType)
