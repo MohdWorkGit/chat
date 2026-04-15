@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '@core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -31,6 +32,7 @@ export const routes: Routes = [
   },
   {
     path: 'conversations',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -70,6 +72,7 @@ export const routes: Routes = [
   },
   {
     path: 'contacts',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -100,6 +103,7 @@ export const routes: Routes = [
   },
   {
     path: 'reports',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -165,6 +169,7 @@ export const routes: Routes = [
   },
   {
     path: 'settings',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -393,6 +398,7 @@ export const routes: Routes = [
   },
   {
     path: 'notifications',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -409,6 +415,7 @@ export const routes: Routes = [
   },
   {
     path: 'helpcenter',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -439,6 +446,7 @@ export const routes: Routes = [
   },
   {
     path: 'captain',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -476,6 +484,7 @@ export const routes: Routes = [
   },
   {
     path: 'super-admin',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -504,6 +513,7 @@ export const routes: Routes = [
   },
   {
     path: '',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -517,5 +527,9 @@ export const routes: Routes = [
           ).then((m) => m.DashboardHomeComponent),
       },
     ],
+  },
+  {
+    path: '**',
+    redirectTo: '',
   },
 ];

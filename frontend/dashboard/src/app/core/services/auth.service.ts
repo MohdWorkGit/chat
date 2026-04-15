@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { environment } from '@env/environment';
 import { AuthResponse, LoginRequest, RegisterRequest } from '@core/models/auth.model';
@@ -14,6 +15,7 @@ const USER_KEY = 'cep_current_user';
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   private readonly baseUrl = environment.apiUrl;
 
   private readonly currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
@@ -33,12 +35,19 @@ export class AuthService {
     );
   }
 
-  logout(): void {
+  logout(redirectToLogin: boolean = true): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this.currentUserSubject.next(null);
     this.isAuthenticated.set(false);
+    if (redirectToLogin) {
+      const returnUrl = this.router.url;
+      const isOnAuthRoute = returnUrl.startsWith('/auth/');
+      this.router.navigate(['/auth/login'], {
+        queryParams: isOnAuthRoute ? undefined : { returnUrl },
+      });
+    }
   }
 
   refreshToken(): Observable<AuthResponse> {
@@ -82,8 +91,36 @@ export class AuthService {
     this.isAuthenticated.set(true);
   }
 
-  private hasValidToken(): boolean {
-    return !!localStorage.getItem(TOKEN_KEY);
+  hasValidToken(): boolean {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      return false;
+    }
+    const expiry = this.getTokenExpiry(token);
+    if (expiry === null) {
+      // Token is not a decodable JWT; treat presence as valid and defer to
+      // server-side validation via the jwtInterceptor.
+      return true;
+    }
+    return expiry > Date.now();
+  }
+
+  private getTokenExpiry(token: string): number | null {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return null;
+      }
+      const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = payload + '==='.slice((payload.length + 3) % 4);
+      const decoded = JSON.parse(atob(padded));
+      if (typeof decoded.exp !== 'number') {
+        return null;
+      }
+      return decoded.exp * 1000;
+    } catch {
+      return null;
+    }
   }
 
   private getStoredUser(): User | null {
