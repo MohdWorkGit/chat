@@ -1,6 +1,7 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
+using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -100,7 +101,12 @@ public class ConversationService : IConversationService
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _mediator.Publish(new ConversationUpdatedEvent(conversationId, conversation.AccountId, nameof(status)), cancellationToken);
+        await _mediator.Publish(
+            new ConversationUpdatedEvent(
+                (int)conversationId,
+                conversation.AccountId,
+                new Dictionary<string, object?> { [nameof(status)] = status.ToString() }),
+            cancellationToken);
     }
 
     public async Task AssignAsync(long conversationId, int? agentId, int? teamId, CancellationToken cancellationToken = default)
@@ -115,7 +121,9 @@ public class ConversationService : IConversationService
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _mediator.Publish(new ConversationAssignedEvent(conversationId, conversation.AccountId, agentId, teamId), cancellationToken);
+        await _mediator.Publish(
+            new ConversationAssignedEvent((int)conversationId, conversation.AccountId, agentId, teamId),
+            cancellationToken);
     }
 
     public async Task TogglePriorityAsync(long conversationId, CancellationToken cancellationToken = default)
@@ -199,7 +207,12 @@ public class ConversationService : IConversationService
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _mediator.Publish(new ConversationUpdatedEvent(conversationId, conversation.AccountId, "snoozed"), cancellationToken);
+        await _mediator.Publish(
+            new ConversationUpdatedEvent(
+                (int)conversationId,
+                conversation.AccountId,
+                new Dictionary<string, object?> { ["snoozed"] = snoozeUntil }),
+            cancellationToken);
     }
 
     public async Task ResolveAsync(long conversationId, CancellationToken cancellationToken = default)
@@ -245,7 +258,9 @@ public class ConversationService : IConversationService
     }
 }
 
-// Domain Events
-public record ConversationCreatedEvent(long ConversationId, int AccountId) : INotification;
-public record ConversationUpdatedEvent(long ConversationId, int AccountId, string ChangedProperty) : INotification;
-public record ConversationAssignedEvent(long ConversationId, int AccountId, int? AgentId, int? TeamId) : INotification;
+// Domain events live in CustomerEngagement.Core.Events and are imported via the
+// `using` directive at the top of this file. Keep the canonical definitions
+// there — duplicating them here creates distinct CLR types under a different
+// namespace, which silently prevents MediatR from routing published events to
+// the handlers (ConversationCreatedEvent is what triggers the SignalR
+// broadcast that updates the dashboard in real time).

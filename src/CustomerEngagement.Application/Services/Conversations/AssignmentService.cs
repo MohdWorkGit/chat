@@ -1,4 +1,5 @@
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -39,7 +40,7 @@ public class AssignmentService : IAssignmentService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _mediator.Publish(
-            new ConversationAssignedEvent(conversationId, conversation.AccountId, agentId, conversation.TeamId),
+            new ConversationAssignedEvent((int)conversationId, conversation.AccountId, agentId, conversation.TeamId),
             cancellationToken);
     }
 
@@ -55,7 +56,7 @@ public class AssignmentService : IAssignmentService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _mediator.Publish(
-            new ConversationAssignedEvent(conversationId, conversation.AccountId, conversation.AssigneeId, teamId),
+            new ConversationAssignedEvent((int)conversationId, conversation.AccountId, conversation.AssigneeId, teamId),
             cancellationToken);
     }
 
@@ -92,7 +93,7 @@ public class AssignmentService : IAssignmentService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _mediator.Publish(
-            new ConversationAssignedEvent(conversationId, conversation.AccountId, nextAgentId, conversation.TeamId),
+            new ConversationAssignedEvent((int)conversationId, conversation.AccountId, nextAgentId, conversation.TeamId),
             cancellationToken);
     }
 }
