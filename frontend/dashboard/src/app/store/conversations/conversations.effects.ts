@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, exhaustMap, map, of, switchMap } from 'rxjs';
+import { EMPTY, catchError, exhaustMap, map, mergeMap, of, switchMap } from 'rxjs';
 import { ConversationService } from '@core/services/conversation.service';
 import { SignalRService } from '@core/services/signalr.service';
 import { ConversationsActions } from './conversations.actions';
@@ -110,6 +110,33 @@ export const messageReceivedFromSignalR$ = createEffect(
   (signalrService = inject(SignalRService)) =>
     signalrService.messageCreated$.pipe(
       map((message) => ConversationsActions.messageReceived({ message }))
+    ),
+  { functional: true }
+);
+
+// Listen for real-time `conversation.created` events from SignalR and pull the
+// full conversation into the store so the list updates without a manual
+// refresh. The broadcast payload only carries identifiers (see
+// BroadcastEventHandler.Handle(ConversationCreatedEvent)); the list template
+// and the reducer's sortComparer need related data (contact, assignee, inbox,
+// lastActivityAt), so we fetch the full entity by id and reuse
+// loadConversationSuccess which upserts into the store. `mergeMap` is used
+// instead of `switchMap` so rapid bursts of new conversations are not
+// cancelled mid-flight.
+export const conversationCreatedFromSignalR$ = createEffect(
+  (signalrService = inject(SignalRService), conversationService = inject(ConversationService)) =>
+    signalrService.conversationCreated$.pipe(
+      mergeMap((data) => {
+        const rawId = (data as { id?: number | string }).id;
+        const id = typeof rawId === 'number' ? rawId : Number(rawId);
+        if (!Number.isFinite(id) || id <= 0) {
+          return EMPTY;
+        }
+        return conversationService.getById(id).pipe(
+          map((conversation) => ConversationsActions.loadConversationSuccess({ conversation })),
+          catchError(() => EMPTY)
+        );
+      })
     ),
   { functional: true }
 );
