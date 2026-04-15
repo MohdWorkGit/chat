@@ -1,7 +1,7 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using CustomerEngagement.Api.Authorization;
-using CustomerEngagement.Api.Hubs;
+using CustomerEngagement.Application.Hubs;
 using CustomerEngagement.Api.Middleware;
 using CustomerEngagement.Application;
 using CustomerEngagement.Application.Auth;
