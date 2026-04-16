@@ -84,20 +84,38 @@ export class SignalrService {
     this.pendingJoins.clear();
   }
 
+  /**
+   * Normalizes a SignalR message payload to the camelCase shape the widget
+   * expects.  ASP.NET Core SignalR may serialize with PascalCase unless
+   * explicitly configured, while the REST API always returns camelCase.
+   */
+  private normalizeMessage(data: Record<string, unknown>): Message {
+    return {
+      id: (data['id'] ?? data['Id']) as number,
+      conversationId: (data['conversationId'] ?? data['ConversationId']) as number,
+      content: (data['content'] ?? data['Content']) as string,
+      senderType: (data['senderType'] ?? data['SenderType']) as Message['senderType'],
+      contentType: (data['contentType'] ?? data['ContentType']) as string,
+      createdAt: (data['createdAt'] ?? data['CreatedAt']) as string,
+    };
+  }
+
   private registerHandlers(): void {
     if (!this.hubConnection) return;
 
-    this.hubConnection.on('message.created', (message: Message) => {
-      this.messagesSubject.next(message);
+    this.hubConnection.on('message.created', (data: Record<string, unknown>) => {
+      this.messagesSubject.next(this.normalizeMessage(data));
     });
 
     this.hubConnection.on('TypingStatus', (data: { isTyping: boolean }) => {
       this.typingSubject.next(data.isTyping);
     });
 
-    this.hubConnection.on('conversation.status_changed', (data: { conversationId: number; newStatus: string }) => {
-      if (data.newStatus === 'Resolved') {
-        this.conversationResolvedSubject.next(data.conversationId);
+    this.hubConnection.on('conversation.status_changed', (data: Record<string, unknown>) => {
+      const newStatus = (data['newStatus'] ?? data['NewStatus']) as string;
+      const conversationId = (data['conversationId'] ?? data['ConversationId']) as number;
+      if (newStatus === 'Resolved') {
+        this.conversationResolvedSubject.next(conversationId);
       }
     });
 

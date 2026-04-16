@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using System.Threading.RateLimiting;
 using CustomerEngagement.Api.Authorization;
 using CustomerEngagement.Application.Hubs;
@@ -154,7 +155,11 @@ var redisUrl = builder.Configuration["REDIS_URL"]
     ?? builder.Configuration["Redis:Url"]
     ?? "localhost:6379";
 
-var signalRBuilder = builder.Services.AddSignalR();
+var signalRBuilder = builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 if (!builder.Environment.IsDevelopment())
 {
     signalRBuilder.AddStackExchangeRedis(redisUrl);

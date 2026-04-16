@@ -510,13 +510,15 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     const content = this.newMessage.trim();
     if (!content || !this.conversationId()) return;
 
+    // Clear input immediately to prevent double-submit on rapid Enter key
+    this.newMessage = '';
+
     this.apiService.sendMessage(this.websiteToken, this.conversationId(), content)
       .subscribe({
         next: (message: Message) => {
           this.messages.update(msgs =>
             msgs.some(m => m.id === message.id) ? msgs : [...msgs, message],
           );
-          this.newMessage = '';
           this.shouldScrollToBottom = true;
         },
       });
