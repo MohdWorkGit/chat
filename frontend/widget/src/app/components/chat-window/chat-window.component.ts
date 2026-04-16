@@ -50,14 +50,26 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
           [avatarUrl]="agentAvatarUrl()"
           [status]="agentAvailability()"
           [replyTimeMinutes]="agentReplyTime()" />
-        <button
-          class="minimize-btn"
-          (click)="close.emit()"
-          aria-label="Minimize chat">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13H5v-2h14v2z"/>
-          </svg>
-        </button>
+        <div class="header-actions">
+          @if (currentView() === 'conversation') {
+            <button
+              class="header-action-btn close-conversation-btn"
+              (click)="onEndConversation()"
+              aria-label="End conversation">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+          }
+          <button
+            class="header-action-btn minimize-btn"
+            (click)="close.emit()"
+            aria-label="Minimize chat">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13H5v-2h14v2z"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       @switch (currentView()) {
@@ -140,6 +152,9 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
     :host {
       display: contents;
       font-family: var(--widget-font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    }
+    :host([hidden]) {
+      display: none !important;
     }
     .chat-window {
       width: 384px;
@@ -299,7 +314,13 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
       color: var(--widget-primary, #1b72e8);
       background-color: rgba(27, 114, 232, 0.12);
     }
-    .minimize-btn {
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .header-action-btn {
       background: rgba(255, 255, 255, 0.12);
       border: none;
       color: #ffffff;
@@ -313,12 +334,15 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
       flex-shrink: 0;
       transition: background-color 0.18s ease, transform 0.15s ease;
     }
-    .minimize-btn:hover {
+    .header-action-btn:hover {
       background-color: rgba(255, 255, 255, 0.22);
       transform: scale(1.05);
     }
-    .minimize-btn:active {
+    .header-action-btn:active {
       transform: scale(0.96);
+    }
+    .close-conversation-btn:hover {
+      background-color: rgba(239, 68, 68, 0.55);
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -508,6 +532,21 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
           this.clearPersistedConversation();
         },
       });
+  }
+
+  onEndConversation(): void {
+    const convId = this.conversationId();
+    if (convId) {
+      this.signalrService.leaveConversation(convId);
+    }
+    this.currentView.set('greeting');
+    this.messages.set([]);
+    this.conversationId.set(0);
+    this.newMessage = '';
+    this.showEmojiPicker.set(false);
+    this.showFileUpload.set(false);
+    this.isAgentTyping.set(false);
+    this.clearPersistedConversation();
   }
 
   toggleEmojiPicker(): void {
