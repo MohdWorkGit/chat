@@ -1,8 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { Subscription } from 'rxjs';
 import { ConversationsActions } from '@app/store/conversations/conversations.actions';
 import {
   selectAllConversations,
@@ -12,6 +13,7 @@ import {
   selectSelectedConversationId,
 } from '@app/store/conversations/conversations.selectors';
 import { ConversationStatus, ConversationPriority, Conversation } from '@core/models/conversation.model';
+import { SignalRService } from '@core/services/signalr.service';
 
 @Component({
   selector: 'app-conversation-list',
@@ -196,9 +198,11 @@ import { ConversationStatus, ConversationPriority, Conversation } from '@core/mo
     }
   `],
 })
-export class ConversationListComponent implements OnInit {
+export class ConversationListComponent implements OnInit, OnDestroy {
   private store = inject(Store);
   private router = inject(Router);
+  private signalrService = inject(SignalRService);
+  private signalrSubs = new Subscription();
 
   conversations$ = this.store.select(selectAllConversations);
   loading$ = this.store.select(selectConversationsLoading);
@@ -225,6 +229,24 @@ export class ConversationListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadConversations();
+
+    // Reload the conversation list when SignalR notifies us of new or
+    // status-changed conversations so the dashboard stays in sync without
+    // requiring a manual page refresh.
+    this.signalrSubs.add(
+      this.signalrService.conversationCreated$.subscribe(() => {
+        this.loadConversations();
+      }),
+    );
+    this.signalrSubs.add(
+      this.signalrService.conversationStatusChanged$.subscribe(() => {
+        this.loadConversations();
+      }),
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.signalrSubs.unsubscribe();
   }
 
   loadConversations(): void {
