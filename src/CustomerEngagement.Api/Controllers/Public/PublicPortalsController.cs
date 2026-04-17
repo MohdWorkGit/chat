@@ -50,11 +50,39 @@ public class PublicPortalsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("logo")]
+    public async Task<ActionResult> GetLogo(string portalSlug)
+    {
+        var result = await _mediator.Send(
+            new Application.Public.Queries.GetPublicPortalLogoQuery(portalSlug));
+
+        if (result is null)
+            return NotFound();
+
+        return File(result.Stream, result.ContentType);
+    }
+
+    [HttpGet("categories/{categorySlug}/related")]
+    public async Task<ActionResult> GetRelatedCategories(string portalSlug, string categorySlug, [FromQuery] string? locale)
+    {
+        var result = await _mediator.Send(
+            new Application.Public.Queries.GetPublicRelatedCategoriesQuery(portalSlug, categorySlug, locale));
+        return Ok(result);
+    }
+
     [HttpGet("articles/{articleSlug}")]
     public async Task<ActionResult> GetArticle(string portalSlug, string articleSlug)
     {
         var result = await _mediator.Send(
             new Application.Public.Queries.GetPublicArticleQuery(portalSlug, articleSlug));
+        return Ok(result);
+    }
+
+    [HttpPost("articles/{articleSlug}/view")]
+    public async Task<ActionResult> RecordArticleView(string portalSlug, string articleSlug)
+    {
+        var result = await _mediator.Send(
+            new Application.Public.Queries.IncrementPublicArticleViewCommand(portalSlug, articleSlug));
         return Ok(result);
     }
 }

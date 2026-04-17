@@ -1,4 +1,6 @@
 using System.Linq.Expressions;
+using CustomerEngagement.Application.BackgroundJobs;
+using CustomerEngagement.Application.Services.HelpCenter;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Interfaces;
@@ -19,6 +21,160 @@ public record SearchPublicArticlesQuery(string PortalSlug, string Query, string?
 public record GetPublicArticleQuery(string PortalSlug, string ArticleSlug) : IRequest<object>;
 
 public record GetPublicInboxQuery(string InboxIdentifier) : IRequest<object>;
+
+public record GetPublicPortalLogoQuery(string PortalSlug) : IRequest<PortalLogoResult?>;
+
+public record PortalLogoResult(Stream Stream, string ContentType);
+
+public class GetPublicPortalLogoQueryHandler : IRequestHandler<GetPublicPortalLogoQuery, PortalLogoResult?>
+{
+    private readonly IRepository<Portal> _portalRepository;
+    private readonly IStorageService _storageService;
+
+    public GetPublicPortalLogoQueryHandler(
+        IRepository<Portal> portalRepository,
+        IStorageService storageService)
+    {
+        _portalRepository = portalRepository;
+        _storageService = storageService;
+    }
+
+    public async Task<PortalLogoResult?> Handle(GetPublicPortalLogoQuery request, CancellationToken cancellationToken)
+    {
+        var portals = await _portalRepository.FindAsync(
+            p => p.Slug == request.PortalSlug && !p.Archived, cancellationToken);
+
+        var portal = portals.FirstOrDefault();
+        if (portal is null || string.IsNullOrEmpty(portal.LogoUrl))
+            return null;
+
+        var stream = await _storageService.DownloadFileAsync(portal.LogoUrl, cancellationToken);
+        var contentType = string.IsNullOrEmpty(portal.LogoContentType)
+            ? "application/octet-stream"
+            : portal.LogoContentType;
+
+        return new PortalLogoResult(stream, contentType);
+    }
+}
+
+public record GetPublicRelatedCategoriesQuery(string PortalSlug, string CategorySlug, string? Locale) : IRequest<object>;
+
+public class GetPublicRelatedCategoriesQueryHandler : IRequestHandler<GetPublicRelatedCategoriesQuery, object>
+{
+    private readonly IRepository<Portal> _portalRepository;
+    private readonly IRepository<Category> _categoryRepository;
+    private readonly IRepository<RelatedCategory> _relatedCategoryRepository;
+
+    public GetPublicRelatedCategoriesQueryHandler(
+        IRepository<Portal> portalRepository,
+        IRepository<Category> categoryRepository,
+        IRepository<RelatedCategory> relatedCategoryRepository)
+    {
+        _portalRepository = portalRepository;
+        _categoryRepository = categoryRepository;
+        _relatedCategoryRepository = relatedCategoryRepository;
+    }
+
+    public async Task<object> Handle(GetPublicRelatedCategoriesQuery request, CancellationToken cancellationToken)
+    {
+        var portals = await _portalRepository.FindAsync(
+            p => p.Slug == request.PortalSlug && !p.Archived, cancellationToken);
+
+        var portal = portals.FirstOrDefault();
+        if (portal is null)
+            return new { Data = Array.Empty<object>() };
+
+        var portalId = portal.Id;
+        var locale = request.Locale;
+        var categorySlug = request.CategorySlug;
+
+        var matchingCategories = await _categoryRepository.FindAsync(
+            c => c.PortalId == portalId && c.Slug == categorySlug
+                 && (locale == null || c.Locale == locale),
+            cancellationToken);
+
+        var category = matchingCategories.FirstOrDefault();
+        if (category is null)
+            return new { Data = Array.Empty<object>() };
+
+        var categoryId = category.Id;
+
+        var links = await _relatedCategoryRepository.FindAsync(
+            r => r.CategoryId == categoryId || r.RelatedCategoryId == categoryId,
+            cancellationToken);
+
+        var relatedIds = links
+            .Select(r => r.CategoryId == categoryId ? r.RelatedCategoryId : r.CategoryId)
+            .Distinct()
+            .ToList();
+
+        if (relatedIds.Count == 0)
+            return new { Data = Array.Empty<object>() };
+
+        var related = await _categoryRepository.FindAsync(
+            c => relatedIds.Contains(c.Id) && c.PortalId == portalId
+                 && (locale == null || c.Locale == locale),
+            cancellationToken);
+
+        return new
+        {
+            Data = related
+                .OrderBy(c => c.Position)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.Slug,
+                    c.Description,
+                    c.Position,
+                    c.Locale
+                })
+        };
+    }
+}
+
+public record IncrementPublicArticleViewCommand(string PortalSlug, string ArticleSlug) : IRequest<object>;
+
+public class IncrementPublicArticleViewCommandHandler : IRequestHandler<IncrementPublicArticleViewCommand, object>
+{
+    private readonly IRepository<Portal> _portalRepository;
+    private readonly IRepository<Article> _articleRepository;
+    private readonly IArticleService _articleService;
+
+    public IncrementPublicArticleViewCommandHandler(
+        IRepository<Portal> portalRepository,
+        IRepository<Article> articleRepository,
+        IArticleService articleService)
+    {
+        _portalRepository = portalRepository;
+        _articleRepository = articleRepository;
+        _articleService = articleService;
+    }
+
+    public async Task<object> Handle(IncrementPublicArticleViewCommand request, CancellationToken cancellationToken)
+    {
+        var portals = await _portalRepository.FindAsync(
+            p => p.Slug == request.PortalSlug && !p.Archived, cancellationToken);
+
+        var portal = portals.FirstOrDefault();
+        if (portal is null)
+            return new { Success = false };
+
+        var portalId = portal.Id;
+        var articleSlug = request.ArticleSlug;
+
+        var articles = await _articleRepository.FindAsync(
+            a => a.PortalId == portalId && a.Slug == articleSlug && a.Status == ArticleStatus.Published,
+            cancellationToken);
+
+        var article = articles.FirstOrDefault();
+        if (article is null)
+            return new { Success = false };
+
+        await _articleService.IncrementViewCountAsync(article.Id, cancellationToken);
+        return new { Success = true };
+    }
+}
 
 public class GetPublicCsatSurveyQueryHandler : IRequestHandler<GetPublicCsatSurveyQuery, object>
 {
@@ -78,7 +234,10 @@ public class GetPublicPortalQueryHandler : IRequestHandler<GetPublicPortalQuery,
             portal.Color,
             portal.HeaderText,
             portal.PageTitle,
-            portal.HomepageLink
+            portal.HomepageLink,
+            LogoUrl = string.IsNullOrEmpty(portal.LogoUrl)
+                ? null
+                : $"/api/v1/public/portals/{portal.Slug}/logo"
         };
     }
 }

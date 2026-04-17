@@ -108,6 +108,11 @@ export class ArticleComponent implements OnInit {
         crumbs.push({ label: article.title });
         this.breadcrumbItems.set(crumbs);
         this.loading.set(false);
+
+        this.apiService.recordArticleView(slug).subscribe({
+          next: () => {},
+          error: () => {},
+        });
       },
       error: () => {
         this.error.set('Failed to load article.');

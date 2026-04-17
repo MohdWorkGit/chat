@@ -1,8 +1,10 @@
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { catchError, of } from 'rxjs';
 import { LocaleSwitcherComponent } from './components/locale-switcher/locale-switcher.component';
 import { FolderNavigationComponent } from './components/folder-navigation/folder-navigation.component';
+import { PortalApiService, PortalMeta } from './services/portal-api.service';
 
 @Component({
   selector: 'portal-root',
@@ -12,7 +14,11 @@ import { FolderNavigationComponent } from './components/folder-navigation/folder
     <header class="portal-header">
       <div class="container portal-header-inner">
         <a routerLink="/" class="portal-logo">
-          <span style="font-weight: 700; font-size: 1.125rem; color: var(--portal-text);">Help Center</span>
+          @if (portal()?.logoUrl) {
+            <img [src]="portal()!.logoUrl!" [alt]="portal()?.name || 'Help Center'" class="portal-logo-image" />
+          } @else {
+            <span style="font-weight: 700; font-size: 1.125rem; color: var(--portal-text);">{{ portal()?.name || 'Help Center' }}</span>
+          }
         </a>
         <button
           class="portal-hamburger"
@@ -74,9 +80,16 @@ import { FolderNavigationComponent } from './components/folder-navigation/folder
     }
     .portal-logo {
       text-decoration: none;
+      display: flex;
+      align-items: center;
     }
     .portal-logo:hover {
       text-decoration: none;
+    }
+    .portal-logo-image {
+      max-height: 40px;
+      max-width: 200px;
+      object-fit: contain;
     }
     .portal-nav {
       display: flex;
@@ -166,8 +179,17 @@ import { FolderNavigationComponent } from './components/folder-navigation/folder
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   isMobileMenuOpen = signal(false);
+  portal = signal<PortalMeta | null>(null);
+
+  constructor(private readonly apiService: PortalApiService) {}
+
+  ngOnInit(): void {
+    this.apiService.getPortal()
+      .pipe(catchError(() => of<PortalMeta | null>(null)))
+      .subscribe(portal => this.portal.set(portal));
+  }
 
   toggleMobileMenu(): void {
     this.isMobileMenuOpen.update(v => !v);

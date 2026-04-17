@@ -3,6 +3,18 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
+export interface PortalMeta {
+  id: number;
+  name: string;
+  slug: string;
+  customDomain?: string | null;
+  color?: string | null;
+  headerText?: string | null;
+  pageTitle?: string | null;
+  homepageLink?: string | null;
+  logoUrl?: string | null;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -12,6 +24,15 @@ export interface Category {
   locale?: string;
   parentCategoryId?: number | null;
   articleCount: number;
+}
+
+export interface RelatedCategorySummary {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  position: number;
+  locale?: string;
 }
 
 export interface ArticleSummary {
@@ -99,6 +120,10 @@ export class PortalApiService {
     return envelope.data ?? [];
   }
 
+  getPortal(): Observable<PortalMeta> {
+    return this.http.get<PortalMeta>(this.baseUrl);
+  }
+
   getCategories(): Observable<Category[]> {
     const params = this.applyLocale(new HttpParams());
     return this.http
@@ -133,9 +158,23 @@ export class PortalApiService {
     );
   }
 
+  getRelatedCategories(categorySlug: string): Observable<RelatedCategorySummary[]> {
+    const params = this.applyLocale(new HttpParams());
+    return this.http
+      .get<PaginatedEnvelope<RelatedCategorySummary>>(
+        `${this.baseUrl}/categories/${categorySlug}/related`,
+        { params },
+      )
+      .pipe(map((response) => this.unwrap<RelatedCategorySummary>(response)));
+  }
+
   getArticle(slug: string): Observable<Article> {
     const params = this.applyLocale(new HttpParams());
     return this.http.get<Article>(`${this.baseUrl}/articles/${slug}`, { params });
+  }
+
+  recordArticleView(slug: string): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/articles/${slug}/view`, null);
   }
 
   searchArticles(query: string, page: number = 1, pageSize: number = 10): Observable<PagedResult<ArticleSummary>> {

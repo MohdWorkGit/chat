@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, OnInit, Input, signal } from '@angu
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { PortalApiService, Category, ArticleSummary } from '../../services/portal-api.service';
+import { PortalApiService, Category, ArticleSummary, RelatedCategorySummary } from '../../services/portal-api.service';
 import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb/breadcrumb.component';
 
 @Component({
@@ -44,6 +44,26 @@ import { BreadcrumbComponent, BreadcrumbItem } from '../../components/breadcrumb
                 </li>
               }
             </ul>
+
+            @if (relatedCategories().length > 0) {
+              <section class="portal-related-categories" style="margin-top: 48px;">
+                <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 16px;">Related categories</h2>
+                <ul class="related-category-list" style="list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+                  @for (related of relatedCategories(); track related.id) {
+                    <li>
+                      <a
+                        [routerLink]="['/category', related.slug]"
+                        style="display: block; padding: 16px; border: 1px solid var(--portal-border, #e5e7eb); border-radius: 8px; text-decoration: none; color: inherit;">
+                        <strong style="display: block; margin-bottom: 4px;">{{ related.name }}</strong>
+                        @if (related.description) {
+                          <span style="color: var(--portal-text-secondary, #6b7280); font-size: 0.875rem;">{{ related.description }}</span>
+                        }
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
           </div>
         }
       }
@@ -56,6 +76,7 @@ export class CategoryComponent implements OnInit {
 
   category = signal<Category | null>(null);
   articles = signal<ArticleSummary[]>([]);
+  relatedCategories = signal<RelatedCategorySummary[]>([]);
   breadcrumbItems = signal<BreadcrumbItem[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
@@ -82,6 +103,7 @@ export class CategoryComponent implements OnInit {
     this.error.set(null);
     this.category.set(null);
     this.articles.set([]);
+    this.relatedCategories.set([]);
 
     this.apiService.getCategory(slug).subscribe({
       next: (category) => {
@@ -101,6 +123,11 @@ export class CategoryComponent implements OnInit {
             this.error.set('Failed to load articles for this category.');
             this.loading.set(false);
           },
+        });
+
+        this.apiService.getRelatedCategories(slug).subscribe({
+          next: (related) => this.relatedCategories.set(related),
+          error: () => this.relatedCategories.set([]),
         });
       },
       error: (err) => {
