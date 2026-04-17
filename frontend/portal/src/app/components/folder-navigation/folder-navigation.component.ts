@@ -16,7 +16,9 @@ export interface FolderNode {
   name: string;
   slug: string;
   articleCount: number;
+  parentCategoryId: number | null;
   expanded: boolean;
+  children: FolderNode[];
 }
 
 @Component({
@@ -28,27 +30,42 @@ export interface FolderNode {
       <div class="folder-nav-title">Categories</div>
       <ul class="folder-nav-list">
         @for (folder of folders(); track folder.id) {
-          <li class="folder-nav-item">
-            <a
-              class="folder-nav-link"
-              [routerLink]="['/category', folder.slug]"
-              routerLinkActive="folder-nav-link-active"
-              (click)="toggleFolder(folder)">
-              <span class="folder-nav-icon" [class.expanded]="folder.expanded">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                </svg>
-              </span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="folder-nav-folder-icon">
-                <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-              </svg>
-              <span class="folder-nav-name">{{ folder.name }}</span>
-              <span class="folder-nav-count">{{ folder.articleCount }}</span>
-            </a>
-          </li>
+          <ng-container *ngTemplateOutlet="folderItem; context: { $implicit: folder }"></ng-container>
         }
       </ul>
     </nav>
+
+    <ng-template #folderItem let-folder>
+      <li class="folder-nav-item">
+        <a
+          class="folder-nav-link"
+          [routerLink]="['/category', folder.slug]"
+          routerLinkActive="folder-nav-link-active"
+          (click)="toggleFolder(folder)">
+          @if (folder.children.length > 0) {
+            <span class="folder-nav-icon" [class.expanded]="folder.expanded">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+              </svg>
+            </span>
+          } @else {
+            <span class="folder-nav-icon folder-nav-icon-spacer"></span>
+          }
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="folder-nav-folder-icon">
+            <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+          </svg>
+          <span class="folder-nav-name">{{ folder.name }}</span>
+          <span class="folder-nav-count">{{ folder.articleCount }}</span>
+        </a>
+        @if (folder.expanded && folder.children.length > 0) {
+          <ul class="folder-nav-sublist">
+            @for (child of folder.children; track child.id) {
+              <ng-container *ngTemplateOutlet="folderItem; context: { $implicit: child }"></ng-container>
+            }
+          </ul>
+        }
+      </li>
+    </ng-template>
   `,
   styles: [`
     .folder-nav {
@@ -106,6 +123,15 @@ export interface FolderNode {
     .folder-nav-icon.expanded {
       transform: rotate(90deg);
     }
+    .folder-nav-icon-spacer {
+      width: 12px;
+      height: 12px;
+    }
+    .folder-nav-sublist {
+      list-style: none;
+      padding: 0 0 0 20px;
+      margin: 0;
+    }
     .folder-nav-folder-icon {
       flex-shrink: 0;
       color: var(--portal-text-secondary, #6b7280);
@@ -141,22 +167,68 @@ export class FolderNavigationComponent implements OnInit {
     this.apiService.getCategories()
       .pipe(catchError(() => of<Category[]>([])))
       .subscribe(categories => {
-        const folderNodes: FolderNode[] = categories.map(cat => ({
-          id: cat.id,
-          name: cat.name,
-          slug: cat.slug,
-          articleCount: cat.articleCount,
-          expanded: cat.slug === this.activeCategorySlug,
-        }));
-        this.folders.set(folderNodes);
+        this.folders.set(this.buildTree(categories));
       });
   }
 
+  private buildTree(categories: Category[]): FolderNode[] {
+    const nodesById = new Map<number, FolderNode>();
+    for (const cat of categories) {
+      nodesById.set(cat.id, {
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        articleCount: cat.articleCount,
+        parentCategoryId: cat.parentCategoryId ?? null,
+        expanded: false,
+        children: [],
+      });
+    }
+
+    const roots: FolderNode[] = [];
+    for (const node of nodesById.values()) {
+      const parent = node.parentCategoryId != null ? nodesById.get(node.parentCategoryId) : undefined;
+      if (parent) {
+        parent.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+
+    if (this.activeCategorySlug) {
+      this.expandAncestors(roots, this.activeCategorySlug);
+    }
+
+    return roots;
+  }
+
+  private expandAncestors(nodes: FolderNode[], activeSlug: string): boolean {
+    for (const node of nodes) {
+      if (node.slug === activeSlug) {
+        node.expanded = true;
+        return true;
+      }
+      if (node.children.length > 0 && this.expandAncestors(node.children, activeSlug)) {
+        node.expanded = true;
+        return true;
+      }
+    }
+    return false;
+  }
+
   toggleFolder(folder: FolderNode): void {
-    this.folders.update(folders =>
-      folders.map(f =>
-        f.id === folder.id ? { ...f, expanded: !f.expanded } : f,
-      ),
-    );
+    this.folders.update(folders => this.toggleInTree(folders, folder.id));
+  }
+
+  private toggleInTree(nodes: FolderNode[], targetId: number): FolderNode[] {
+    return nodes.map(node => {
+      if (node.id === targetId) {
+        return { ...node, expanded: !node.expanded };
+      }
+      if (node.children.length > 0) {
+        return { ...node, children: this.toggleInTree(node.children, targetId) };
+      }
+      return node;
+    });
   }
 }

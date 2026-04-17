@@ -29,6 +29,12 @@ public class Portal : BaseEntity
     [MaxLength(2048)]
     public string? HomepageLink { get; set; }
 
+    [MaxLength(1024)]
+    public string? LogoUrl { get; set; }
+
+    [MaxLength(255)]
+    public string? LogoContentType { get; set; }
+
     public bool Archived { get; set; }
 
     // Navigation properties

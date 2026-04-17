@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CustomerEngagement.Api.Controllers.V1;
@@ -51,5 +52,23 @@ public class PortalsController : ControllerBase
     {
         await _mediator.Send(new Application.Portals.Commands.DeletePortalCommand(portalId));
         return NoContent();
+    }
+
+    [HttpPost("{portalId:int}/logo")]
+    [RequestSizeLimit(5_000_000)]
+    public async Task<ActionResult> UploadLogo(int portalId, IFormFile file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { Error = "File is required." });
+
+        using var memStream = new MemoryStream();
+        await file.CopyToAsync(memStream);
+        var bytes = memStream.ToArray();
+
+        var result = await _mediator.Send(
+            new Application.Portals.Commands.UploadPortalLogoCommand(
+                portalId, bytes, file.FileName, file.ContentType));
+
+        return Ok(result);
     }
 }

@@ -160,10 +160,7 @@ public class ArticleService : IArticleService
         var article = await _articleRepository.GetByIdAsync(articleId, cancellationToken);
         if (article is null) return;
 
-        // Note: Article entity doesn't have a ViewCount property in the BaseEntity,
-        // but the DTO exposes it. For now we track via the UpdatedAt timestamp.
-        // A dedicated ViewCount column should be added to the Article entity if needed.
-        article.UpdatedAt = DateTime.UtcNow;
+        article.ViewCount += 1;
         await _articleRepository.UpdateAsync(article, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -192,7 +189,7 @@ public class ArticleService : IArticleService
             Status = (int)article.Status,
             CategoryId = article.CategoryId,
             AuthorId = article.AuthorId,
-            ViewCount = 0,
+            ViewCount = article.ViewCount,
             CreatedAt = article.CreatedAt,
             UpdatedAt = article.UpdatedAt
         };

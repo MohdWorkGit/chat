@@ -25,6 +25,7 @@ public class Article : BaseEntity
 
     public ArticleStatus Status { get; set; } = ArticleStatus.Draft;
     public int Position { get; set; }
+    public int ViewCount { get; set; }
 
     [MaxLength(10)]
     public string? Locale { get; set; }
