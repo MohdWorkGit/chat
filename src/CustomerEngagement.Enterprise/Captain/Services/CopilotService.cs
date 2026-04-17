@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Enterprise.Captain.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -139,7 +140,7 @@ public class CopilotService : ICopilotService
     private static string FormatMessages(List<Message> messages)
     {
         return string.Join("\n", messages.Select(m =>
-            $"[{(m.SenderType == "User" ? "Customer" : "Agent")}]: {m.Content}"));
+            $"[{(m.MessageType == MessageType.Incoming ? "Customer" : "Agent")}]: {m.Content}"));
     }
 
     private async Task<string> CallOllamaAsync(string prompt, CancellationToken cancellationToken)

@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { EMPTY, Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { CsatData } from '../components/csat-survey/csat-survey.component';
 
 export interface Message {
@@ -79,20 +78,11 @@ export class WidgetApiService {
     );
   }
 
-  // TODO: backend has no POST /widget/conversations/{id}/csat endpoint yet.
-  // The request is still fired so that it starts working automatically as
-  // soon as the backend adds the route, but any failure is swallowed so the
-  // UI can close the CSAT form without showing an error.
   submitCsat(websiteToken: string, conversationId: number, data: CsatData): Observable<void> {
     return this.http.post<void>(
       `${this.baseUrl}/conversations/${conversationId}/csat`,
-      data,
+      { rating: data.rating, feedback: data.feedback },
       { headers: { 'X-Website-Token': websiteToken } },
-    ).pipe(
-      catchError((err) => {
-        console.warn('Widget CSAT submit failed (endpoint not implemented?):', err);
-        return EMPTY;
-      }),
     );
   }
 

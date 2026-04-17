@@ -77,9 +77,9 @@ import { CopilotPanelComponent } from '@app/features/captain/copilot-panel/copil
 
               <!-- Snooze -->
               <button
-                (click)="updateStatus(conversation.id, 'snoozed')"
+                (click)="snoozeConversation(conversation.id)"
                 class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
-                title="Snooze"
+                title="Snooze for 1 hour"
               >
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -88,8 +88,11 @@ import { CopilotPanelComponent } from '@app/features/captain/copilot-panel/copil
 
               <!-- Mute -->
               <button
-                class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
-                title="Mute notifications"
+                (click)="toggleMute(conversation)"
+                [class]="conversation.muted
+                  ? 'p-1.5 text-red-500 hover:text-red-600 rounded transition-colors'
+                  : 'p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors'"
+                [title]="conversation.muted ? 'Unmute notifications' : 'Mute notifications'"
               >
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
@@ -406,15 +409,20 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
   }
 
   togglePriority(conversation: Conversation): void {
-    // Cycle through priorities: none -> high -> urgent -> none
-    const cycle: Record<string, string> = { none: 'high', high: 'urgent', urgent: 'none' };
-    const next = cycle[conversation.priority] || 'none';
-    this.store.dispatch(
-      ConversationsActions.conversationUpdated({
-        conversationId: conversation.id,
-        updates: { priority: next },
-      }),
-    );
+    this.store.dispatch(ConversationsActions.togglePriority({ id: conversation.id }));
+  }
+
+  toggleMute(conversation: Conversation): void {
+    if (conversation.muted) {
+      this.store.dispatch(ConversationsActions.unmuteConversation({ id: conversation.id }));
+    } else {
+      this.store.dispatch(ConversationsActions.muteConversation({ id: conversation.id }));
+    }
+  }
+
+  snoozeConversation(id: number): void {
+    const until = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    this.store.dispatch(ConversationsActions.snoozeConversation({ id, snoozeUntil: until }));
   }
 
   onMessageSent(conversationId: number, event: { content: string; isPrivate: boolean }): void {

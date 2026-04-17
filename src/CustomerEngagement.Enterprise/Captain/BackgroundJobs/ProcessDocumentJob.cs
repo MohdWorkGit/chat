@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using CustomerEngagement.Enterprise.Captain.Entities;
 using CustomerEngagement.Enterprise.Captain.Services;
 using Microsoft.EntityFrameworkCore;
@@ -11,15 +12,18 @@ public class ProcessDocumentJob
 
     private readonly DbContext _dbContext;
     private readonly IEmbeddingService _embeddingService;
+    private readonly IStorageService _storageService;
     private readonly ILogger<ProcessDocumentJob> _logger;
 
     public ProcessDocumentJob(
         DbContext dbContext,
         IEmbeddingService embeddingService,
+        IStorageService storageService,
         ILogger<ProcessDocumentJob> logger)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _embeddingService = embeddingService ?? throw new ArgumentNullException(nameof(embeddingService));
+        _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -42,7 +46,12 @@ public class ProcessDocumentJob
 
         try
         {
-            var content = await File.ReadAllTextAsync(document.FileUrl, cancellationToken);
+            string content;
+            await using (var stream = await _storageService.DownloadFileAsync(document.FileUrl, cancellationToken))
+            using (var reader = new StreamReader(stream))
+            {
+                content = await reader.ReadToEndAsync(cancellationToken);
+            }
 
             if (string.IsNullOrWhiteSpace(content))
             {

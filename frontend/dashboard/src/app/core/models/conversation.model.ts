@@ -65,6 +65,7 @@ export interface Conversation {
   customAttributes: Record<string, unknown>;
   labels: string[];
   snoozedUntil?: string;
+  muted?: boolean;
   messages: Message[];
   contact?: {
     id: number;
