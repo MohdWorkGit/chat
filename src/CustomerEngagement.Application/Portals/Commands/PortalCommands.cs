@@ -54,6 +54,9 @@ public class CreatePortalCommandHandler : IRequestHandler<CreatePortalCommand, l
             ? Slugify(request.Name)
             : Slugify(request.Slug);
 
+        if (await _portalRepository.AnyAsync(p => p.Slug == slug, cancellationToken))
+            throw new InvalidOperationException($"A portal with slug '{slug}' already exists.");
+
         var portal = new Portal
         {
             AccountId = request.AccountId,
@@ -97,7 +100,15 @@ public class UpdatePortalCommandHandler : IRequestHandler<UpdatePortalCommand>
         if (request.Name is not null)
             portal.Name = request.Name;
         if (request.Slug is not null)
-            portal.Slug = request.Slug.Trim().ToLowerInvariant().Replace(" ", "-").Replace("--", "-").Trim('-');
+        {
+            var newSlug = request.Slug.Trim().ToLowerInvariant().Replace(" ", "-").Replace("--", "-").Trim('-');
+            if (newSlug != portal.Slug &&
+                await _portalRepository.AnyAsync(p => p.Slug == newSlug && p.Id != portal.Id, cancellationToken))
+            {
+                throw new InvalidOperationException($"A portal with slug '{newSlug}' already exists.");
+            }
+            portal.Slug = newSlug;
+        }
         if (request.CustomDomain is not null)
             portal.CustomDomain = request.CustomDomain;
         if (request.Color is not null)
