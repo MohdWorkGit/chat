@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
 import { Article, Portal, Category } from '@core/models/helpcenter.model';
 
@@ -10,7 +10,31 @@ export class HelpCenterService {
   private readonly api = inject(ApiService);
 
   getPortals(): Observable<Portal[]> {
-    return this.api.get('/portals');
+    return this.api.get<{ data: Portal[] } | Portal[]>('/portals').pipe(
+      map((res) => (Array.isArray(res) ? res : res?.data ?? []))
+    );
+  }
+
+  getPortal(id: number): Observable<Portal> {
+    return this.api.get(`/portals/${id}`);
+  }
+
+  createPortal(data: Partial<Portal>): Observable<{ id: number }> {
+    return this.api.post(`/portals`, data);
+  }
+
+  updatePortal(id: number, data: Partial<Portal>): Observable<void> {
+    return this.api.put(`/portals/${id}`, data);
+  }
+
+  deletePortal(id: number): Observable<void> {
+    return this.api.delete(`/portals/${id}`);
+  }
+
+  uploadPortalLogo(id: number, file: File): Observable<{ id: number; logoUrl: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.upload(`/portals/${id}/logo`, formData);
   }
 
   getArticles(portalId: number): Observable<Article[]> {

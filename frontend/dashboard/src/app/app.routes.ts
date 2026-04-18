@@ -423,6 +423,27 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'articles' },
       {
+        path: 'portals',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/portal-list/portal-list.component'
+          ).then((m) => m.PortalListComponent),
+      },
+      {
+        path: 'portals/new',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/portal-form/portal-form.component'
+          ).then((m) => m.PortalFormComponent),
+      },
+      {
+        path: 'portals/:id',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/portal-form/portal-form.component'
+          ).then((m) => m.PortalFormComponent),
+      },
+      {
         path: 'articles',
         loadComponent: () =>
           import(

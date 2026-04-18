@@ -9,6 +9,14 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   template: `
     <nav class="flex gap-1 border-b border-gray-200 px-6 pt-4 bg-white">
       <a
+        routerLink="/helpcenter/portals"
+        routerLinkActive="border-blue-600 text-blue-600"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-900"
+      >
+        Portals
+      </a>
+      <a
         routerLink="/helpcenter/articles"
         routerLinkActive="border-blue-600 text-blue-600"
         [routerLinkActiveOptions]="{ exact: false }"

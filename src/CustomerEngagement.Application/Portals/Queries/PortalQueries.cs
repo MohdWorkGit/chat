@@ -37,6 +37,8 @@ public class GetPortalsQueryHandler : IRequestHandler<GetPortalsQuery, object>
                 p.HeaderText,
                 p.PageTitle,
                 p.HomepageLink,
+                p.LogoUrl,
+                p.LogoContentType,
                 p.Archived,
                 p.CreatedAt,
                 p.UpdatedAt
@@ -78,6 +80,8 @@ public class GetPortalByIdQueryHandler : IRequestHandler<GetPortalByIdQuery, obj
             portal.HeaderText,
             portal.PageTitle,
             portal.HomepageLink,
+            portal.LogoUrl,
+            portal.LogoContentType,
             portal.Archived,
             portal.CreatedAt,
             portal.UpdatedAt

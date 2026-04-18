@@ -11,6 +11,8 @@ public class PortalDto
     public string? PageTitle { get; set; }
     public string? HomepageLink { get; set; }
     public string? Color { get; set; }
+    public string? LogoUrl { get; set; }
+    public string? LogoContentType { get; set; }
     public bool IsArchived { get; set; }
     public int ArticleCount { get; set; }
     public DateTime CreatedAt { get; set; }

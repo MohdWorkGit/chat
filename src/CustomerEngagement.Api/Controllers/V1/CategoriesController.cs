@@ -1,3 +1,4 @@
+using CustomerEngagement.Api.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseRead)]
     public async Task<ActionResult> GetAll(long portalId)
     {
         var result = await _mediator.Send(new Application.Categories.Queries.GetCategoriesQuery(portalId));
@@ -24,6 +26,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{categoryId:long}")]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseRead)]
     public async Task<ActionResult> GetById(long portalId, long categoryId)
     {
         var result = await _mediator.Send(
@@ -32,6 +35,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseWrite)]
     public async Task<ActionResult> Create(long portalId,
         [FromBody] Application.Categories.Commands.CreateCategoryCommand command)
     {
@@ -41,6 +45,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPut("{categoryId:long}")]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseWrite)]
     public async Task<ActionResult> Update(long portalId, long categoryId,
         [FromBody] Application.Categories.Commands.UpdateCategoryCommand command)
     {
@@ -50,6 +55,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{categoryId:long}")]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseWrite)]
     public async Task<ActionResult> Delete(long portalId, long categoryId)
     {
         await _mediator.Send(new Application.Categories.Commands.DeleteCategoryCommand(portalId, categoryId));

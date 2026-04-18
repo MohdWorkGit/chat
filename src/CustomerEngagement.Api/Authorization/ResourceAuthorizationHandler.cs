@@ -94,6 +94,7 @@ public static class ResourcePolicies
         ContactDelete, ContactMerge,
         ReportWrite,
         LabelDelete,
+        KnowledgeBaseWrite,
     };
 }
 

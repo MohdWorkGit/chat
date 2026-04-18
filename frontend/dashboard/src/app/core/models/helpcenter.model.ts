@@ -21,6 +21,10 @@ export interface Portal {
   headerText: string;
   pageTitle: string;
   customDomain: string | null;
+  homepageLink?: string | null;
+  logoUrl?: string | null;
+  logoContentType?: string | null;
+  archived?: boolean;
   createdAt: string;
 }
 
