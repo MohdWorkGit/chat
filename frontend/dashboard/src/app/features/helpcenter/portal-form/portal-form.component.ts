@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { HelpCenterService } from '@core/services/helpcenter.service';
 import { HelpCenterTabsComponent } from '../helpcenter-tabs/helpcenter-tabs.component';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-portal-form',
@@ -225,7 +226,7 @@ export class PortalFormComponent implements OnInit {
     this.error = null;
     const payload = this.portalForm.value;
 
-    const request$ = this.isEditing && this.portalId
+    const request$: Observable<unknown> = this.isEditing && this.portalId
       ? this.helpCenter.updatePortal(this.portalId, payload)
       : this.helpCenter.createPortal(payload);
 
