@@ -1,3 +1,4 @@
+using CustomerEngagement.Api.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,7 @@ public class ArticlesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseRead)]
     public async Task<ActionResult> GetAll(long portalId,
         [FromQuery] long? categoryId, [FromQuery] int page = 1, [FromQuery] int pageSize = 25)
     {
@@ -26,6 +28,7 @@ public class ArticlesController : ControllerBase
     }
 
     [HttpGet("{articleId:long}")]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseRead)]
     public async Task<ActionResult> GetById(long portalId, long articleId)
     {
         var result = await _mediator.Send(
@@ -34,6 +37,7 @@ public class ArticlesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseWrite)]
     public async Task<ActionResult> Create(long portalId,
         [FromBody] Application.Articles.Commands.CreateArticleCommand command)
     {
@@ -43,6 +47,7 @@ public class ArticlesController : ControllerBase
     }
 
     [HttpPut("{articleId:long}")]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseWrite)]
     public async Task<ActionResult> Update(long portalId, long articleId,
         [FromBody] Application.Articles.Commands.UpdateArticleCommand command)
     {
@@ -52,6 +57,7 @@ public class ArticlesController : ControllerBase
     }
 
     [HttpDelete("{articleId:long}")]
+    [Authorize(Policy = ResourcePolicies.KnowledgeBaseWrite)]
     public async Task<ActionResult> Delete(long portalId, long articleId)
     {
         await _mediator.Send(new Application.Articles.Commands.DeleteArticleCommand(portalId, articleId));

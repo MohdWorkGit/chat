@@ -101,6 +101,8 @@ public class PortalService : IPortalService
             PageTitle = portal.PageTitle,
             HomepageLink = portal.HomepageLink,
             Color = portal.Color,
+            LogoUrl = portal.LogoUrl,
+            LogoContentType = portal.LogoContentType,
             IsArchived = portal.Archived,
             CreatedAt = portal.CreatedAt,
             UpdatedAt = portal.UpdatedAt

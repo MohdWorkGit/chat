@@ -421,26 +421,69 @@ export const routes: Routes = [
         (m) => m.MainLayoutComponent
       ),
     children: [
+      { path: '', pathMatch: 'full', redirectTo: 'articles' },
       {
-        path: '',
+        path: 'portals',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/portal-list/portal-list.component'
+          ).then((m) => m.PortalListComponent),
+      },
+      {
+        path: 'portals/new',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/portal-form/portal-form.component'
+          ).then((m) => m.PortalFormComponent),
+      },
+      {
+        path: 'portals/:id',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/portal-form/portal-form.component'
+          ).then((m) => m.PortalFormComponent),
+      },
+      {
+        path: 'articles',
         loadComponent: () =>
           import(
             '@features/helpcenter/article-list/article-list.component'
           ).then((m) => m.ArticleListComponent),
       },
       {
-        path: 'new',
+        path: 'articles/new',
         loadComponent: () =>
           import(
             '@features/helpcenter/article-form/article-form.component'
           ).then((m) => m.ArticleFormComponent),
       },
       {
-        path: ':id',
+        path: 'articles/:id',
         loadComponent: () =>
           import(
             '@features/helpcenter/article-form/article-form.component'
           ).then((m) => m.ArticleFormComponent),
+      },
+      {
+        path: 'categories',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/category-list/category-list.component'
+          ).then((m) => m.CategoryListComponent),
+      },
+      {
+        path: 'categories/new',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/category-form/category-form.component'
+          ).then((m) => m.CategoryFormComponent),
+      },
+      {
+        path: 'categories/:id',
+        loadComponent: () =>
+          import(
+            '@features/helpcenter/category-form/category-form.component'
+          ).then((m) => m.CategoryFormComponent),
       },
     ],
   },

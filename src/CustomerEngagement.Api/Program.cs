@@ -28,6 +28,7 @@ using CustomerEngagement.Infrastructure.ExternalServices.Llm;
 using CustomerEngagement.Infrastructure.ExternalServices.Push;
 using CustomerEngagement.Infrastructure.ExternalServices.Storage;
 using CustomerEngagement.Infrastructure.Identity;
+using FluentValidation;
 using CustomerEngagement.Infrastructure.Persistence;
 using CustomerEngagement.Infrastructure.Repositories;
 using CustomerEngagement.Application.BackgroundJobs;
@@ -320,7 +321,10 @@ builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>();
     cfg.RegisterServicesFromAssemblyContaining<AssistantChatService>();
+    cfg.AddOpenBehavior(typeof(CustomerEngagement.Application.Common.Behaviors.ValidationBehavior<,>));
 });
+
+builder.Services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
 
 // ---------------------------------------------------------------------------
 // Infrastructure Services

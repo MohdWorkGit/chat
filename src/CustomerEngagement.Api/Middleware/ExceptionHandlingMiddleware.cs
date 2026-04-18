@@ -31,6 +31,13 @@ public class ExceptionHandlingMiddleware
     {
         var problemDetails = exception switch
         {
+            FluentValidation.ValidationException fluentEx => new ProblemDetails
+            {
+                Status = StatusCodes.Status422UnprocessableEntity,
+                Title = "Validation Error",
+                Detail = string.Join("; ", fluentEx.Errors.Select(e => $"{e.PropertyName}: {e.ErrorMessage}")),
+                Type = "https://tools.ietf.org/html/rfc4918#section-11.2"
+            },
             ValidationException validationEx => new ProblemDetails
             {
                 Status = StatusCodes.Status422UnprocessableEntity,

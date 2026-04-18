@@ -9,8 +9,8 @@ export const loadArticles$ = createEffect(
   (actions$ = inject(Actions), helpCenterService = inject(HelpCenterService)) =>
     actions$.pipe(
       ofType(HelpCenterActions.loadArticles),
-      switchMap(() =>
-        helpCenterService.getArticles().pipe(
+      switchMap(({ portalId }) =>
+        helpCenterService.getArticles(portalId).pipe(
           map((articles) => HelpCenterActions.loadArticlesSuccess({ articles })),
           catchError((error: ApiError) => of(HelpCenterActions.loadArticlesFailure({ error })))
         )
@@ -23,8 +23,8 @@ export const loadArticle$ = createEffect(
   (actions$ = inject(Actions), helpCenterService = inject(HelpCenterService)) =>
     actions$.pipe(
       ofType(HelpCenterActions.loadArticle),
-      switchMap(({ id }) =>
-        helpCenterService.getArticle(id).pipe(
+      switchMap(({ portalId, id }) =>
+        helpCenterService.getArticle(portalId, id).pipe(
           map((article) => HelpCenterActions.loadArticleSuccess({ article })),
           catchError((error: ApiError) => of(HelpCenterActions.loadArticleFailure({ error })))
         )
@@ -37,8 +37,8 @@ export const createArticle$ = createEffect(
   (actions$ = inject(Actions), helpCenterService = inject(HelpCenterService)) =>
     actions$.pipe(
       ofType(HelpCenterActions.createArticle),
-      exhaustMap(({ data }) =>
-        helpCenterService.createArticle(data).pipe(
+      exhaustMap(({ portalId, data }) =>
+        helpCenterService.createArticle(portalId, data).pipe(
           map((article) => HelpCenterActions.createArticleSuccess({ article })),
           catchError((error: ApiError) => of(HelpCenterActions.createArticleFailure({ error })))
         )
@@ -51,8 +51,8 @@ export const updateArticle$ = createEffect(
   (actions$ = inject(Actions), helpCenterService = inject(HelpCenterService)) =>
     actions$.pipe(
       ofType(HelpCenterActions.updateArticle),
-      exhaustMap(({ id, data }) =>
-        helpCenterService.updateArticle(id, data).pipe(
+      exhaustMap(({ portalId, id, data }) =>
+        helpCenterService.updateArticle(portalId, id, data).pipe(
           map((article) => HelpCenterActions.updateArticleSuccess({ article })),
           catchError((error: ApiError) => of(HelpCenterActions.updateArticleFailure({ error })))
         )
@@ -65,8 +65,8 @@ export const deleteArticle$ = createEffect(
   (actions$ = inject(Actions), helpCenterService = inject(HelpCenterService)) =>
     actions$.pipe(
       ofType(HelpCenterActions.deleteArticle),
-      exhaustMap(({ id }) =>
-        helpCenterService.deleteArticle(id).pipe(
+      exhaustMap(({ portalId, id }) =>
+        helpCenterService.deleteArticle(portalId, id).pipe(
           map(() => HelpCenterActions.deleteArticleSuccess({ id })),
           catchError((error: ApiError) => of(HelpCenterActions.deleteArticleFailure({ error })))
         )

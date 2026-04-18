@@ -38,6 +38,16 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
             .Replace("--", "-")
             .Trim('-');
 
+        var portalIdInt = (int)request.PortalId;
+        var locale = request.Locale;
+        if (await _categoryRepository.AnyAsync(
+                c => c.PortalId == portalIdInt && c.Slug == slug && c.Locale == locale,
+                cancellationToken))
+        {
+            throw new InvalidOperationException(
+                $"A category with slug '{slug}' already exists in this portal for locale '{locale ?? "default"}'.");
+        }
+
         var category = new Category
         {
             AccountId = portal.AccountId,
@@ -89,10 +99,27 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
         if (request.Name is not null)
         {
             category.Name = request.Name;
-            category.Slug = request.Name.ToLowerInvariant()
+            var newSlug = request.Name.ToLowerInvariant()
                 .Replace(" ", "-")
                 .Replace("--", "-")
                 .Trim('-');
+            if (newSlug != category.Slug)
+            {
+                var portalIdInt = category.PortalId;
+                var locale = category.Locale;
+                var categoryId = category.Id;
+                if (await _categoryRepository.AnyAsync(
+                        c => c.PortalId == portalIdInt
+                             && c.Slug == newSlug
+                             && c.Locale == locale
+                             && c.Id != categoryId,
+                        cancellationToken))
+                {
+                    throw new InvalidOperationException(
+                        $"A category with slug '{newSlug}' already exists in this portal for locale '{locale ?? "default"}'.");
+                }
+                category.Slug = newSlug;
+            }
         }
         if (request.Description is not null)
             category.Description = request.Description;
