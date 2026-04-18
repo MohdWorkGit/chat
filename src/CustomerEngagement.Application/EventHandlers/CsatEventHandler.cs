@@ -1,7 +1,9 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
+using Hangfire;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -15,6 +17,7 @@ public sealed class CsatEventHandler : INotificationHandler<ConversationStatusCh
     private readonly IRepository<CsatSurveyResponse> _csatRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMediator _mediator;
+    private readonly IBackgroundJobClient _jobClient;
     private readonly ILogger<CsatEventHandler> _logger;
 
     public CsatEventHandler(
@@ -24,6 +27,7 @@ public sealed class CsatEventHandler : INotificationHandler<ConversationStatusCh
         IRepository<CsatSurveyResponse> csatRepository,
         IUnitOfWork unitOfWork,
         IMediator mediator,
+        IBackgroundJobClient jobClient,
         ILogger<CsatEventHandler> logger)
     {
         _conversationRepository = conversationRepository;
@@ -32,6 +36,7 @@ public sealed class CsatEventHandler : INotificationHandler<ConversationStatusCh
         _csatRepository = csatRepository;
         _unitOfWork = unitOfWork;
         _mediator = mediator;
+        _jobClient = jobClient;
         _logger = logger;
     }
 
@@ -88,6 +93,10 @@ public sealed class CsatEventHandler : INotificationHandler<ConversationStatusCh
         await _mediator.Publish(
             new MessageCreatedEvent(surveyMessage.Id, conversation.Id, conversation.AccountId),
             cancellationToken);
+
+        // Enqueue email delivery of the survey link for the email channel.
+        _jobClient.Enqueue<CsatSurveyJob>(job =>
+            job.ExecuteAsync(conversation.Id, CancellationToken.None));
 
         _logger.LogInformation("CSAT survey created: Message {MessageId}, CsatSurveyResponse {CsatId}",
             surveyMessage.Id, csatResponse.Id);

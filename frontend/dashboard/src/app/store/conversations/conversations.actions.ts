@@ -41,5 +41,21 @@ export const ConversationsActions = createActionGroup({
 
     'Set Filters': props<{ filters: ConversationFilters }>(),
     'Clear Filters': emptyProps(),
+
+    'Snooze Conversation': props<{ id: number; snoozeUntil: string }>(),
+    'Snooze Conversation Success': props<{ id: number; snoozeUntil: string }>(),
+    'Snooze Conversation Failure': props<{ error: ApiError }>(),
+
+    'Mute Conversation': props<{ id: number }>(),
+    'Mute Conversation Success': props<{ id: number }>(),
+    'Mute Conversation Failure': props<{ error: ApiError }>(),
+
+    'Unmute Conversation': props<{ id: number }>(),
+    'Unmute Conversation Success': props<{ id: number }>(),
+    'Unmute Conversation Failure': props<{ error: ApiError }>(),
+
+    'Toggle Priority': props<{ id: number }>(),
+    'Toggle Priority Success': props<{ id: number }>(),
+    'Toggle Priority Failure': props<{ error: ApiError }>(),
   },
 });

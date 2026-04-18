@@ -67,6 +67,14 @@ public sealed class BotEventHandler : INotificationHandler<MessageCreatedEvent>
         if (agentBot is null || string.IsNullOrWhiteSpace(agentBot.OutgoingUrl))
             return;
 
+        // Rasa bots are routed through RasaIntentHandler, which uses the
+        // Rasa REST webhook contract. Skip here so we don't double-post.
+        if (!string.IsNullOrEmpty(agentBot.BotType)
+            && string.Equals(agentBot.BotType, "rasa", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         _logger.LogInformation("Forwarding message {MessageId} to bot {BotName} at {OutgoingUrl}",
             notification.MessageId, agentBot.Name, agentBot.OutgoingUrl);
 

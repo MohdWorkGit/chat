@@ -1,4 +1,5 @@
 using CustomerEngagement.Application.BackgroundJobs;
+using CustomerEngagement.Application.Hubs;
 using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Entities.Channels;
@@ -6,6 +7,7 @@ using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CustomerEngagement.Application.Widget.Commands;
 
@@ -295,21 +297,27 @@ public class SubmitWidgetCsatCommandHandler : IRequestHandler<SubmitWidgetCsatCo
     private readonly IRepository<Conversation> _conversationRepository;
     private readonly IRepository<CsatSurveyResponse> _csatRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IHubContext<ConversationHub> _hubContext;
 
     public SubmitWidgetCsatCommandHandler(
         IRepository<ChannelWebWidget> widgetRepository,
         IRepository<Conversation> conversationRepository,
         IRepository<CsatSurveyResponse> csatRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IHubContext<ConversationHub> hubContext)
     {
         _widgetRepository = widgetRepository;
         _conversationRepository = conversationRepository;
         _csatRepository = csatRepository;
         _unitOfWork = unitOfWork;
+        _hubContext = hubContext;
     }
 
     public async Task<object> Handle(SubmitWidgetCsatCommand request, CancellationToken cancellationToken)
     {
+        if (request.Rating < 1 || request.Rating > 5)
+            throw new InvalidOperationException("Rating must be between 1 and 5.");
+
         var widget = (await _widgetRepository.FindAsync(
             w => w.WebsiteToken == request.WidgetToken, cancellationToken)).FirstOrDefault()
             ?? throw new InvalidOperationException("Invalid widget token.");
@@ -330,6 +338,16 @@ public class SubmitWidgetCsatCommandHandler : IRequestHandler<SubmitWidgetCsatCo
 
         await _csatRepository.AddAsync(response, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _hubContext.Clients.Group($"account_{widget.AccountId}")
+            .SendAsync("CsatReceived", new
+            {
+                response.Id,
+                response.ConversationId,
+                response.Rating,
+                response.FeedbackText,
+                response.CreatedAt
+            }, cancellationToken);
 
         return new { response.Id, response.Rating, response.FeedbackText };
     }

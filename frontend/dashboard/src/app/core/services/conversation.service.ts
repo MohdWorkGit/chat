@@ -95,6 +95,22 @@ export class ConversationService {
     return this.api.post<void>(`${this.basePath()}/${id}/unmute`);
   }
 
+  snooze(id: number, snoozeUntil: string): Observable<void> {
+    return this.api.post<void>(`${this.basePath()}/${id}/snooze`, { snoozeUntil });
+  }
+
+  togglePriority(id: number): Observable<void> {
+    return this.api.post<void>(`${this.basePath()}/${id}/toggle_priority`);
+  }
+
+  resolve(id: number): Observable<void> {
+    return this.api.post<void>(`${this.basePath()}/${id}/resolve`);
+  }
+
+  reopen(id: number): Observable<void> {
+    return this.api.post<void>(`${this.basePath()}/${id}/reopen`);
+  }
+
   search(query: string, page = 1): Observable<PaginatedResult<Conversation>> {
     return this.api.get<PaginatedResult<Conversation>>(
       this.api.accountPath('/search'),

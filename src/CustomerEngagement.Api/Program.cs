@@ -21,8 +21,10 @@ using CustomerEngagement.Enterprise.Captain.Services;
 using CustomerEngagement.Enterprise.AuditLogs.Services;
 using CustomerEngagement.Enterprise.CustomRoles.Services;
 using CustomerEngagement.Enterprise.Saml.Services;
+using CustomerEngagement.Infrastructure.ExternalServices.Cache;
 using CustomerEngagement.Infrastructure.ExternalServices.Email;
 using CustomerEngagement.Infrastructure.ExternalServices.GeoIp;
+using CustomerEngagement.Infrastructure.ExternalServices.Llm;
 using CustomerEngagement.Infrastructure.ExternalServices.Push;
 using CustomerEngagement.Infrastructure.ExternalServices.Storage;
 using CustomerEngagement.Infrastructure.Identity;
@@ -370,6 +372,10 @@ builder.Services.AddScoped<ICsatReportService, CsatReportService>();
 // Storage & GeoIP services
 builder.Services.AddScoped<IStorageService, MinioStorageService>();
 builder.Services.AddSingleton<IGeoIpService, MaxMindOfflineGeoIpService>();
+
+// LLM & cache services
+builder.Services.AddHttpClient<ILlmService, OllamaClient>();
+builder.Services.AddScoped<ICacheService, RedisCacheService>();
 
 // Enterprise services
 builder.Services.AddScoped<ISamlAuthService, SamlAuthService>();

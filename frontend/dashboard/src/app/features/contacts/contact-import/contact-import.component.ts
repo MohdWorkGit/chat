@@ -450,7 +450,7 @@ export class ContactImportComponent {
       }
     }, 500);
 
-    this.api.upload<{ imported: number; failed: number }>(
+    this.api.upload<{ importedCount: number; skippedCount: number; errors: string[] }>(
       this.api.accountPath('/contacts/import'),
       formData
     ).subscribe({
@@ -459,8 +459,11 @@ export class ContactImportComponent {
         this.importProgress = 100;
         this.importing = false;
         this.importComplete = true;
-        this.importedCount = result.imported;
-        this.failedCount = result.failed;
+        // Import runs async via Hangfire; the handler returns 0/0 immediately
+        // and the job updates DataImport.ProcessedRecords in the background.
+        // We show the CSV row count as "queued" until we add a status poll.
+        this.importedCount = result.importedCount || this.csvData.length;
+        this.failedCount = result.skippedCount || 0;
       },
       error: (err) => {
         clearInterval(progressInterval);

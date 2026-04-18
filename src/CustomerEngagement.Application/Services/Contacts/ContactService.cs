@@ -1,5 +1,6 @@
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -157,5 +158,3 @@ public class ContactService : IContactService
             0);
     }
 }
-
-public record ContactCreatedEvent(int ContactId, int AccountId) : INotification;

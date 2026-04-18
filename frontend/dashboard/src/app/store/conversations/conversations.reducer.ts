@@ -155,5 +155,30 @@ export const conversationsReducer = createReducer(
   on(ConversationsActions.clearFilters, (state) => ({
     ...state,
     filters: {},
-  }))
+  })),
+
+  on(ConversationsActions.snoozeConversationSuccess, (state, { id, snoozeUntil }) =>
+    conversationsAdapter.updateOne(
+      { id, changes: { status: 'snoozed', snoozedUntil: snoozeUntil } as Partial<Conversation> },
+      state
+    )
+  ),
+
+  on(ConversationsActions.muteConversationSuccess, (state, { id }) =>
+    conversationsAdapter.updateOne({ id, changes: { muted: true } as Partial<Conversation> }, state)
+  ),
+
+  on(ConversationsActions.unmuteConversationSuccess, (state, { id }) =>
+    conversationsAdapter.updateOne({ id, changes: { muted: false } as Partial<Conversation> }, state)
+  ),
+
+  on(ConversationsActions.togglePrioritySuccess, (state, { id }) => {
+    const current = state.entities[id];
+    if (!current) return state;
+    const nextPriority = current.priority === 'urgent' ? 'none' : 'urgent';
+    return conversationsAdapter.updateOne(
+      { id, changes: { priority: nextPriority } as Partial<Conversation> },
+      state
+    );
+  })
 );

@@ -1,6 +1,8 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
+using Hangfire;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -15,6 +17,7 @@ public sealed class NotificationEventHandler :
     private readonly IRepository<ConversationParticipant> _participantRepository;
     private readonly IRepository<Message> _messageRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundJobClient _jobClient;
     private readonly ILogger<NotificationEventHandler> _logger;
 
     public NotificationEventHandler(
@@ -22,12 +25,14 @@ public sealed class NotificationEventHandler :
         IRepository<ConversationParticipant> participantRepository,
         IRepository<Message> messageRepository,
         IUnitOfWork unitOfWork,
+        IBackgroundJobClient jobClient,
         ILogger<NotificationEventHandler> logger)
     {
         _notificationRepository = notificationRepository;
         _participantRepository = participantRepository;
         _messageRepository = messageRepository;
         _unitOfWork = unitOfWork;
+        _jobClient = jobClient;
         _logger = logger;
     }
 
@@ -52,6 +57,9 @@ public sealed class NotificationEventHandler :
 
         await _notificationRepository.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _jobClient.Enqueue<NotificationDeliveryJob>(job =>
+            job.ExecuteAsync(entity.Id, CancellationToken.None));
     }
 
     public async Task Handle(MessageCreatedEvent notification, CancellationToken cancellationToken)
@@ -67,6 +75,7 @@ public sealed class NotificationEventHandler :
             p => p.ConversationId == notification.ConversationId,
             cancellationToken);
 
+        var created = new List<Notification>();
         foreach (var participant in participants)
         {
             // Don't notify the sender about their own message
@@ -87,9 +96,16 @@ public sealed class NotificationEventHandler :
             };
 
             await _notificationRepository.AddAsync(entity, cancellationToken);
+            created.Add(entity);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        foreach (var entity in created)
+        {
+            _jobClient.Enqueue<NotificationDeliveryJob>(job =>
+                job.ExecuteAsync(entity.Id, CancellationToken.None));
+        }
     }
 
     public async Task Handle(MentionCreatedEvent notification, CancellationToken cancellationToken)
@@ -112,5 +128,8 @@ public sealed class NotificationEventHandler :
 
         await _notificationRepository.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _jobClient.Enqueue<NotificationDeliveryJob>(job =>
+            job.ExecuteAsync(entity.Id, CancellationToken.None));
     }
 }

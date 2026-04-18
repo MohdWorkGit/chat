@@ -27,8 +27,11 @@ public class ReportBuilder : IReportBuilder
 
     public async Task<ReportDto> GetConversationReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
     {
-        var events = await _reportingEventRepository.ListAsync(
-            new { AccountId = accountId, EventName = "conversation", Since = filter.Since, Until = filter.Until },
+        var events = await _reportingEventRepository.FindAsync(
+            e => e.AccountId == accountId
+                 && e.Name == "conversation"
+                 && e.CreatedAt >= filter.Since
+                 && e.CreatedAt <= filter.Until,
             cancellationToken);
 
         return BuildTimeSeriesReport("Conversations", events, filter);
@@ -36,8 +39,12 @@ public class ReportBuilder : IReportBuilder
 
     public async Task<ReportDto> GetAgentReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
     {
-        var events = await _reportingEventRepository.ListAsync(
-            new { AccountId = accountId, EventName = "agent_activity", Since = filter.Since, Until = filter.Until, AgentId = filter.AgentId },
+        var events = await _reportingEventRepository.FindAsync(
+            e => e.AccountId == accountId
+                 && e.Name == "agent_activity"
+                 && e.CreatedAt >= filter.Since
+                 && e.CreatedAt <= filter.Until
+                 && (filter.AgentId == null || e.UserId == filter.AgentId),
             cancellationToken);
 
         return BuildTimeSeriesReport("Agent Activity", events, filter);
@@ -45,8 +52,12 @@ public class ReportBuilder : IReportBuilder
 
     public async Task<ReportDto> GetInboxReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
     {
-        var events = await _reportingEventRepository.ListAsync(
-            new { AccountId = accountId, EventName = "inbox_activity", Since = filter.Since, Until = filter.Until, InboxId = filter.InboxId },
+        var events = await _reportingEventRepository.FindAsync(
+            e => e.AccountId == accountId
+                 && e.Name == "inbox_activity"
+                 && e.CreatedAt >= filter.Since
+                 && e.CreatedAt <= filter.Until
+                 && (filter.InboxId == null || e.InboxId == filter.InboxId),
             cancellationToken);
 
         return BuildTimeSeriesReport("Inbox Activity", events, filter);
@@ -54,8 +65,11 @@ public class ReportBuilder : IReportBuilder
 
     public async Task<ReportDto> GetTeamReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
     {
-        var events = await _reportingEventRepository.ListAsync(
-            new { AccountId = accountId, EventName = "team_activity", Since = filter.Since, Until = filter.Until, TeamId = filter.TeamId },
+        var events = await _reportingEventRepository.FindAsync(
+            e => e.AccountId == accountId
+                 && e.Name == "team_activity"
+                 && e.CreatedAt >= filter.Since
+                 && e.CreatedAt <= filter.Until,
             cancellationToken);
 
         return BuildTimeSeriesReport("Team Activity", events, filter);
@@ -63,8 +77,11 @@ public class ReportBuilder : IReportBuilder
 
     public async Task<ReportDto> GetLabelReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
     {
-        var events = await _reportingEventRepository.ListAsync(
-            new { AccountId = accountId, EventName = "label_activity", Since = filter.Since, Until = filter.Until, LabelName = filter.LabelName },
+        var events = await _reportingEventRepository.FindAsync(
+            e => e.AccountId == accountId
+                 && e.Name == "label_activity"
+                 && e.CreatedAt >= filter.Since
+                 && e.CreatedAt <= filter.Until,
             cancellationToken);
 
         return BuildTimeSeriesReport("Label Activity", events, filter);
@@ -72,14 +89,18 @@ public class ReportBuilder : IReportBuilder
 
     public async Task<ReportSummaryDto> GetSummaryAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
     {
-        var conversations = await _conversationRepository.ListAsync(
-            new { AccountId = accountId, Since = filter.Since, Until = filter.Until },
+        var conversations = await _conversationRepository.FindAsync(
+            c => c.AccountId == accountId
+                 && c.CreatedAt >= filter.Since
+                 && c.CreatedAt <= filter.Until,
             cancellationToken);
 
         var conversationList = conversations.ToList();
 
-        var messages = await _messageRepository.ListAsync(
-            new { AccountId = accountId, Since = filter.Since, Until = filter.Until },
+        var messages = await _messageRepository.FindAsync(
+            m => m.AccountId == accountId
+                 && m.CreatedAt >= filter.Since
+                 && m.CreatedAt <= filter.Until,
             cancellationToken);
 
         var messageList = messages.ToList();
@@ -98,8 +119,10 @@ public class ReportBuilder : IReportBuilder
 
     public async Task<object> GetTrafficReportAsync(int accountId, ReportFilterDto filter, CancellationToken cancellationToken = default)
     {
-        var conversations = await _conversationRepository.ListAsync(
-            new { AccountId = accountId, Since = filter.Since, Until = filter.Until },
+        var conversations = await _conversationRepository.FindAsync(
+            c => c.AccountId == accountId
+                 && c.CreatedAt >= filter.Since
+                 && c.CreatedAt <= filter.Until,
             cancellationToken);
 
         // Aggregate conversation counts by (dayOfWeek, hour)

@@ -62,4 +62,13 @@ export class ContactService {
   getNotes(contactId: number): Observable<{ id: number; content: string; createdAt: string }[]> {
     return this.api.get(`${this.basePath()}/${contactId}/notes`);
   }
+
+  importFromCsv(file: File): Observable<{ importedCount: number; skippedCount: number; errors: string[] }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.upload<{ importedCount: number; skippedCount: number; errors: string[] }>(
+      `${this.basePath()}/import`,
+      formData
+    );
+  }
 }

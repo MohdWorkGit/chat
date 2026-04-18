@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CustomerEngagement.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -27,7 +28,7 @@ public record EmbeddingRequest(string Model, string Prompt);
 
 public record EmbeddingResponse(float[] Embedding);
 
-public class OllamaClient
+public class OllamaClient : ILlmService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<OllamaClient> _logger;
@@ -115,6 +116,28 @@ public class OllamaClient
         }
 
         return results;
+    }
+
+    async Task<LlmCompletionResult> ILlmService.GenerateCompletionAsync(
+        IEnumerable<LlmChatMessage> messages,
+        string? model,
+        float temperature,
+        int maxTokens,
+        CancellationToken cancellationToken)
+    {
+        var mapped = messages.Select(m => new ChatMessage(m.Role, m.Content)).ToList();
+        var response = await ChatCompletionAsync(mapped, model, temperature, maxTokens, cancellationToken);
+        var tokens = (response.PromptEvalCount ?? 0) + (response.EvalCount ?? 0);
+        return new LlmCompletionResult(response.Message.Content, tokens);
+    }
+
+    async Task<LlmEmbeddingResult> ILlmService.GenerateEmbeddingAsync(
+        string text,
+        string? model,
+        CancellationToken cancellationToken)
+    {
+        var embedding = await GenerateEmbeddingAsync(text, model, cancellationToken);
+        return new LlmEmbeddingResult(embedding, 0);
     }
 
     public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
