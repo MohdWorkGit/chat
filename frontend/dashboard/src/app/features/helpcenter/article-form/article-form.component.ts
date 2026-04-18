@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HelpCenterService } from '@core/services/helpcenter.service';
+import { HelpCenterTabsComponent } from '../helpcenter-tabs/helpcenter-tabs.component';
 import { switchMap, of } from 'rxjs';
 
 @Component({
   selector: 'app-article-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HelpCenterTabsComponent],
   template: `
+    <app-helpcenter-tabs />
     <div class="p-6 max-w-4xl mx-auto">
       <!-- Header -->
       <div class="mb-6">
@@ -191,7 +193,7 @@ export class ArticleFormComponent implements OnInit {
     request$.subscribe({
       next: () => {
         this.saving = false;
-        this.router.navigate(['/helpcenter']);
+        this.router.navigate(['/helpcenter/articles']);
       },
       error: () => {
         this.saving = false;
@@ -201,6 +203,6 @@ export class ArticleFormComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/helpcenter']);
+    this.router.navigate(['/helpcenter/articles']);
   }
 }

@@ -2,86 +2,73 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HelpCenterService } from '@core/services/helpcenter.service';
-import { Article } from '@core/models/helpcenter.model';
+import { Category } from '@core/models/helpcenter.model';
 import { HelpCenterTabsComponent } from '../helpcenter-tabs/helpcenter-tabs.component';
 import { BehaviorSubject, switchMap, of } from 'rxjs';
 
 @Component({
-  selector: 'app-article-list',
+  selector: 'app-category-list',
   standalone: true,
   imports: [CommonModule, RouterLink, HelpCenterTabsComponent],
   template: `
     <app-helpcenter-tabs />
     <div class="p-6">
-      <!-- Header -->
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold text-gray-900">Help Center Articles</h2>
+        <h2 class="text-lg font-semibold text-gray-900">Categories</h2>
         <a
           routerLink="new"
           class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
         >
-          New Article
+          New Category
         </a>
       </div>
 
-      <!-- Loading State -->
       @if (loading$ | async) {
         <div class="flex items-center justify-center py-12">
           <div class="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
         </div>
       } @else if (portalError) {
         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p class="text-sm text-red-700">No portal found. Create a portal before managing articles.</p>
+          <p class="text-sm text-red-700">No portal found. Create a portal before managing categories.</p>
         </div>
       } @else {
-        @if ((articles$ | async); as articles) {
-          @if (articles.length === 0) {
+        @if ((categories$ | async); as categories) {
+          @if (categories.length === 0) {
             <div class="text-center py-12">
-              <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-              </svg>
-              <p class="mt-2 text-sm text-gray-500">No articles yet.</p>
+              <p class="text-sm text-gray-500">No categories yet.</p>
               <a
                 routerLink="new"
                 class="mt-4 inline-block px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
-                Write your first article
+                Create your first category
               </a>
             </div>
           } @else {
-            <!-- Articles Table -->
             <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locale</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
                     <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                  @for (article of articles; track article.id) {
+                  @for (category of categories; track category.id) {
                     <tr class="hover:bg-gray-50 transition-colors">
                       <td class="px-6 py-4">
-                        <a [routerLink]="[article.id]" class="text-sm font-medium text-gray-900 hover:text-blue-600">
-                          {{ article.title }}
+                        <a [routerLink]="[category.id]" class="text-sm font-medium text-gray-900 hover:text-blue-600">
+                          {{ category.name }}
                         </a>
                       </td>
-                      <td class="px-6 py-4">
-                        <span
-                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                          [class]="article.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
-                        >
-                          {{ article.status }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 text-sm text-gray-500">{{ article.slug }}</td>
-                      <td class="px-6 py-4 text-sm text-gray-500">{{ article.locale || '—' }}</td>
+                      <td class="px-6 py-4 text-sm text-gray-500">{{ category.slug }}</td>
+                      <td class="px-6 py-4 text-sm text-gray-500">{{ category.description || '—' }}</td>
+                      <td class="px-6 py-4 text-sm text-gray-500 text-right">{{ category.position }}</td>
                       <td class="px-6 py-4 text-right">
                         <button
-                          (click)="deleteArticle(article)"
+                          (click)="deleteCategory(category)"
                           class="text-sm text-red-600 hover:text-red-800"
                         >
                           Delete
@@ -98,39 +85,35 @@ import { BehaviorSubject, switchMap, of } from 'rxjs';
     </div>
   `,
   styles: [`
-    :host {
-      display: block;
-      height: 100%;
-      overflow-y: auto;
-    }
+    :host { display: block; height: 100%; overflow-y: auto; }
   `],
 })
-export class ArticleListComponent implements OnInit {
+export class CategoryListComponent implements OnInit {
   private readonly helpCenter = inject(HelpCenterService);
 
-  articles$ = new BehaviorSubject<Article[]>([]);
+  categories$ = new BehaviorSubject<Category[]>([]);
   loading$ = new BehaviorSubject<boolean>(false);
   portalError = false;
   private portalId: number | null = null;
 
   ngOnInit(): void {
-    this.loadArticles();
+    this.loadCategories();
   }
 
-  private loadArticles(): void {
+  private loadCategories(): void {
     this.loading$.next(true);
     this.helpCenter.getPortals().pipe(
       switchMap((portals) => {
         if (!portals || portals.length === 0) {
           this.portalError = true;
-          return of([] as Article[]);
+          return of([] as Category[]);
         }
         this.portalId = portals[0].id;
-        return this.helpCenter.getArticles(this.portalId);
+        return this.helpCenter.getCategories(this.portalId);
       })
     ).subscribe({
-      next: (articles) => {
-        this.articles$.next(articles ?? []);
+      next: (categories) => {
+        this.categories$.next(categories ?? []);
         this.loading$.next(false);
       },
       error: () => {
@@ -139,12 +122,12 @@ export class ArticleListComponent implements OnInit {
     });
   }
 
-  deleteArticle(article: Article): void {
+  deleteCategory(category: Category): void {
     if (!this.portalId) return;
-    if (!confirm(`Delete article "${article.title}"?`)) return;
+    if (!confirm(`Delete category "${category.name}"?`)) return;
 
-    this.helpCenter.deleteArticle(this.portalId, article.id).subscribe({
-      next: () => this.loadArticles(),
+    this.helpCenter.deleteCategory(this.portalId, category.id).subscribe({
+      next: () => this.loadCategories(),
     });
   }
 }

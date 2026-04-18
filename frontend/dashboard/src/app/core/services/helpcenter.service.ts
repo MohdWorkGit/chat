@@ -36,4 +36,20 @@ export class HelpCenterService {
   getCategories(portalId: number): Observable<Category[]> {
     return this.api.get(`/portals/${portalId}/categories`);
   }
+
+  getCategory(portalId: number, id: number): Observable<Category> {
+    return this.api.get(`/portals/${portalId}/categories/${id}`);
+  }
+
+  createCategory(portalId: number, data: Partial<Category>): Observable<Category> {
+    return this.api.post(`/portals/${portalId}/categories`, data);
+  }
+
+  updateCategory(portalId: number, id: number, data: Partial<Category>): Observable<Category> {
+    return this.api.put(`/portals/${portalId}/categories/${id}`, data);
+  }
+
+  deleteCategory(portalId: number, id: number): Observable<void> {
+    return this.api.delete(`/portals/${portalId}/categories/${id}`);
+  }
 }

@@ -34,6 +34,11 @@ public class PortalsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] Application.Portals.Commands.CreatePortalCommand command)
     {
+        var accountId = HttpContext.Items.TryGetValue("AccountId", out var a) && a is long l
+            ? (int)l
+            : command.AccountId;
+
+        command = command with { AccountId = accountId };
         var result = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetById), new { portalId = result }, new { Id = result });
     }
