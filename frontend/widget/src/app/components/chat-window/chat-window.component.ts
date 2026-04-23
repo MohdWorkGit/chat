@@ -22,7 +22,7 @@ import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { EmojiPickerComponent } from '../emoji-picker/emoji-picker.component';
 import { AgentAvailabilityComponent, AgentAvailabilityStatus } from '../agent-availability/agent-availability.component';
 import { GreetingMessageComponent } from '../greeting-message/greeting-message.component';
-import { WidgetApiService, Message, Conversation } from '../../services/widget-api.service';
+import { WidgetApiService, Message, Conversation, WidgetConfig, PreChatField } from '../../services/widget-api.service';
 import { SignalrService } from '../../services/signalr.service';
 
 type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
@@ -81,7 +81,7 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
             (startConversation)="onStartConversation()" />
         }
         @case ('pre-chat') {
-          <cew-pre-chat-form (formSubmit)="onPreChatSubmit($event)" />
+          <cew-pre-chat-form [fields]="preChatFields" (formSubmit)="onPreChatSubmit($event)" />
         }
         @case ('conversation') {
           <div class="chat-messages" #messageList>
@@ -357,6 +357,8 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
    * is valid.
    */
   @Input() apiBaseUrl = '';
+  /** Full widget config fetched by AppComponent on startup. */
+  @Input() config: WidgetConfig | null = null;
   @Output() close = new EventEmitter<void>();
 
   currentView = signal<ChatView>('greeting');
@@ -372,6 +374,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
   newMessage = '';
   greetingTitle = 'Hi there!';
   greetingText = 'We are here to help. Ask us anything, or share your feedback.';
+  preChatFields: PreChatField[] | null = null;
 
   @ViewChild('messageList') private messageList?: ElementRef<HTMLDivElement>;
   private shouldScrollToBottom = false;
@@ -383,6 +386,20 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
   ) {}
 
   ngOnInit(): void {
+    if (this.config) {
+      if (this.config.welcomeTitle) this.greetingTitle = this.config.welcomeTitle;
+      if (this.config.welcomeTagline) this.greetingText = this.config.welcomeTagline;
+      if (this.config.inbox?.name) this.agentName.set(this.config.inbox.name);
+      if (this.config.replyTime) this.agentReplyTime.set(this.parseReplyTime(this.config.replyTime));
+      if (this.config.preChatFormOptions) {
+        try {
+          this.preChatFields = JSON.parse(this.config.preChatFormOptions) as PreChatField[];
+        } catch {
+          this.preChatFields = null;
+        }
+      }
+    }
+
     this.restoreConversation();
 
     this.signalrService.messages$
@@ -483,7 +500,31 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
   }
 
   onStartConversation(): void {
-    this.currentView.set('pre-chat');
+    if (this.config?.preChatFormEnabled === false) {
+      // Form disabled in inbox settings — create an anonymous conversation immediately.
+      this.apiService.createConversation(this.websiteToken, { name: '', email: '' })
+        .subscribe({
+          next: (conversation: Conversation) => {
+            this.conversationId.set(conversation.id);
+            this.signalrService.joinConversation(conversation.id);
+            this.currentView.set('conversation');
+            this.persistConversation();
+          },
+        });
+    } else {
+      this.currentView.set('pre-chat');
+    }
+  }
+
+  private parseReplyTime(replyTime: string): number {
+    const n = parseInt(replyTime, 10);
+    if (!isNaN(n)) return n;
+    switch (replyTime) {
+      case 'few_minutes': return 5;
+      case 'few_hours': return 180;
+      case 'day': return 1440;
+      default: return 5;
+    }
   }
 
   onPreChatSubmit(data: PreChatFormData): void {

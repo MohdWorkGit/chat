@@ -26,12 +26,34 @@ export interface CreateConversationRequest {
   customFields?: Record<string, string>;
 }
 
+export interface WidgetConfigInbox {
+  id: number;
+  name: string;
+  greetingEnabled: boolean;
+  greetingMessage: string | null;
+  enableEmailCollect: boolean;
+}
+
 export interface WidgetConfig {
   websiteToken: string;
-  inboxName: string;
-  welcomeMessage: string;
+  websiteUrl: string | null;
+  welcomeTitle: string | null;
+  welcomeTagline: string | null;
+  widgetColor: string | null;
+  replyTime: string | null;
   preChatFormEnabled: boolean;
-  primaryColor: string;
+  preChatFormOptions: string | null;
+  isEnabled: boolean;
+  inbox: WidgetConfigInbox | null;
+}
+
+export interface PreChatField {
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'number' | 'checkbox';
+  required: boolean;
+  enabled: boolean;
+  position: number;
 }
 
 @Injectable({ providedIn: 'root' })

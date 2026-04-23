@@ -1,11 +1,20 @@
-import { Component, ChangeDetectionStrategy, Input, OnInit, OnDestroy, ViewEncapsulation, signal } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  ElementRef,
+  Input,
+  OnInit,
+  OnDestroy,
+  ViewEncapsulation,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { ChatWindowComponent } from './components/chat-window/chat-window.component';
 import { UnreadBadgeComponent } from './components/unread-badge/unread-badge.component';
 import { CampaignBannerComponent } from './components/campaign-banner/campaign-banner.component';
 import { SignalrService, CampaignMessage } from './services/signalr.service';
-import { WidgetApiService } from './services/widget-api.service';
+import { WidgetApiService, WidgetConfig } from './services/widget-api.service';
 
 @Component({
   selector: 'cew-root',
@@ -13,44 +22,47 @@ import { WidgetApiService } from './services/widget-api.service';
   imports: [CommonModule, ChatWindowComponent, UnreadBadgeComponent, CampaignBannerComponent],
   template: `
     <div class="widget-container">
-      <!--
-        Keep the chat window mounted even when minimized so that the active
-        conversation (id, messages, view state) is preserved. Toggling via
-        [hidden] prevents Angular from destroying the component on minimize.
-      -->
-      <cew-chat-window
-        [hidden]="!isChatOpen"
-        [websiteToken]="websiteToken"
-        [locale]="locale"
-        [apiBaseUrl]="apiBaseUrl"
-        (close)="toggleChat()" />
+      @if (widgetReady() && (widgetConfig()?.isEnabled ?? true)) {
+        <!--
+          Keep the chat window mounted even when minimized so that the active
+          conversation (id, messages, view state) is preserved. Toggling via
+          [hidden] prevents Angular from destroying the component on minimize.
+        -->
+        <cew-chat-window
+          [hidden]="!isChatOpen"
+          [websiteToken]="websiteToken"
+          [locale]="locale"
+          [apiBaseUrl]="apiBaseUrl"
+          [config]="widgetConfig()"
+          (close)="toggleChat()" />
 
-      @if (!isChatOpen && campaignMessage()) {
-        <cew-campaign-banner
-          [message]="campaignMessage()!.message"
-          [senderName]="campaignMessage()!.senderName"
-          [avatarUrl]="campaignMessage()!.avatarUrl"
-          (bannerClick)="onCampaignBannerClick()"
-          (bannerClose)="dismissCampaignBanner()" />
+        @if (!isChatOpen && campaignMessage()) {
+          <cew-campaign-banner
+            [message]="campaignMessage()!.message"
+            [senderName]="campaignMessage()!.senderName"
+            [avatarUrl]="campaignMessage()!.avatarUrl"
+            (bannerClick)="onCampaignBannerClick()"
+            (bannerClose)="dismissCampaignBanner()" />
+        }
+
+        <button
+          class="widget-launcher"
+          (click)="toggleChat()"
+          [attr.aria-label]="isChatOpen ? 'Close chat' : 'Open chat'">
+          @if (!isChatOpen) {
+            <cew-unread-badge [count]="unreadCount()" />
+          }
+          @if (isChatOpen) {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+            </svg>
+          }
+        </button>
       }
-
-      <button
-        class="widget-launcher"
-        (click)="toggleChat()"
-        [attr.aria-label]="isChatOpen ? 'Close chat' : 'Open chat'">
-        @if (!isChatOpen) {
-          <cew-unread-badge [count]="unreadCount()" />
-        }
-        @if (isChatOpen) {
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-          </svg>
-        } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-          </svg>
-        }
-      </button>
     </div>
   `,
   styles: [`
@@ -154,20 +166,49 @@ export class AppComponent implements OnInit, OnDestroy {
   isChatOpen = false;
   unreadCount = signal(0);
   campaignMessage = signal<CampaignMessage | null>(null);
+  widgetConfig = signal<WidgetConfig | null>(null);
+  widgetReady = signal(false);
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly signalrService: SignalrService,
     private readonly apiService: WidgetApiService,
+    private readonly elementRef: ElementRef,
   ) {}
 
   ngOnInit(): void {
     const origin = this.apiBaseUrl?.trim() || '';
     this.apiService.setApiOrigin(origin);
 
+    const initSignalR = () => this.signalrService.initialize(this.websiteToken, origin);
+
     if (this.websiteToken) {
-      this.signalrService.initialize(this.websiteToken, origin);
+      this.apiService.getWidgetConfig(this.websiteToken)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (config) => {
+            this.widgetConfig.set(config);
+            this.widgetReady.set(true);
+            if (config.widgetColor) {
+              // Propagate the brand colour into the shadow-DOM CSS custom properties.
+              // Setting on the host element makes it available to all child components
+              // via var(--widget-primary) and var(--widget-primary-hover).
+              this.elementRef.nativeElement.style.setProperty('--widget-primary', config.widgetColor);
+              this.elementRef.nativeElement.style.setProperty('--widget-bubble-customer', config.widgetColor);
+            }
+            if (config.isEnabled) {
+              initSignalR();
+            }
+          },
+          error: () => {
+            // Gracefully degrade: show the widget with defaults when config fails.
+            this.widgetReady.set(true);
+            initSignalR();
+          },
+        });
+    } else {
+      this.widgetReady.set(true);
     }
 
     this.signalrService.messages$
