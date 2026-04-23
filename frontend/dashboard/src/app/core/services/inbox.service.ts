@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Inbox, InboxMember, WidgetConfig } from '@core/models/inbox.model';
+import { Inbox, InboxMember, UpdateWidgetConfigPayload, WidgetConfig } from '@core/models/inbox.model';
 
 @Injectable({
   providedIn: 'root',
@@ -46,5 +46,9 @@ export class InboxService {
 
   getWidgetConfig(inboxId: number): Observable<WidgetConfig> {
     return this.api.get<WidgetConfig>(`${this.basePath()}/${inboxId}/widget_config`);
+  }
+
+  updateWidgetConfig(inboxId: number, payload: UpdateWidgetConfigPayload): Observable<WidgetConfig> {
+    return this.api.put<WidgetConfig>(`${this.basePath()}/${inboxId}/widget_config`, payload);
   }
 }

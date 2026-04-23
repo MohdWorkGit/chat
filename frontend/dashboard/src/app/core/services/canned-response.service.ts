@@ -33,6 +33,6 @@ export class CannedResponseService {
   }
 
   search(query: string): Observable<CannedResponse[]> {
-    return this.api.get<CannedResponse[]>(this.basePath(), { search: query });
+    return this.api.get<CannedResponse[]>(`${this.basePath()}/search`, { q: query });
   }
 }

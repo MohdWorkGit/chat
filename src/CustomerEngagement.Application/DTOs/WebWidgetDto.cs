@@ -10,6 +10,8 @@ public class WebWidgetConfigDto
     public string WelcomeTagline { get; set; } = string.Empty;
     public string WidgetColor { get; set; } = "#1F93FF";
     public bool IsEnabled { get; set; } = true;
+    public bool PreChatFormEnabled { get; set; }
+    public string? PreChatFormOptions { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

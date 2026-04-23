@@ -1,6 +1,8 @@
+using System.Text.Json;
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Application.Services.Channels;
 using CustomerEngagement.Core.Entities;
+using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 
@@ -85,6 +87,96 @@ public class UpdateInboxCommandHandler : IRequestHandler<UpdateInboxCommand, obj
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new { inbox.Id };
+    }
+}
+
+public record PreChatFormFieldDto(
+    string Name = "",
+    string Label = "",
+    string Type = "text",
+    bool Required = false,
+    bool Enabled = true,
+    int Position = 0);
+
+public record UpdateInboxWidgetConfigCommand(
+    long AccountId = 0,
+    long InboxId = 0,
+    string? WebsiteUrl = null,
+    string? WelcomeTitle = null,
+    string? WelcomeTagline = null,
+    string? WidgetColor = null,
+    bool? IsEnabled = null,
+    bool? PreChatFormEnabled = null,
+    List<PreChatFormFieldDto>? PreChatFormFields = null) : IRequest<object>;
+
+public class UpdateInboxWidgetConfigCommandHandler : IRequestHandler<UpdateInboxWidgetConfigCommand, object>
+{
+    private static readonly HashSet<string> AllowedFieldTypes = new(StringComparer.Ordinal)
+    {
+        "text", "email", "number", "checkbox"
+    };
+
+    private readonly IRepository<ChannelWebWidget> _widgetRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UpdateInboxWidgetConfigCommandHandler(
+        IRepository<ChannelWebWidget> widgetRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _widgetRepository = widgetRepository ?? throw new ArgumentNullException(nameof(widgetRepository));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+    }
+
+    public async Task<object> Handle(UpdateInboxWidgetConfigCommand request, CancellationToken cancellationToken)
+    {
+        var widgets = await _widgetRepository.FindAsync(
+            w => w.InboxId == (int)request.InboxId && w.AccountId == (int)request.AccountId,
+            cancellationToken);
+
+        var widget = widgets.FirstOrDefault();
+        if (widget is null)
+            return new { Error = "Widget config not found for this inbox" };
+
+        if (request.WebsiteUrl is not null) widget.WebsiteUrl = request.WebsiteUrl;
+        if (request.WelcomeTitle is not null) widget.WelcomeTitle = request.WelcomeTitle;
+        if (request.WelcomeTagline is not null) widget.WelcomeTagline = request.WelcomeTagline;
+        if (request.WidgetColor is not null) widget.WidgetColor = request.WidgetColor;
+        if (request.IsEnabled.HasValue) widget.IsEnabled = request.IsEnabled.Value;
+        if (request.PreChatFormEnabled.HasValue) widget.PreChatFormEnabled = request.PreChatFormEnabled.Value;
+
+        if (request.PreChatFormFields is not null)
+        {
+            foreach (var field in request.PreChatFormFields)
+            {
+                if (string.IsNullOrWhiteSpace(field.Name))
+                    return new { Error = "Pre-chat form field name is required." };
+                if (!AllowedFieldTypes.Contains(field.Type))
+                    return new { Error = $"Unsupported pre-chat form field type: {field.Type}" };
+            }
+
+            widget.PreChatFormOptions = JsonSerializer.Serialize(
+                request.PreChatFormFields,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        }
+
+        widget.UpdatedAt = DateTime.UtcNow;
+        _widgetRepository.Update(widget);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new
+        {
+            widget.Id,
+            widget.InboxId,
+            widget.AccountId,
+            widget.WebsiteToken,
+            widget.WebsiteUrl,
+            widget.WelcomeTitle,
+            widget.WelcomeTagline,
+            widget.WidgetColor,
+            widget.IsEnabled,
+            widget.PreChatFormEnabled,
+            widget.PreChatFormOptions
+        };
     }
 }
 

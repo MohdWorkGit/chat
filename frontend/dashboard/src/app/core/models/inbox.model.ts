@@ -16,6 +16,15 @@ export interface InboxMember {
   userAvatar?: string;
 }
 
+export interface PreChatFormField {
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'number' | 'checkbox';
+  required: boolean;
+  enabled: boolean;
+  position: number;
+}
+
 export interface WidgetConfig {
   id: number;
   inboxId: number;
@@ -27,7 +36,18 @@ export interface WidgetConfig {
   widgetColor?: string;
   isEnabled: boolean;
   preChatFormEnabled: boolean;
+  preChatFormOptions?: string | null;
   createdAt: string;
+}
+
+export interface UpdateWidgetConfigPayload {
+  websiteUrl?: string;
+  welcomeTitle?: string;
+  welcomeTagline?: string;
+  widgetColor?: string;
+  isEnabled?: boolean;
+  preChatFormEnabled?: boolean;
+  preChatFormFields?: PreChatFormField[];
 }
 
 export interface Inbox {

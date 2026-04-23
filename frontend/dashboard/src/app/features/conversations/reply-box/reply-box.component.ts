@@ -6,9 +6,16 @@ import {
   ElementRef,
   AfterViewInit,
   OnDestroy,
+  OnInit,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Store } from '@ngrx/store';
+import { Subscription } from 'rxjs';
+import { CannedResponsesActions } from '@store/canned-responses/canned-responses.actions';
+import { selectAllCannedResponses } from '@store/canned-responses/canned-responses.selectors';
+import { CannedResponse } from '@core/models/canned-response.model';
 
 @Component({
   selector: 'app-reply-box',
@@ -111,26 +118,32 @@ import { FormsModule } from '@angular/forms';
     }
   `],
 })
-export class ReplyBoxComponent implements AfterViewInit, OnDestroy {
+export class ReplyBoxComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() messageSent = new EventEmitter<{ content: string; isPrivate: boolean }>();
   @ViewChild('textareaRef') textareaRef!: ElementRef<HTMLTextAreaElement>;
+
+  private store = inject(Store);
 
   content = '';
   mode: 'reply' | 'note' = 'reply';
   showCannedDropdown = false;
   cannedSearchQuery = '';
 
-  // Placeholder canned responses for shortcode detection
-  cannedResponses = [
-    { shortCode: 'greeting', content: 'Hello! Thank you for reaching out. How can I help you today?' },
-    { shortCode: 'thanks', content: 'Thank you for your patience. Is there anything else I can help with?' },
-    { shortCode: 'resolved', content: 'I\'m glad we could resolve this. Feel free to reach out if you need anything else.' },
-    { shortCode: 'followup', content: 'I\'m following up on your previous inquiry. Have you had a chance to try the solution?' },
-  ];
-
-  filteredCanned = this.cannedResponses;
+  cannedResponses: CannedResponse[] = [];
+  filteredCanned: CannedResponse[] = [];
 
   private keydownHandler = this.handleGlobalKeydown.bind(this);
+  private cannedSubscription?: Subscription;
+
+  ngOnInit(): void {
+    this.store.dispatch(CannedResponsesActions.loadCannedResponses());
+    this.cannedSubscription = this.store
+      .select(selectAllCannedResponses)
+      .subscribe((responses) => {
+        this.cannedResponses = responses;
+        this.refreshFilteredCanned();
+      });
+  }
 
   ngAfterViewInit(): void {
     document.addEventListener('keydown', this.keydownHandler);
@@ -138,6 +151,7 @@ export class ReplyBoxComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     document.removeEventListener('keydown', this.keydownHandler);
+    this.cannedSubscription?.unsubscribe();
   }
 
   setMode(mode: 'reply' | 'note'): void {
@@ -176,16 +190,21 @@ export class ReplyBoxComponent implements AfterViewInit, OnDestroy {
     const match = this.content.match(/\/(\w*)$/);
     if (match) {
       this.cannedSearchQuery = match[1];
-      this.filteredCanned = this.cannedResponses.filter((c) =>
-        c.shortCode.toLowerCase().includes(this.cannedSearchQuery.toLowerCase()),
-      );
-      this.showCannedDropdown = true;
+      this.refreshFilteredCanned();
+      this.showCannedDropdown = this.filteredCanned.length > 0;
     } else {
       this.showCannedDropdown = false;
     }
   }
 
-  insertCanned(canned: { shortCode: string; content: string }): void {
+  private refreshFilteredCanned(): void {
+    const q = this.cannedSearchQuery.toLowerCase();
+    this.filteredCanned = q
+      ? this.cannedResponses.filter((c) => c.shortCode.toLowerCase().includes(q))
+      : this.cannedResponses;
+  }
+
+  insertCanned(canned: CannedResponse): void {
     this.content = this.content.replace(/\/\w*$/, canned.content);
     this.showCannedDropdown = false;
     this.textareaRef?.nativeElement.focus();
