@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, Output, EventEmitter } from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PreChatField } from '../../services/widget-api.service';
 
 export interface PreChatFormData {
   name: string;
@@ -21,46 +22,105 @@ export interface PreChatFormData {
         </p>
       </div>
 
-      <div class="pre-chat-field">
-        <label for="cew-name" class="pre-chat-label">
-          Name <span class="pre-chat-required">*</span>
-        </label>
-        <input
-          id="cew-name"
-          class="pre-chat-input"
-          type="text"
-          [(ngModel)]="formData.name"
-          placeholder="Your name"
-          autocomplete="name"
-          required />
-      </div>
+      @if (useDynamicFields) {
+        @for (field of activeFields; track field.name) {
+          <div class="pre-chat-field">
+            @if (field.type !== 'checkbox') {
+              <label [for]="'cew-field-' + field.name" class="pre-chat-label">
+                {{ field.label }}
+                @if (field.required) { <span class="pre-chat-required">*</span> }
+              </label>
+            }
+            @switch (field.type) {
+              @case ('email') {
+                <input
+                  [id]="'cew-field-' + field.name"
+                  class="pre-chat-input"
+                  type="email"
+                  [ngModel]="dynamicValues[field.name]"
+                  (ngModelChange)="dynamicValues[field.name] = $event"
+                  [placeholder]="field.label"
+                  [attr.required]="field.required || null"
+                  autocomplete="email" />
+              }
+              @case ('number') {
+                <input
+                  [id]="'cew-field-' + field.name"
+                  class="pre-chat-input"
+                  type="number"
+                  [ngModel]="dynamicValues[field.name]"
+                  (ngModelChange)="dynamicValues[field.name] = $event"
+                  [placeholder]="field.label"
+                  [attr.required]="field.required || null" />
+              }
+              @case ('checkbox') {
+                <label [for]="'cew-field-' + field.name" class="pre-chat-label pre-chat-label-checkbox">
+                  <input
+                    [id]="'cew-field-' + field.name"
+                    type="checkbox"
+                    [checked]="dynamicValues[field.name] === 'true'"
+                    (change)="onCheckboxChange(field.name, $any($event.target).checked)"
+                    [attr.required]="field.required || null" />
+                  {{ field.label }}
+                  @if (field.required) { <span class="pre-chat-required">*</span> }
+                </label>
+              }
+              @default {
+                <input
+                  [id]="'cew-field-' + field.name"
+                  class="pre-chat-input"
+                  type="text"
+                  [ngModel]="dynamicValues[field.name]"
+                  (ngModelChange)="dynamicValues[field.name] = $event"
+                  [placeholder]="field.label"
+                  [attr.required]="field.required || null"
+                  [attr.autocomplete]="field.name === 'name' ? 'name' : null" />
+              }
+            }
+          </div>
+        }
+      } @else {
+        <div class="pre-chat-field">
+          <label for="cew-name" class="pre-chat-label">
+            Name <span class="pre-chat-required">*</span>
+          </label>
+          <input
+            id="cew-name"
+            class="pre-chat-input"
+            type="text"
+            [(ngModel)]="formData.name"
+            placeholder="Your name"
+            autocomplete="name"
+            required />
+        </div>
 
-      <div class="pre-chat-field">
-        <label for="cew-email" class="pre-chat-label">
-          Email <span class="pre-chat-required">*</span>
-        </label>
-        <input
-          id="cew-email"
-          class="pre-chat-input"
-          type="email"
-          [(ngModel)]="formData.email"
-          placeholder="you@example.com"
-          autocomplete="email"
-          required />
-      </div>
+        <div class="pre-chat-field">
+          <label for="cew-email" class="pre-chat-label">
+            Email <span class="pre-chat-required">*</span>
+          </label>
+          <input
+            id="cew-email"
+            class="pre-chat-input"
+            type="email"
+            [(ngModel)]="formData.email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required />
+        </div>
 
-      <div class="pre-chat-field">
-        <label for="cew-message" class="pre-chat-label">
-          How can we help?
-        </label>
-        <textarea
-          id="cew-message"
-          class="pre-chat-textarea"
-          [(ngModel)]="formData.customFields['initial_message']"
-          placeholder="Describe your issue..."
-          rows="3">
-        </textarea>
-      </div>
+        <div class="pre-chat-field">
+          <label for="cew-message" class="pre-chat-label">
+            How can we help?
+          </label>
+          <textarea
+            id="cew-message"
+            class="pre-chat-textarea"
+            [(ngModel)]="formData.customFields['initial_message']"
+            placeholder="Describe your issue..."
+            rows="3">
+          </textarea>
+        </div>
+      }
 
       <button
         class="pre-chat-submit"
@@ -121,6 +181,21 @@ export interface PreChatFormData {
       font-weight: 600;
       color: var(--widget-text, #1f2937);
       letter-spacing: 0.01em;
+    }
+    .pre-chat-label-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+    }
+    .pre-chat-label-checkbox input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      accent-color: var(--widget-primary, #1b72e8);
+      cursor: pointer;
     }
     .pre-chat-required {
       color: #ef4444;
@@ -204,6 +279,7 @@ export interface PreChatFormData {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PreChatFormComponent {
+  @Input() fields: PreChatField[] | null = null;
   @Output() formSubmit = new EventEmitter<PreChatFormData>();
 
   formData: PreChatFormData = {
@@ -212,14 +288,55 @@ export class PreChatFormComponent {
     customFields: { initial_message: '' },
   };
 
+  dynamicValues: Record<string, string> = {};
+
+  get activeFields(): PreChatField[] {
+    if (!this.fields?.length) return [];
+    return this.fields
+      .filter(f => f.enabled)
+      .sort((a, b) => a.position - b.position);
+  }
+
+  get useDynamicFields(): boolean {
+    return this.activeFields.length > 0;
+  }
+
+  onCheckboxChange(name: string, checked: boolean): void {
+    this.dynamicValues[name] = checked ? 'true' : 'false';
+  }
+
   isValid(): boolean {
+    if (this.useDynamicFields) {
+      return this.activeFields
+        .filter(f => f.required)
+        .every(f => {
+          const v = (this.dynamicValues[f.name] ?? '').trim();
+          if (f.type === 'checkbox') return this.dynamicValues[f.name] === 'true';
+          if (f.type === 'email') return v.length > 0 && v.includes('@');
+          return v.length > 0;
+        });
+    }
     return this.formData.name.trim().length > 0
       && this.formData.email.trim().length > 0
       && this.formData.email.includes('@');
   }
 
   onSubmit(): void {
-    if (this.isValid()) {
+    if (!this.isValid()) return;
+
+    if (this.useDynamicFields) {
+      const result: PreChatFormData = {
+        name: this.dynamicValues['name'] ?? '',
+        email: this.dynamicValues['email'] ?? '',
+        customFields: {},
+      };
+      for (const field of this.activeFields) {
+        if (field.name !== 'name' && field.name !== 'email') {
+          result.customFields[field.name] = this.dynamicValues[field.name] ?? '';
+        }
+      }
+      this.formSubmit.emit(result);
+    } else {
       this.formSubmit.emit({ ...this.formData });
     }
   }
