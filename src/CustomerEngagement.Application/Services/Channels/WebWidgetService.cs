@@ -81,6 +81,8 @@ public class WebWidgetService : IWebWidgetService
             WelcomeTagline = widget.WelcomeTagline,
             WidgetColor = widget.WidgetColor,
             IsEnabled = widget.IsEnabled,
+            PreChatFormEnabled = widget.PreChatFormEnabled,
+            PreChatFormOptions = widget.PreChatFormOptions,
             CreatedAt = widget.CreatedAt
         };
     }

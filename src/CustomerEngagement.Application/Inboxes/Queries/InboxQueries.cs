@@ -183,7 +183,8 @@ public class GetInboxWidgetConfigQueryHandler : IRequestHandler<GetInboxWidgetCo
                 dto.WelcomeTagline,
                 dto.WidgetColor,
                 dto.IsEnabled,
-                PreChatFormEnabled = false,
+                dto.PreChatFormEnabled,
+                dto.PreChatFormOptions,
                 dto.CreatedAt
             };
         }
@@ -203,6 +204,7 @@ public class GetInboxWidgetConfigQueryHandler : IRequestHandler<GetInboxWidgetCo
             widget.WidgetColor,
             widget.IsEnabled,
             widget.PreChatFormEnabled,
+            widget.PreChatFormOptions,
             widget.CreatedAt
         };
     }

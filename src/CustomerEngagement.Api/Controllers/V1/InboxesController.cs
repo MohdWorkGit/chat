@@ -101,6 +101,16 @@ public class InboxesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPut("{inboxId:long}/widget_config")]
+    [Authorize(Policy = "Administrator")]
+    public async Task<ActionResult> UpdateWidgetConfig(long accountId, long inboxId,
+        [FromBody] Application.Inboxes.Commands.UpdateInboxWidgetConfigCommand command)
+    {
+        command = command with { AccountId = accountId, InboxId = inboxId };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
     [HttpPut("{inboxId:long}/working_hours")]
     [Authorize(Policy = "Administrator")]
     public async Task<ActionResult> UpdateWorkingHours(long accountId, long inboxId,
