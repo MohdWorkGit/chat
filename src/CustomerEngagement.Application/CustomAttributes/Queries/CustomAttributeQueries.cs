@@ -4,80 +4,57 @@ using MediatR;
 
 namespace CustomerEngagement.Application.CustomAttributes.Queries;
 
-public record GetCustomAttributesQuery(long AccountId, string? AttributeModel) : IRequest<object>;
+public record GetCustomAttributesQuery(long AccountId, string? AppliedTo) : IRequest<object>;
 
 public record GetCustomAttributeByIdQuery(long AccountId, long Id) : IRequest<object>;
 
 public class GetCustomAttributesQueryHandler : IRequestHandler<GetCustomAttributesQuery, object>
 {
-    private readonly IRepository<CustomAttributeDefinition> _customAttributeRepository;
+    private readonly IRepository<CustomAttributeDefinition> _repository;
 
-    public GetCustomAttributesQueryHandler(IRepository<CustomAttributeDefinition> customAttributeRepository)
+    public GetCustomAttributesQueryHandler(IRepository<CustomAttributeDefinition> repository)
     {
-        _customAttributeRepository = customAttributeRepository ?? throw new ArgumentNullException(nameof(customAttributeRepository));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
     public async Task<object> Handle(GetCustomAttributesQuery request, CancellationToken cancellationToken)
     {
         IReadOnlyList<CustomAttributeDefinition> attributes;
 
-        if (!string.IsNullOrEmpty(request.AttributeModel))
+        if (!string.IsNullOrWhiteSpace(request.AppliedTo))
         {
-            attributes = await _customAttributeRepository.FindAsync(
-                ca => ca.AccountId == (int)request.AccountId && ca.AttributeModel == request.AttributeModel,
+            var appliedTo = request.AppliedTo!.ToLowerInvariant();
+            attributes = await _repository.FindAsync(
+                ca => ca.AccountId == (int)request.AccountId && ca.AttributeModel == appliedTo,
                 cancellationToken);
         }
         else
         {
-            attributes = await _customAttributeRepository.FindAsync(
+            attributes = await _repository.FindAsync(
                 ca => ca.AccountId == (int)request.AccountId,
                 cancellationToken);
         }
 
-        return attributes.Select(ca => new
-        {
-            ca.Id,
-            ca.AccountId,
-            ca.AttributeDisplayName,
-            ca.AttributeDisplayType,
-            ca.AttributeKey,
-            ca.AttributeModel,
-            ca.DefaultValue,
-            ca.CreatedAt
-        }).ToList();
+        return attributes.Select(CustomAttributeMapping.ToDto).ToList();
     }
 }
 
 public class GetCustomAttributeByIdQueryHandler : IRequestHandler<GetCustomAttributeByIdQuery, object>
 {
-    private readonly IRepository<CustomAttributeDefinition> _customAttributeRepository;
+    private readonly IRepository<CustomAttributeDefinition> _repository;
 
-    public GetCustomAttributeByIdQueryHandler(IRepository<CustomAttributeDefinition> customAttributeRepository)
+    public GetCustomAttributeByIdQueryHandler(IRepository<CustomAttributeDefinition> repository)
     {
-        _customAttributeRepository = customAttributeRepository ?? throw new ArgumentNullException(nameof(customAttributeRepository));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
     public async Task<object> Handle(GetCustomAttributeByIdQuery request, CancellationToken cancellationToken)
     {
-        var attributes = await _customAttributeRepository.FindAsync(
+        var entity = await _repository.FindOneAsync(
             ca => ca.AccountId == (int)request.AccountId && ca.Id == (int)request.Id,
-            cancellationToken);
+            cancellationToken)
+            ?? throw new KeyNotFoundException($"Custom attribute {request.Id} not found.");
 
-        var attribute = attributes.FirstOrDefault();
-
-        if (attribute is null)
-            return new { Error = "Custom attribute not found" };
-
-        return new
-        {
-            attribute.Id,
-            attribute.AccountId,
-            attribute.AttributeDisplayName,
-            attribute.AttributeDisplayType,
-            attribute.AttributeKey,
-            attribute.AttributeModel,
-            attribute.DefaultValue,
-            attribute.CreatedAt
-        };
+        return CustomAttributeMapping.ToDto(entity);
     }
 }

@@ -17,10 +17,10 @@ public class CustomAttributesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult> GetAll(long accountId, [FromQuery] string? attributeModel)
+    public async Task<ActionResult> GetAll(long accountId, [FromQuery] string? appliedTo)
     {
         var result = await _mediator.Send(
-            new Application.CustomAttributes.Queries.GetCustomAttributesQuery(accountId, attributeModel));
+            new Application.CustomAttributes.Queries.GetCustomAttributesQuery(accountId, appliedTo));
         return Ok(result);
     }
 
@@ -39,7 +39,7 @@ public class CustomAttributesController : ControllerBase
     {
         command = command with { AccountId = accountId };
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetById), new { accountId, attributeId = result }, new { Id = result });
+        return Ok(result);
     }
 
     [HttpPut("{attributeId:long}")]
@@ -48,8 +48,8 @@ public class CustomAttributesController : ControllerBase
         [FromBody] Application.CustomAttributes.Commands.UpdateCustomAttributeCommand command)
     {
         command = command with { AccountId = accountId, Id = attributeId };
-        await _mediator.Send(command);
-        return NoContent();
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 
     [HttpDelete("{attributeId:long}")]

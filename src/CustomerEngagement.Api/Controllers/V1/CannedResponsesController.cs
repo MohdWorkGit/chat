@@ -38,7 +38,7 @@ public class CannedResponsesController : ControllerBase
     {
         command = command with { AccountId = accountId };
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetById), new { accountId, cannedResponseId = result }, new { Id = result });
+        return Ok(result);
     }
 
     [HttpPut("{cannedResponseId:long}")]
@@ -46,8 +46,8 @@ public class CannedResponsesController : ControllerBase
         [FromBody] Application.CannedResponses.Commands.UpdateCannedResponseCommand command)
     {
         command = command with { AccountId = accountId, Id = cannedResponseId };
-        await _mediator.Send(command);
-        return NoContent();
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 
     [HttpDelete("{cannedResponseId:long}")]

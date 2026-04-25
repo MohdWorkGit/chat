@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet, Router, ActivatedRoute } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { AuthActions } from '@app/store/auth/auth.actions';
@@ -167,7 +167,6 @@ export class SettingsLayoutComponent implements OnInit {
   private store = inject(Store);
   private fb = inject(FormBuilder);
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
 
   user$ = this.store.select(selectCurrentUser);
 
@@ -291,7 +290,8 @@ export class SettingsLayoutComponent implements OnInit {
       }
     });
 
-    // Show profile when there is no active child route (i.e. /settings or /settings/profile)
+    // Show inline profile only on /settings (no child route).
+    // /settings/profile is handled by the routed ProfileSettingsComponent.
     this.updateShowProfile();
     this.router.events.subscribe(() => {
       this.updateShowProfile();
@@ -299,8 +299,7 @@ export class SettingsLayoutComponent implements OnInit {
   }
 
   private updateShowProfile(): void {
-    const url = this.router.url;
-    this.showProfile = url === '/settings' || url === '/settings/profile';
+    this.showProfile = this.router.url === '/settings';
   }
 
   setAvailability(value: string): void {
@@ -318,9 +317,6 @@ export class SettingsLayoutComponent implements OnInit {
 
   saveProfile(): void {
     if (this.profileForm.invalid) return;
-    // In a real app, dispatch an action to update user profile
-    const { name, availability } = this.profileForm.value;
-    // Could dispatch a profile update action here
     this.profileForm.markAsPristine();
   }
 

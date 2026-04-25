@@ -1,15 +1,20 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HelpCenterService } from '@core/services/helpcenter.service';
+import { Category } from '@core/models/helpcenter.model';
 import { HelpCenterTabsComponent } from '../helpcenter-tabs/helpcenter-tabs.component';
-import { switchMap, of } from 'rxjs';
+import { forkJoin, switchMap, of } from 'rxjs';
+
+type StatusLabel = 'draft' | 'published' | 'archived';
+const STATUS_TO_INT: Record<StatusLabel, number> = { draft: 0, published: 1, archived: 2 };
+const INT_TO_STATUS: StatusLabel[] = ['draft', 'published', 'archived'];
 
 @Component({
   selector: 'app-article-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HelpCenterTabsComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, HelpCenterTabsComponent],
   template: `
     <app-helpcenter-tabs />
     <div class="p-6 max-w-4xl mx-auto">
@@ -68,6 +73,26 @@ import { switchMap, of } from 'rxjs';
               ></textarea>
               @if (articleForm.get('content')?.invalid && articleForm.get('content')?.touched) {
                 <p class="mt-1 text-xs text-red-600">Content is required.</p>
+              }
+            </div>
+
+            <!-- Category -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                formControlName="categoryId"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option [ngValue]="null">— Uncategorized —</option>
+                @for (cat of categories; track cat.id) {
+                  <option [ngValue]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+              @if (categories.length === 0) {
+                <p class="mt-1 text-xs text-gray-500">
+                  No categories yet.
+                  <a routerLink="/helpcenter/categories/new" class="text-blue-600 hover:text-blue-800">Create one</a>.
+                </p>
               }
             </div>
 
@@ -131,6 +156,7 @@ export class ArticleFormComponent implements OnInit {
   saving = false;
   error: string | null = null;
   portalError = false;
+  categories: Category[] = [];
 
   private portalId: number | null = null;
   private articleId: number | null = null;
@@ -140,6 +166,7 @@ export class ArticleFormComponent implements OnInit {
     description: [''],
     content: ['', Validators.required],
     status: ['draft'],
+    categoryId: [null as number | null],
   });
 
   ngOnInit(): void {
@@ -153,23 +180,31 @@ export class ArticleFormComponent implements OnInit {
       switchMap((portals) => {
         if (!portals || portals.length === 0) {
           this.portalError = true;
-          return of(null);
+          return of({ categories: [] as Category[], article: null as any });
         }
         this.portalId = portals[0].id;
 
-        if (this.isEditing && this.articleId) {
-          return this.helpCenter.getArticle(this.portalId, this.articleId);
-        }
-        return of(null);
+        const categories$ = this.helpCenter.getCategories(this.portalId);
+        const article$ = this.isEditing && this.articleId
+          ? this.helpCenter.getArticle(this.portalId, this.articleId)
+          : of(null);
+
+        return forkJoin({ categories: categories$, article: article$ });
       })
     ).subscribe({
-      next: (article) => {
+      next: ({ categories, article }) => {
+        this.categories = categories ?? [];
         if (article) {
+          const statusValue = typeof article.status === 'number'
+            ? INT_TO_STATUS[article.status] ?? 'draft'
+            : (article.status ?? 'draft');
+
           this.articleForm.patchValue({
             title: article.title,
             description: article.description ?? '',
             content: article.content ?? '',
-            status: article.status ?? 'draft',
+            status: statusValue,
+            categoryId: article.categoryId ?? null,
           });
         }
       },
@@ -184,11 +219,18 @@ export class ArticleFormComponent implements OnInit {
 
     this.saving = true;
     this.error = null;
-    const payload = this.articleForm.value;
+    const raw = this.articleForm.value;
+    const payload = {
+      title: raw.title,
+      description: raw.description ?? '',
+      content: raw.content ?? '',
+      status: STATUS_TO_INT[raw.status as StatusLabel] ?? 0,
+      categoryId: raw.categoryId ?? null,
+    };
 
     const request$ = this.isEditing && this.articleId
-      ? this.helpCenter.updateArticle(this.portalId, this.articleId, payload)
-      : this.helpCenter.createArticle(this.portalId, payload);
+      ? this.helpCenter.updateArticle(this.portalId, this.articleId, payload as any)
+      : this.helpCenter.createArticle(this.portalId, payload as any);
 
     request$.subscribe({
       next: () => {

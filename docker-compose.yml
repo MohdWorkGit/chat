@@ -70,6 +70,26 @@ services:
     profiles:
       - dev
 
+  # ── EF Core migration tooling ───────────────────────────────────
+  # Runs `dotnet ef` against the source tree mounted from the host.
+  # Use via the wrapper at scripts/ef.sh, or directly:
+  #   docker compose --profile tools run --rm ef-tools <ef-args>
+  ef-tools:
+    build:
+      context: .
+      dockerfile: scripts/ef.Dockerfile
+    profiles:
+      - tools
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;Port=5432;Database=${POSTGRES_DB:-customer_engagement};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - .:/src
+    working_dir: /src
+
   # ── Backend API ─────────────────────────────────────────────────
   api:
     build:

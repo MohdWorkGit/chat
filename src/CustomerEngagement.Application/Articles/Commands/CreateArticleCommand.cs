@@ -12,7 +12,7 @@ public record CreateArticleCommand(
     string? Description,
     int Status,
     long? CategoryId,
-    int AuthorId) : IRequest<long>;
+    int? AuthorId) : IRequest<long>;
 
 public class CreateArticleCommandHandler : IRequestHandler<CreateArticleCommand, long>
 {

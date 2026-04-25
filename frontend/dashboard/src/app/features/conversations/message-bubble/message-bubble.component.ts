@@ -59,7 +59,7 @@ import { Message, MessageType } from '@core/models/conversation.model';
                 <div [innerHTML]="message.content"></div>
 
                 <!-- Attachments -->
-                @if (message.attachments?.length) {
+                @if (message.attachments.length) {
                   <div class="mt-2 space-y-1">
                     @for (attachment of message.attachments; track attachment.id) {
                       <a

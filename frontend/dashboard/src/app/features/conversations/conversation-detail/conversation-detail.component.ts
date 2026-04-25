@@ -12,6 +12,7 @@ import {
 } from '@app/store/conversations/conversations.selectors';
 import { Conversation, Message, ConversationStatus } from '@core/models/conversation.model';
 import { SignalRService } from '@core/services/signalr.service';
+import { ConversationService } from '@core/services/conversation.service';
 import { MessageBubbleComponent } from '../message-bubble/message-bubble.component';
 import { ReplyBoxComponent } from '../reply-box/reply-box.component';
 import { CopilotPanelComponent } from '@app/features/captain/copilot-panel/copilot-panel.component';
@@ -183,7 +184,10 @@ import { CopilotPanelComponent } from '@app/features/captain/copilot-panel/copil
           </div>
 
           <!-- Reply Box -->
-          <app-reply-box (messageSent)="onMessageSent(conversation.id, $event)" />
+          <app-reply-box
+            #replyBox
+            (messageSent)="onMessageSent(conversation.id, $event)"
+            (fileAttached)="onFileAttached(conversation.id, $event, replyBox)" />
         </div>
 
         <!-- Copilot panel -->
@@ -307,6 +311,7 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
   private store = inject(Store);
   private route = inject(ActivatedRoute);
   private signalrService = inject(SignalRService);
+  private conversationService = inject(ConversationService);
   private destroy$ = new Subject<void>();
   private joinedConversationId: number | null = null;
 
@@ -433,6 +438,34 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
         isPrivate: event.isPrivate,
       }),
     );
+  }
+
+  onFileAttached(
+    conversationId: number,
+    event: { file: File; isPrivate: boolean },
+    replyBox: ReplyBoxComponent,
+  ): void {
+    replyBox.setUploading(true);
+    this.conversationService
+      .sendAttachment(conversationId, event.file, { isPrivate: event.isPrivate })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (message) => {
+          // Append optimistically; SignalR will dedupe by id.
+          this.store.dispatch(
+            ConversationsActions.sendMessageSuccess({ message }),
+          );
+          replyBox.setUploading(false);
+        },
+        error: (err) => {
+          const msg =
+            err?.error?.detail ||
+            err?.error?.message ||
+            err?.message ||
+            'Upload failed. Please try again.';
+          replyBox.setUploadError(msg);
+        },
+      });
   }
 
   getInitials(name: string): string {

@@ -1,7 +1,9 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Entities.Channels;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CustomerEngagement.Application.Widget.Queries;
 
@@ -112,13 +114,16 @@ public class GetWidgetMessagesQueryHandler : IRequestHandler<GetWidgetMessagesQu
 {
     private readonly IRepository<ChannelWebWidget> _widgetRepository;
     private readonly IRepository<Message> _messageRepository;
+    private readonly IStorageService _storageService;
 
     public GetWidgetMessagesQueryHandler(
         IRepository<ChannelWebWidget> widgetRepository,
-        IRepository<Message> messageRepository)
+        IRepository<Message> messageRepository,
+        IStorageService storageService)
     {
         _widgetRepository = widgetRepository;
         _messageRepository = messageRepository;
+        _storageService = storageService;
     }
 
     public async Task<object> Handle(GetWidgetMessagesQuery request, CancellationToken cancellationToken)
@@ -134,24 +139,42 @@ public class GetWidgetMessagesQueryHandler : IRequestHandler<GetWidgetMessagesQu
 
         // Private messages are internal agent notes and must never be exposed
         // to the widget client (embedded on an end-user's browser).
-        var messages = await _messageRepository.GetPagedAsync(
-            request.Page, request.PageSize,
-            m => m.ConversationId == conversationId && !m.Private,
-            m => m.CreatedAt, ascending: true, cancellationToken);
+        var baseQuery = _messageRepository.QueryNoTracking()
+            .Where(m => m.ConversationId == conversationId && !m.Private);
 
-        var totalCount = await _messageRepository.CountAsync(
-            m => m.ConversationId == conversationId && !m.Private, cancellationToken);
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        var messages = await baseQuery
+            .Include(m => m.Attachments)
+            .OrderBy(m => m.CreatedAt)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync(cancellationToken);
 
         return new
         {
             Data = messages.Select(m => new
             {
                 m.Id,
+                m.ConversationId,
                 m.Content,
                 m.ContentType,
                 m.MessageType,
                 m.SenderType,
-                m.CreatedAt
+                m.CreatedAt,
+                Attachments = m.Attachments.Select(a => new
+                {
+                    a.Id,
+                    a.MessageId,
+                    FileType = a.FileType.ToString().ToLowerInvariant(),
+                    a.FileName,
+                    FileUrl = _storageService.GetFileUrl(a.ExternalUrl),
+                    a.FileSize,
+                    a.ContentType,
+                    ThumbUrl = _storageService.GetFileUrl(a.ThumbnailUrl),
+                    a.Extension,
+                    a.CreatedAt
+                }).ToList()
             }),
             Meta = new
             {

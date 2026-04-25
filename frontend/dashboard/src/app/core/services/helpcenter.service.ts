@@ -38,7 +38,16 @@ export class HelpCenterService {
   }
 
   getArticles(portalId: number): Observable<Article[]> {
-    return this.api.get(`/portals/${portalId}/articles`);
+    return this.api
+      .get<{ items: Article[] } | { data: Article[] } | Article[]>(`/portals/${portalId}/articles`)
+      .pipe(
+        map((res) => {
+          if (Array.isArray(res)) return res;
+          if (res && 'items' in res) return res.items ?? [];
+          if (res && 'data' in res) return res.data ?? [];
+          return [];
+        })
+      );
   }
 
   getArticle(portalId: number, id: number): Observable<Article> {

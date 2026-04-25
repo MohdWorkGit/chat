@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormArray, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { InboxesActions } from '@store/inboxes/inboxes.actions';

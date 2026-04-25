@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Observable } from 'rxjs';
 import { HelpCenterService } from '@core/services/helpcenter.service';
 import { HelpCenterTabsComponent } from '../helpcenter-tabs/helpcenter-tabs.component';
 
@@ -225,7 +226,7 @@ export class PortalFormComponent implements OnInit {
     this.error = null;
     const payload = this.portalForm.value;
 
-    const request$ = this.isEditing && this.portalId
+    const request$: Observable<unknown> = this.isEditing && this.portalId
       ? this.helpCenter.updatePortal(this.portalId, payload)
       : this.helpCenter.createPortal(payload);
 

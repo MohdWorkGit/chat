@@ -1,4 +1,5 @@
 using CustomerEngagement.Application.BackgroundJobs;
+using CustomerEngagement.Application.Common.Attachments;
 using CustomerEngagement.Application.Hubs;
 using CustomerEngagement.Application.Services.Conversations;
 using CustomerEngagement.Core.Entities;
@@ -358,7 +359,6 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
     private readonly IRepository<ChannelWebWidget> _widgetRepository;
     private readonly IRepository<Conversation> _conversationRepository;
     private readonly IRepository<Message> _messageRepository;
-    private readonly IRepository<Attachment> _attachmentRepository;
     private readonly IStorageService _storageService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMediator _mediator;
@@ -367,7 +367,6 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
         IRepository<ChannelWebWidget> widgetRepository,
         IRepository<Conversation> conversationRepository,
         IRepository<Message> messageRepository,
-        IRepository<Attachment> attachmentRepository,
         IStorageService storageService,
         IUnitOfWork unitOfWork,
         IMediator mediator)
@@ -375,7 +374,6 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
         _widgetRepository = widgetRepository;
         _conversationRepository = conversationRepository;
         _messageRepository = messageRepository;
-        _attachmentRepository = attachmentRepository;
         _storageService = storageService;
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -383,6 +381,12 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
 
     public async Task<object> Handle(UploadWidgetAttachmentCommand request, CancellationToken cancellationToken)
     {
+        if (request.FileBytes is null || request.FileBytes.Length == 0)
+            throw new InvalidOperationException("File content is empty.");
+
+        AttachmentUploadValidator.Validate(
+            request.FileName, request.ContentType, request.FileBytes.LongLength);
+
         var widget = (await _widgetRepository.FindAsync(
             w => w.WebsiteToken == request.WidgetToken, cancellationToken)).FirstOrDefault()
             ?? throw new InvalidOperationException("Invalid widget token.");
@@ -390,48 +394,53 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
         var conversation = await _conversationRepository.GetByIdAsync((int)request.ConversationId, cancellationToken)
             ?? throw new InvalidOperationException("Conversation not found.");
 
-        var key = $"attachments/{widget.AccountId}/{Guid.NewGuid()}/{request.FileName}";
+        if (conversation.AccountId != widget.AccountId)
+            throw new InvalidOperationException("Conversation does not belong to this widget.");
+
+        var safeName = AttachmentUploadValidator.SanitizeFileName(request.FileName);
+        var extension = Path.GetExtension(safeName).TrimStart('.');
+        var key = $"attachments/{widget.AccountId}/{Guid.NewGuid():N}/{safeName}";
+
         using var stream = new MemoryStream(request.FileBytes);
         await _storageService.UploadFileAsync(key, stream, request.ContentType, cancellationToken);
+
+        var attachment = new Attachment
+        {
+            AccountId = widget.AccountId,
+            ExternalUrl = key,
+            FileName = safeName,
+            FileSize = request.FileBytes.LongLength,
+            ContentType = request.ContentType,
+            FallbackTitle = safeName,
+            Extension = extension,
+            FileType = AttachmentUploadValidator.ResolveFileType(request.ContentType),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
         var message = new Message
         {
             ConversationId = conversation.Id,
             AccountId = widget.AccountId,
             ContactId = conversation.ContactId,
-            Content = request.FileName,
+            Content = safeName,
             ContentType = "attachment",
             SenderType = "customer",
             MessageType = MessageType.Incoming,
             Status = MessageStatus.Sent,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Attachments = new List<Attachment> { attachment }
         };
 
         await _messageRepository.AddAsync(message, cancellationToken);
-
-        var extension = Path.GetExtension(request.FileName).TrimStart('.');
-        var attachment = new Attachment
-        {
-            AccountId = widget.AccountId,
-            ExternalUrl = key,
-            FallbackTitle = request.FileName,
-            Extension = extension,
-            FileType = AttachmentType.File,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        await _attachmentRepository.AddAsync(attachment, cancellationToken);
 
         conversation.LastActivityAt = DateTime.UtcNow;
         conversation.UpdatedAt = DateTime.UtcNow;
         _conversationRepository.Update(conversation);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        attachment.MessageId = message.Id;
-        _attachmentRepository.Update(attachment);
+        // Single SaveChanges: EF wires attachment.MessageId from the navigation
+        // and generates both rows' keys in one transaction.
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _mediator.Publish(
@@ -445,7 +454,23 @@ public class UploadWidgetAttachmentCommandHandler : IRequestHandler<UploadWidget
             message.Content,
             message.SenderType,
             message.ContentType,
-            message.CreatedAt
+            message.CreatedAt,
+            Attachments = new[]
+            {
+                new
+                {
+                    attachment.Id,
+                    attachment.MessageId,
+                    FileType = attachment.FileType.ToString().ToLowerInvariant(),
+                    attachment.FileName,
+                    FileUrl = _storageService.GetFileUrl(attachment.ExternalUrl),
+                    attachment.FileSize,
+                    attachment.ContentType,
+                    ThumbUrl = _storageService.GetFileUrl(attachment.ThumbnailUrl),
+                    attachment.Extension,
+                    attachment.CreatedAt
+                }
+            }
         };
     }
 }
