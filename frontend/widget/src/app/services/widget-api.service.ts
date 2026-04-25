@@ -3,6 +3,19 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CsatData } from '../components/csat-survey/csat-survey.component';
 
+export interface WidgetAttachment {
+  id: number;
+  messageId: number;
+  fileType: 'image' | 'audio' | 'video' | 'file' | 'location' | string;
+  fileName: string | null;
+  fileUrl: string | null;
+  fileSize: number;
+  contentType: string | null;
+  thumbUrl: string | null;
+  extension: string | null;
+  createdAt: string;
+}
+
 export interface Message {
   id: number;
   conversationId: number;
@@ -10,6 +23,7 @@ export interface Message {
   senderType: 'agent' | 'customer';
   contentType: string;
   createdAt: string;
+  attachments?: WidgetAttachment[];
 }
 
 export interface Conversation {

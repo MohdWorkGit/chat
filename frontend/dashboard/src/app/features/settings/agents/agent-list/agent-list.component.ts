@@ -230,7 +230,7 @@ export class AgentListComponent implements OnInit {
   updateAgentRole(agent: User, event: Event): void {
     const role = (event.target as HTMLSelectElement).value;
     const path = this.api.accountPath(`/agents/${agent.id}`);
-    this.api.put<User>(path, { role }).subscribe((updated) => {
+    this.api.put<User>(path, { role }).subscribe(() => {
       const current = this.agentsSubject.getValue();
       const index = current.findIndex((a) => a.id === agent.id);
       if (index >= 0) {

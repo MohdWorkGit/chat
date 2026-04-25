@@ -89,7 +89,8 @@ type ChatView = 'greeting' | 'pre-chat' | 'conversation' | 'csat';
               <cew-message-bubble
                 [content]="message.content"
                 [senderType]="message.senderType"
-                [timestamp]="message.createdAt" />
+                [timestamp]="message.createdAt"
+                [attachments]="message.attachments" />
             }
             @if (isAgentTyping()) {
               <cew-typing-indicator />

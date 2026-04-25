@@ -30,7 +30,8 @@ public class GetCannedResponsesQueryHandler : IRequestHandler<GetCannedResponses
             cr.AccountId,
             cr.ShortCode,
             cr.Content,
-            cr.CreatedAt
+            cr.CreatedAt,
+            cr.UpdatedAt
         }).ToList();
     }
 }
@@ -61,7 +62,8 @@ public class GetCannedResponseByIdQueryHandler : IRequestHandler<GetCannedRespon
             response.AccountId,
             response.ShortCode,
             response.Content,
-            response.CreatedAt
+            response.CreatedAt,
+            response.UpdatedAt
         };
     }
 }
@@ -88,7 +90,8 @@ public class SearchCannedResponsesQueryHandler : IRequestHandler<SearchCannedRes
             cr.AccountId,
             cr.ShortCode,
             cr.Content,
-            cr.CreatedAt
+            cr.CreatedAt,
+            cr.UpdatedAt
         }).ToList();
     }
 }

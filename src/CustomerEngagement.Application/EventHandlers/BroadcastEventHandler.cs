@@ -1,3 +1,4 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using CustomerEngagement.Application.Hubs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
@@ -5,6 +6,7 @@ using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace CustomerEngagement.Application.EventHandlers;
@@ -17,17 +19,20 @@ public sealed class BroadcastEventHandler :
     private readonly IHubContext<ConversationHub> _hubContext;
     private readonly IRepository<Conversation> _conversationRepository;
     private readonly IRepository<Message> _messageRepository;
+    private readonly IStorageService _storageService;
     private readonly ILogger<BroadcastEventHandler> _logger;
 
     public BroadcastEventHandler(
         IHubContext<ConversationHub> hubContext,
         IRepository<Conversation> conversationRepository,
         IRepository<Message> messageRepository,
+        IStorageService storageService,
         ILogger<BroadcastEventHandler> logger)
     {
         _hubContext = hubContext;
         _conversationRepository = conversationRepository;
         _messageRepository = messageRepository;
+        _storageService = storageService;
         _logger = logger;
     }
 
@@ -64,9 +69,28 @@ public sealed class BroadcastEventHandler :
         _logger.LogInformation("Broadcasting message.created for Message {MessageId} in Conversation {ConversationId}",
             notification.MessageId, notification.ConversationId);
 
-        var message = await _messageRepository.GetByIdAsync(notification.MessageId, cancellationToken);
+        // Load the message together with its attachments so the realtime
+        // payload carries the same shape as GET /messages.
+        var message = await _messageRepository.QueryNoTracking()
+            .Where(m => m.Id == notification.MessageId)
+            .Include(m => m.Attachments)
+            .FirstOrDefaultAsync(cancellationToken);
         if (message is null)
             return;
+
+        var attachments = message.Attachments.Select(a => new
+        {
+            a.Id,
+            a.MessageId,
+            FileType = a.FileType.ToString().ToLowerInvariant(),
+            a.FileName,
+            FileUrl = _storageService.GetFileUrl(a.ExternalUrl),
+            a.FileSize,
+            a.ContentType,
+            ThumbUrl = _storageService.GetFileUrl(a.ThumbnailUrl),
+            a.Extension,
+            a.CreatedAt
+        }).ToList();
 
         var payload = new
         {
@@ -79,7 +103,7 @@ public sealed class BroadcastEventHandler :
             message.SenderId,
             SenderType = NormalizeSenderType(message.SenderType, message.MessageType),
             message.Private,
-            Attachments = Array.Empty<object>(),
+            Attachments = attachments,
             message.CreatedAt,
             message.UpdatedAt
         };

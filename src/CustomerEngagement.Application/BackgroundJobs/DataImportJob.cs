@@ -13,6 +13,15 @@ public interface IStorageService
     Task<Stream> DownloadFileAsync(string key, CancellationToken cancellationToken = default);
     Task DeleteFileAsync(string key, CancellationToken cancellationToken = default);
     Task<string> UploadFileAsync(string key, Stream fileStream, string contentType, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves a stored key (or persisted absolute URL) into a URL the
+    /// client can fetch directly. For S3/MinIO keys this returns a
+    /// presigned GET URL with a sensible expiry; for values that already
+    /// look like an absolute URL (http/https) the input is returned
+    /// unchanged. Returns null for null/empty input.
+    /// </summary>
+    string? GetFileUrl(string? keyOrUrl, TimeSpan? expiration = null);
 }
 
 public class DataImportJob

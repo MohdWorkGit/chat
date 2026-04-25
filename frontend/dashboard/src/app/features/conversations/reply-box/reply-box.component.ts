@@ -78,19 +78,38 @@ import { CannedResponse } from '@core/models/canned-response.model';
         <div class="flex items-center justify-between mt-2">
           <div class="flex items-center gap-2">
             <!-- Attachment button -->
+            <input
+              #fileInput
+              type="file"
+              class="hidden"
+              (change)="onFileSelected($event)"
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,audio/*,video/*,.zip" />
             <button
               type="button"
-              class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
+              class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              [disabled]="uploading"
+              (click)="fileInput.click()"
               title="Attach file"
             >
-              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
-              </svg>
+              @if (uploading) {
+                <svg class="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+              } @else {
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                </svg>
+              }
             </button>
 
-            <span class="text-xs text-gray-400">
-              Type / for canned responses. Ctrl+Enter to send.
-            </span>
+            @if (uploadError) {
+              <span class="text-xs text-red-500">{{ uploadError }}</span>
+            } @else {
+              <span class="text-xs text-gray-400">
+                Type / for canned responses. Ctrl+Enter to send.
+              </span>
+            }
           </div>
 
           <button
@@ -120,6 +139,7 @@ import { CannedResponse } from '@core/models/canned-response.model';
 })
 export class ReplyBoxComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() messageSent = new EventEmitter<{ content: string; isPrivate: boolean }>();
+  @Output() fileAttached = new EventEmitter<{ file: File; isPrivate: boolean }>();
   @ViewChild('textareaRef') textareaRef!: ElementRef<HTMLTextAreaElement>;
 
   private store = inject(Store);
@@ -128,6 +148,10 @@ export class ReplyBoxComponent implements OnInit, AfterViewInit, OnDestroy {
   mode: 'reply' | 'note' = 'reply';
   showCannedDropdown = false;
   cannedSearchQuery = '';
+  uploading = false;
+  uploadError = '';
+
+  private readonly maxBytes = 10 * 1024 * 1024;
 
   cannedResponses: CannedResponse[] = [];
   filteredCanned: CannedResponse[] = [];
@@ -221,5 +245,31 @@ export class ReplyBoxComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.content = '';
     this.autoResize();
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // allow re-selecting the same file
+    if (!file) return;
+
+    this.uploadError = '';
+    if (file.size > this.maxBytes) {
+      this.uploadError = 'File exceeds the 10 MB limit.';
+      return;
+    }
+
+    this.fileAttached.emit({ file, isPrivate: this.mode === 'note' });
+  }
+
+  /** Called by the parent to reflect upload progress in the UI. */
+  setUploading(flag: boolean): void {
+    this.uploading = flag;
+  }
+
+  /** Called by the parent to surface upload errors. */
+  setUploadError(message: string): void {
+    this.uploadError = message;
+    this.uploading = false;
   }
 }

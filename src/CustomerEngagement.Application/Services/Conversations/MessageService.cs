@@ -1,9 +1,11 @@
+using CustomerEngagement.Application.BackgroundJobs;
 using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Core.Entities;
 using CustomerEngagement.Core.Enums;
 using CustomerEngagement.Core.Events;
 using CustomerEngagement.Core.Interfaces;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CustomerEngagement.Application.Services.Conversations;
 
@@ -14,19 +16,22 @@ public class MessageService : IMessageService
     private readonly IRepository<Conversation> _conversationRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMediator _mediator;
+    private readonly IStorageService _storageService;
 
     public MessageService(
         IRepository<Message> messageRepository,
         IRepository<Attachment> attachmentRepository,
         IRepository<Conversation> conversationRepository,
         IUnitOfWork unitOfWork,
-        IMediator mediator)
+        IMediator mediator,
+        IStorageService storageService)
     {
         _messageRepository = messageRepository ?? throw new ArgumentNullException(nameof(messageRepository));
         _attachmentRepository = attachmentRepository ?? throw new ArgumentNullException(nameof(attachmentRepository));
         _conversationRepository = conversationRepository ?? throw new ArgumentNullException(nameof(conversationRepository));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
     }
 
     public async Task<PaginatedResultDto<MessageDto>> GetByConversationAsync(
@@ -35,18 +40,21 @@ public class MessageService : IMessageService
         int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        var messages = await _messageRepository.ListAsync(
-            new { ConversationId = (int)conversationId },
-            cancellationToken);
+        var conversationIdInt = (int)conversationId;
 
-        var totalCount = messages.Count;
+        var baseQuery = _messageRepository.QueryNoTracking()
+            .Where(m => m.ConversationId == conversationIdInt);
 
-        var items = messages
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        var messages = await baseQuery
+            .Include(m => m.Attachments)
             .OrderBy(m => m.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(MapToDto)
-            .ToList();
+            .ToListAsync(cancellationToken);
+
+        var items = messages.Select(MapToDto).ToList();
 
         return new PaginatedResultDto<MessageDto>
         {
@@ -91,13 +99,19 @@ public class MessageService : IMessageService
                 {
                     MessageId = message.Id,
                     AccountId = conversation.AccountId,
+                    FileName = attachmentRequest.FileName,
+                    FileSize = attachmentRequest.FileSize,
+                    ContentType = attachmentRequest.ContentType,
+                    ThumbnailUrl = attachmentRequest.ThumbnailUrl,
                     FallbackTitle = attachmentRequest.FileName,
                     ExternalUrl = attachmentRequest.FileUrl,
+                    Extension = Path.GetExtension(attachmentRequest.FileName).TrimStart('.'),
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
 
                 await _attachmentRepository.AddAsync(attachment, cancellationToken);
+                message.Attachments.Add(attachment);
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -142,10 +156,10 @@ public class MessageService : IMessageService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private static MessageDto MapToDto(Message message)
+    private MessageDto MapToDto(Message message)
     {
-        var attachments = message.Attachments
-            .Select(a => new AttachmentDto(a.Id, a.FileType.ToString(), a.ExternalUrl, a.Extension, a.FallbackTitle))
+        var attachments = (message.Attachments ?? new List<Attachment>())
+            .Select(a => MapAttachmentToDto(a, _storageService))
             .ToList();
         return new MessageDto(
             message.Id,
@@ -161,5 +175,20 @@ public class MessageService : IMessageService
             message.SentAt,
             message.CreatedAt,
             attachments);
+    }
+
+    internal static AttachmentDto MapAttachmentToDto(Attachment a, IStorageService storage)
+    {
+        return new AttachmentDto(
+            Id: a.Id,
+            MessageId: a.MessageId,
+            FileType: a.FileType.ToString().ToLowerInvariant(),
+            FileName: a.FileName ?? a.FallbackTitle,
+            FileUrl: storage.GetFileUrl(a.ExternalUrl),
+            FileSize: a.FileSize,
+            ContentType: a.ContentType,
+            ThumbUrl: storage.GetFileUrl(a.ThumbnailUrl),
+            Extension: a.Extension,
+            CreatedAt: a.CreatedAt);
     }
 }

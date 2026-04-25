@@ -34,14 +34,20 @@ import { HttpClient } from '@angular/common/http';
         </div>
 
         <!-- Setup Flow -->
-        @if (setupData()) {
+        @if (setupData(); as data) {
           <div class="mt-6 bg-white rounded-lg border border-gray-200 p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Scan QR Code</h3>
             <p class="text-sm text-gray-600 mb-4">Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.)</p>
 
+            @if (data.qrCodeUri) {
+              <div class="flex justify-center mb-4">
+                <img [src]="data.qrCodeUri" alt="MFA QR Code" class="h-48 w-48 border border-gray-200 rounded-md" />
+              </div>
+            }
+
             <div class="bg-gray-50 p-4 rounded-md mb-4">
               <p class="text-xs text-gray-500 mb-2">Or enter this key manually:</p>
-              <code class="text-sm font-mono bg-gray-100 px-2 py-1 rounded">{{ setupData()!.secretKey }}</code>
+              <code class="text-sm font-mono bg-gray-100 px-2 py-1 rounded">{{ data.secretKey }}</code>
             </div>
 
             <div class="mt-4">

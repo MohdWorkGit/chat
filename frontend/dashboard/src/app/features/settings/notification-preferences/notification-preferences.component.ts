@@ -1,6 +1,5 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '@core/services/auth.service';
 import { SettingsService } from '@core/services/settings.service';
 import { NotificationPreferences } from '@core/models/settings.model';
 
@@ -111,8 +110,7 @@ interface NotificationToggle {
     }
   `],
 })
-export class NotificationPreferencesComponent implements OnInit {
-  private readonly authService = inject(AuthService);
+export class NotificationPreferencesComponent {
   private readonly settingsService = inject(SettingsService);
 
   hasChanges = false;
@@ -151,14 +149,6 @@ export class NotificationPreferencesComponent implements OnInit {
       category: 'event',
     },
   ];
-
-  ngOnInit(): void {
-    this.authService.currentUser$.subscribe((user) => {
-      if (user) {
-        // Preferences would typically come from a dedicated endpoint
-      }
-    });
-  }
 
   togglePreference(toggle: NotificationToggle): void {
     toggle.enabled = !toggle.enabled;

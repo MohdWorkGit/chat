@@ -211,7 +211,7 @@ export class AccountSettingsComponent implements OnInit {
 
   saveAccount(): void {
     if (this.accountForm.invalid) return;
-    const { name, locale, timezone, autoResolveDuration } = this.accountForm.value;
+    const { name, locale, autoResolveDuration } = this.accountForm.value;
     this.settingsService.updateAccountSettings({
       name,
       locale,

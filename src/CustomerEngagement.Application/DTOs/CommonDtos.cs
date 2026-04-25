@@ -3,7 +3,16 @@ namespace CustomerEngagement.Application.DTOs;
 public record MetaDto(int TotalCount, int CurrentPage, int PageSize, int TotalPages);
 
 public record AttachmentDto(
-    int Id, string FileType, string? ExternalUrl, string? Extension, string? FallbackTitle);
+    int Id,
+    int MessageId,
+    string FileType,
+    string? FileName,
+    string? FileUrl,
+    long FileSize,
+    string? ContentType,
+    string? ThumbUrl,
+    string? Extension,
+    DateTime CreatedAt);
 
 public record CreateAttachmentRequest(string FileType, string Url, string? Extension);
 

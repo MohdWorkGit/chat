@@ -25,7 +25,7 @@ public class CreateArticleRequest
     public string? Description { get; set; }
     public int Status { get; set; }
     public int? CategoryId { get; set; }
-    public int AuthorId { get; set; }
+    public int? AuthorId { get; set; }
 }
 
 public class UpdateArticleRequest

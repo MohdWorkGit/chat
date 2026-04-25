@@ -39,13 +39,14 @@ public class CreateCannedResponseCommandHandler : IRequestHandler<CreateCannedRe
         if (duplicate)
             return new { Error = "A canned response with this short code already exists." };
 
+        var now = DateTime.UtcNow;
         var entity = new CannedResponse
         {
             AccountId = accountId,
             ShortCode = shortCode,
             Content = request.Content!,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = now
         };
 
         await _cannedResponseRepository.AddAsync(entity, cancellationToken);
@@ -57,7 +58,8 @@ public class CreateCannedResponseCommandHandler : IRequestHandler<CreateCannedRe
             entity.AccountId,
             entity.ShortCode,
             entity.Content,
-            entity.CreatedAt
+            entity.CreatedAt,
+            entity.UpdatedAt
         };
     }
 }
@@ -124,6 +126,7 @@ public class UpdateCannedResponseCommandHandler : IRequestHandler<UpdateCannedRe
             entity.AccountId,
             entity.ShortCode,
             entity.Content,
+            entity.CreatedAt,
             entity.UpdatedAt
         };
     }

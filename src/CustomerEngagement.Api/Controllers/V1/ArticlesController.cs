@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using CustomerEngagement.Api.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -41,7 +42,7 @@ public class ArticlesController : ControllerBase
     public async Task<ActionResult> Create(long portalId,
         [FromBody] Application.Articles.Commands.CreateArticleCommand command)
     {
-        command = command with { PortalId = portalId };
+        command = command with { PortalId = portalId, AuthorId = ResolveUserId(User) };
         var result = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetById), new { portalId, articleId = result }, new { Id = result });
     }
@@ -62,5 +63,14 @@ public class ArticlesController : ControllerBase
     {
         await _mediator.Send(new Application.Articles.Commands.DeleteArticleCommand(portalId, articleId));
         return NoContent();
+    }
+
+    private static int? ResolveUserId(ClaimsPrincipal user)
+    {
+        var sub = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? user.FindFirst("sub")?.Value
+            ?? user.FindFirst("user_id")?.Value;
+
+        return int.TryParse(sub, out var id) ? id : null;
     }
 }

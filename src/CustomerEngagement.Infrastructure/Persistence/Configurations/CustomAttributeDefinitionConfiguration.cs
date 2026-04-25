@@ -30,6 +30,8 @@ public class CustomAttributeDefinitionConfiguration : IEntityTypeConfiguration<C
             .IsRequired()
             .HasMaxLength(50);
 
+        builder.Property(e => e.ListValues);
+
         builder.Property(e => e.CreatedAt)
             .HasDefaultValueSql("now()");
 

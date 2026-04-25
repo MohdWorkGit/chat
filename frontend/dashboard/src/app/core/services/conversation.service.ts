@@ -80,10 +80,18 @@ export class ConversationService {
     );
   }
 
-  sendAttachment(conversationId: number, formData: FormData): Observable<Message> {
+  sendAttachment(
+    conversationId: number,
+    file: File,
+    options: { caption?: string; isPrivate?: boolean } = {},
+  ): Observable<Message> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    if (options.caption) formData.append('caption', options.caption);
+    if (options.isPrivate) formData.append('isPrivate', 'true');
     return this.api.upload<Message>(
-      this.api.accountPath(`/conversations/${conversationId}/messages`),
-      formData
+      this.api.accountPath(`/conversations/${conversationId}/attachments`),
+      formData,
     );
   }
 

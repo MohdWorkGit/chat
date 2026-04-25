@@ -98,6 +98,20 @@ public class MinioStorageService : IStorageService
         return url;
     }
 
+    public string? GetFileUrl(string? keyOrUrl, TimeSpan? expiration = null)
+    {
+        if (string.IsNullOrWhiteSpace(keyOrUrl))
+            return null;
+
+        if (keyOrUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || keyOrUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return keyOrUrl;
+        }
+
+        return GeneratePresignedUrl(keyOrUrl, expiration ?? TimeSpan.FromHours(6));
+    }
+
     public string GeneratePresignedUploadUrl(string key, string contentType, TimeSpan? expiration = null)
     {
         var expiryDuration = expiration ?? TimeSpan.FromMinutes(30);

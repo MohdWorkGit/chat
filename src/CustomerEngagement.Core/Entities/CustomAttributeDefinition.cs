@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace CustomerEngagement.Core.Entities;
 
@@ -26,6 +27,30 @@ public class CustomAttributeDefinition : BaseEntity
 
     public string? DefaultValue { get; set; }
 
+    public string? ListValues { get; set; }
+
     // Navigation properties
     public Account Account { get; set; } = null!;
+
+    public List<string> GetListValues()
+    {
+        if (string.IsNullOrWhiteSpace(ListValues))
+            return [];
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(ListValues) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    public void SetListValues(List<string>? values)
+    {
+        ListValues = values is null || values.Count == 0
+            ? null
+            : JsonSerializer.Serialize(values);
+    }
 }

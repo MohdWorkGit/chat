@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { WidgetAttachment } from '../../services/widget-api.service';
 
 @Component({
   selector: 'cew-message-bubble',
@@ -7,7 +8,37 @@ import { CommonModule, DatePipe } from '@angular/common';
   imports: [CommonModule, DatePipe],
   template: `
     <div class="message-bubble" [ngClass]="senderType">
-      <div class="message-content">{{ content }}</div>
+      @if (content) {
+        <div class="message-content">{{ content }}</div>
+      }
+      @if (attachments?.length) {
+        <div class="attachments">
+          @for (att of attachments; track att.id) {
+            @if (isImage(att)) {
+              <a
+                class="attachment-image"
+                [href]="att.fileUrl || '#'"
+                target="_blank"
+                rel="noopener noreferrer">
+                <img [src]="att.fileUrl" [alt]="att.fileName || 'image'" loading="lazy" />
+              </a>
+            } @else {
+              <a
+                class="attachment-file"
+                [href]="att.fileUrl || '#'"
+                target="_blank"
+                rel="noopener noreferrer"
+                [download]="att.fileName || ''">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                </svg>
+                <span class="attachment-name">{{ att.fileName || 'file' }}</span>
+                <span class="attachment-size">{{ formatSize(att.fileSize) }}</span>
+              </a>
+            }
+          }
+        </div>
+      }
       <div class="message-time" [ngClass]="senderType">
         {{ timestamp | date:'shortTime' }}
       </div>
@@ -51,6 +82,46 @@ import { CommonModule, DatePipe } from '@angular/common';
     .message-content {
       white-space: pre-wrap;
     }
+    .attachments {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .attachment-image img {
+      max-width: 220px;
+      max-height: 220px;
+      border-radius: 10px;
+      display: block;
+    }
+    .attachment-file {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.14);
+      color: inherit;
+      text-decoration: none;
+      font-size: 13px;
+      max-width: 220px;
+    }
+    .message-bubble.agent .attachment-file {
+      background: rgba(17, 24, 39, 0.05);
+    }
+    .attachment-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .attachment-size {
+      opacity: 0.7;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
     .message-time {
       font-size: 10px;
       margin-top: 4px;
@@ -72,4 +143,17 @@ export class MessageBubbleComponent {
   @Input() content = '';
   @Input() senderType: 'agent' | 'customer' = 'agent';
   @Input() timestamp: string | Date = new Date();
+  @Input() attachments: WidgetAttachment[] | null | undefined = null;
+
+  isImage(att: WidgetAttachment): boolean {
+    if (att.fileType === 'image') return true;
+    return !!att.contentType?.startsWith('image/');
+  }
+
+  formatSize(bytes: number): string {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
 }
